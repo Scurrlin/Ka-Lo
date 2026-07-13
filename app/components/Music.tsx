@@ -141,7 +141,7 @@ export default function Music() {
         scrollTrigger: {
           trigger: introSection,
           start: "top top",
-          end: () => "+=" + window.innerHeight * 1.75,
+          end: () => "+=" + window.innerHeight * 2.1,
           scrub: true,
           pin: introSection,
           anticipatePin: 1,
@@ -152,7 +152,7 @@ export default function Music() {
       // Each line holds fully visible for a beat before starting its exit - a bit under
       // About.tsx's own LINE_HOLD_DURATION, since a full beat felt like too long a pause
       // here for two short lines rather than a whole rotating cast of them.
-      const HOLD_DURATION = 0.7;
+      const HOLD_DURATION = 1.2;
 
       introTl
         .to(introLine1Chars, { autoAlpha: 1, y: 0, duration: 0.5, stagger: { each: 0.03 } }, 0)

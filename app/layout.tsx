@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ScrollRestoration from "./components/ScrollRestoration";
 
 export const metadata: Metadata = {
   title: "KALO",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ScrollRestoration />
+        {children}
+      </body>
     </html>
   );
 }

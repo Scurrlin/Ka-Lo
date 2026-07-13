@@ -12,7 +12,8 @@ const config: Config = {
         sans: ["var(--font-sans)", "Inter", "ui-sans-serif", "system-ui"]
       },
       screens: {
-        xs: "420px"
+        xs: "420px",
+        mobile: "450px"
       }
     }
   },

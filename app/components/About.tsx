@@ -65,7 +65,7 @@ export default function About() {
           // the fixed budget for the "Meet The Team" reveal below - it lives entirely
           // inside this same pin, right after the CD clears the screen, rather than
           // needing a second pinned section of its own.
-          end: () => "+=" + (window.innerHeight * 4.3 + 130),
+          end: () => "+=" + (window.innerHeight * 5.2 + 130),
           scrub: 1,
           pin: section,
           anticipatePin: 1,
@@ -76,8 +76,8 @@ export default function About() {
       // Timing constants for the lines sequence, computed up front (rather than inline in the
       // chain below) so the CD spin duration further down can be derived from them too.
       const LINE_ENTER_DURATION = 0.5;
-      const LINE_HOLD_DURATION = 1;
-      const LINE_CYCLE_OFFSET = 1.3;
+      const LINE_HOLD_DURATION = 1.7;
+      const LINE_CYCLE_OFFSET = 2;
       const LINE_FIRST_START = 0.2;
       const linesDuration =
         LINE_FIRST_START + (lineEls.length - 1) * LINE_CYCLE_OFFSET + LINE_ENTER_DURATION + LINE_HOLD_DURATION + LINE_ENTER_DURATION;

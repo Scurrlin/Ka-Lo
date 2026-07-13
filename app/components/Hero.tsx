@@ -37,11 +37,11 @@ export default function Hero() {
   return (
     <section
       id="top"
-      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-5 text-white"
+      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 pt-16 text-white md:min-h-screen md:pt-20"
     >
-      <div className="absolute inset-0 z-10 bg-white" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 z-10 bg-white" aria-hidden="true" />
 
-      <div className="absolute inset-0 z-20 flex overflow-hidden" aria-hidden="true">
+      <div className="pointer-events-none absolute inset-0 z-20 flex overflow-hidden" aria-hidden="true">
         {Array.from({ length: COLUMN_COUNT }).map((_, index) => (
           <div
             key={index}
@@ -56,32 +56,32 @@ export default function Hero() {
         ))}
       </div>
 
-      <div className="relative z-30 flex w-full max-w-5xl -translate-y-[8%] flex-col items-center">
+      <div className="hero-lockup pointer-events-none relative z-30 flex w-full max-w-5xl flex-col items-center gap-[var(--hero-logo-wave-gap)]">
         <h1
-          className="font-display select-none text-center text-7xl leading-none text-white sm:text-8xl md:text-9xl lg:text-[11rem] xl:text-[13rem]"
+          className="font-display select-none text-center text-[length:var(--hero-logo-size)] leading-none text-white"
           aria-label="KALO"
         >
           KΛLO
         </h1>
-      </div>
 
-      <div
-        className="hero-sound-wave absolute bottom-[clamp(2rem,7vh,4.75rem)] left-1/2 z-30 flex h-[clamp(6rem,15vw,11rem)] w-[min(80vw,46rem)] items-center justify-center"
-        aria-hidden="true"
-      >
-        <div className="flex h-full w-full items-center justify-between gap-[clamp(0.1rem,0.4vw,0.4rem)]">
-          {WAVE_BARS.map((height, index) => (
-            <span
-              key={index}
-              data-wave-bar
-              className="hero-wave-bar block flex-1 rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.4)]"
-              style={{
-                animationDelay: `calc(var(--hero-reveal-duration) + ${getWaveBarDelay(index).toFixed(3)}s)`,
-                animationDuration: `${getWaveBarDuration(index).toFixed(3)}s`,
-                height: `${height}%`
-              }}
-            />
-          ))}
+        <div
+          className="hero-sound-wave pointer-events-none flex h-[var(--hero-wave-height)] w-[var(--hero-wave-width)] items-center justify-center"
+          aria-hidden="true"
+        >
+          <div className="flex h-full w-full items-center justify-between gap-[clamp(0.1rem,0.4vw,0.4rem)]">
+            {WAVE_BARS.map((height, index) => (
+              <span
+                key={index}
+                data-wave-bar
+                className="hero-wave-bar block flex-1 rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.4)]"
+                style={{
+                  animationDelay: `calc(var(--hero-reveal-duration) + ${getWaveBarDelay(index).toFixed(3)}s)`,
+                  animationDuration: `${getWaveBarDuration(index).toFixed(3)}s`,
+                  height: `${height}%`
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>

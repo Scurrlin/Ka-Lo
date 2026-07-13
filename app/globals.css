@@ -62,6 +62,50 @@ img {
   will-change: transform, opacity;
 }
 
+.hero-lockup {
+  --hero-logo-size: clamp(4.75rem, 20vw, 6rem);
+  --hero-logo-wave-gap: 2rem;
+  --hero-wave-height: 6.25rem;
+  --hero-wave-width: min(82vw, 46rem);
+}
+
+@media (min-width: 450px) {
+  .hero-lockup {
+    --hero-logo-size: clamp(5.5rem, 16vw, 7rem);
+    --hero-logo-wave-gap: 2.5rem;
+    --hero-wave-height: clamp(6.5rem, 18vw, 9rem);
+    --hero-wave-width: min(80vw, 46rem);
+  }
+}
+
+@media (min-width: 640px) {
+  .hero-lockup {
+    --hero-logo-wave-gap: 3rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-lockup {
+    --hero-logo-size: 8rem;
+    --hero-logo-wave-gap: 3.5rem;
+    --hero-wave-height: clamp(7rem, 15vw, 11rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-lockup {
+    --hero-logo-size: 11rem;
+    --hero-logo-wave-gap: 4rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-lockup {
+    --hero-logo-size: 13rem;
+    --hero-logo-wave-gap: 4.5rem;
+  }
+}
+
 .hero-reveal-bar,
 .hero-sound-wave,
 .hero-wave-bar {
@@ -77,7 +121,7 @@ img {
 
 .hero-sound-wave {
   opacity: 0;
-  transform: translate3d(-50%, 5.75rem, 0) scale(0.96);
+  transform: translate3d(0, 5.75rem, 0) scale(0.96);
   animation: hero-wave-rise 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: calc(var(--hero-reveal-duration, 4s) + 0.2s);
 }
@@ -116,12 +160,12 @@ img {
 @keyframes hero-wave-rise {
   0% {
     opacity: 0;
-    transform: translate3d(-50%, 5.75rem, 0) scale(0.96);
+    transform: translate3d(0, 5.75rem, 0) scale(0.96);
   }
 
   100% {
     opacity: 1;
-    transform: translate3d(-50%, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
