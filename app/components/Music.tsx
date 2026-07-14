@@ -169,7 +169,7 @@ export default function Music() {
         .addLabel("line1Gone", `line1Done+=${HOLD_DURATION + 0.5}`)
         .to(introLine2Chars, { autoAlpha: 1, y: 0, duration: 0.5, stagger: { each: 0.03 } }, "line1Gone")
         .addLabel("line2Done")
-        .to({}, { duration: 0.3 });
+        .to({}, { duration: 0.1 });
 
       // Albums: a single shared trigger for the whole grid - a simple staggered
       // fade/rise as it scrolls into view, exactly like the "Meet The Team" member
@@ -227,7 +227,7 @@ export default function Music() {
 
   return (
     <>
-      <section ref={sectionRef} id="solus" className="relative bg-black px-5 pb-20 pt-24 text-white sm:px-8 sm:pt-28 md:pt-32">
+      <section ref={sectionRef} id="solus" className="relative bg-black px-5 pb-20 pt-12 text-white sm:px-8 sm:pt-16 md:pt-20">
         {/* The pin target itself, exactly like the `<section>` in About.tsx - real height
             (one full viewport), and the containing block for the text absolutely
             positioned inside it below. Since that text is `absolute` (not `fixed`), it

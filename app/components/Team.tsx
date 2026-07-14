@@ -123,7 +123,7 @@ export default function Team() {
 
   return (
     <section ref={sectionRef} id="team" className="relative bg-black text-white">
-      <div ref={contentRef} className="mx-auto max-w-7xl px-5 pb-24 pt-0 sm:px-8 md:pb-32">
+      <div ref={contentRef} className="mx-auto max-w-7xl px-5 pb-16 pt-0 sm:px-8 md:pb-20">
         <div ref={gridRef} className="grid grid-cols-1 gap-x-4 gap-y-9 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-6">
           {teamMembers.map((member) => {
             const isSelected = selectedMember === member.id;
