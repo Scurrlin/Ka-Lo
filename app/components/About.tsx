@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -15,6 +15,37 @@ const lines = [
   { text: "And thankfully...", position: "below" as const },
   { text: "He's not alone", position: "above" as const }
 ];
+
+type AnimatedWordsProps = {
+  text: string;
+  registerCharacter: (node: HTMLSpanElement | null, index: number) => void;
+};
+
+function AnimatedWords({ text, registerCharacter }: AnimatedWordsProps) {
+  const words = text.split(" ");
+  let characterIndex = 0;
+
+  return words.map((word, wordIndex) => (
+    <Fragment key={`${word}-${wordIndex}`}>
+      <span className="inline-block whitespace-nowrap">
+        {word.split("").map((char) => {
+          const index = characterIndex++;
+
+          return (
+            <span
+              key={index}
+              ref={(node) => registerCharacter(node, index)}
+              className="inline-block"
+            >
+              {char}
+            </span>
+          );
+        })}
+      </span>
+      {wordIndex < words.length - 1 ? " " : null}
+    </Fragment>
+  ));
+}
 
 export default function About() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -176,20 +207,15 @@ export default function About() {
         ref={titleRef}
         className="pointer-events-none absolute left-1/2 top-[16%] z-20 w-full max-w-4xl -translate-x-1/2 px-5 text-center"
       >
-        <h2 className="font-display text-4xl leading-none text-white sm:text-5xl md:text-6xl">
-          {TITLE.split("").map((char, index) => (
-            <span
-              key={index}
-              ref={(node) => {
-                if (node) {
-                  charRefs.current[index] = node;
-                }
-              }}
-              className="inline-block"
-            >
-              {char === " " ? "\u00A0" : char}
-            </span>
-          ))}
+        <h2 className="font-display text-5xl leading-none text-white sm:text-6xl md:text-7xl lg:text-6xl">
+          <AnimatedWords
+            text={TITLE}
+            registerCharacter={(node, index) => {
+              if (node) {
+                charRefs.current[index] = node;
+              }
+            }}
+          />
         </h2>
       </div>
 
@@ -201,11 +227,13 @@ export default function About() {
               lineRefs.current[index] = node;
             }
           }}
-          className={`pointer-events-none absolute left-1/2 z-20 w-full max-w-3xl px-5 text-center ${
+          className={`pointer-events-none absolute left-1/2 z-20 w-full max-w-4xl px-4 text-center sm:px-5 ${
             line.position === "above" ? "top-[20%]" : "bottom-[8%]"
           }`}
         >
-          <h3 className="font-display text-xl leading-tight text-white sm:text-2xl md:text-3xl">{line.text}</h3>
+          <h3 className="break-normal font-display text-2xl leading-tight text-white hyphens-none sm:text-3xl md:text-4xl">
+            {line.text}
+          </h3>
         </div>
       ))}
 
@@ -213,21 +241,16 @@ export default function About() {
       <div className="pointer-events-none absolute inset-x-0 top-16 bottom-0 z-20 flex items-center justify-center px-2 sm:px-5 md:top-20">
         <h2
           ref={teamTitleRef}
-          className="font-display text-center text-5xl leading-none text-white sm:text-7xl md:text-8xl"
+          className="font-display text-center text-6xl leading-none text-white sm:text-8xl md:text-9xl lg:text-8xl"
         >
-          {TEAM_TITLE.split("").map((char, index) => (
-            <span
-              key={index}
-              ref={(node) => {
-                if (node) {
-                  teamCharRefs.current[index] = node;
-                }
-              }}
-              className="inline-block"
-            >
-              {char === " " ? "\u00A0" : char}
-            </span>
-          ))}
+          <AnimatedWords
+            text={TEAM_TITLE}
+            registerCharacter={(node, index) => {
+              if (node) {
+                teamCharRefs.current[index] = node;
+              }
+            }}
+          />
         </h2>
       </div>
     </section>
