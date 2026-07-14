@@ -126,11 +126,22 @@ export default function About() {
       });
 
       tl.addLabel("linesDone", `linesStart+=${linesDuration + LINES_DONE_GAP}`)
-        // The CD slides off the right edge as the section ends. Uses "x" in vw
-        // (viewport-relative, not the CD's own width) so the center of the disc always
-        // lands 25% of the viewport width past the right edge - fully clear of the
-        // screen no matter how big the disc itself is rendered.
-        .to(cd, { x: "75vw", duration: CD_EXIT_DURATION, ease: "power1.in" }, `linesDone+=${CD_EXIT_GAP}`)
+        // The CD slides off the right edge as the section ends. A function-based value
+        // (rather than a fixed "vw" guess) reads the disc's actual rendered width via
+        // getBoundingClientRect() - correct no matter which of min-w/max-w/vmin is
+        // currently clamping it - plus a 25vw buffer so it lands clearly off-screen.
+        // Being a function, GSAP re-evaluates it whenever the timeline is invalidated,
+        // which happens automatically on window resize thanks to invalidateOnRefresh
+        // above, so it never goes stale if the viewport changes size.
+        .to(
+          cd,
+          {
+            x: () => window.innerWidth / 2 + cd.getBoundingClientRect().width / 2 + window.innerWidth * 0.25,
+            duration: CD_EXIT_DURATION,
+            ease: "power1.in"
+          },
+          `linesDone+=${CD_EXIT_GAP}`
+        )
         .addLabel("cdGone")
         // "Meet The Team" reveals the instant the CD is fully off-screen, in this same
         // pinned space - no separate section, no gap. Once revealed it just stays put
