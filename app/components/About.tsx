@@ -19,6 +19,8 @@ const CD_MAX_DIAMETER = 64;
 const VIDEO_MAX_WIDTH = 560;
 const SHRINK_DURATION = 1.25;
 const ROUTE_DURATION = 8;
+const GROW_DURATION = 1.35;
+const EXIT_DURATION = 0.9;
 const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
 
 type Point = {
@@ -137,6 +139,8 @@ export default function About() {
     const routeState = { progress: 0 };
     let routeGeometry: RouteGeometry | null = null;
     let timeline: gsap.core.Timeline | null = null;
+    let videoTrackExitX = 0;
+    let cdExitX = 0;
     let updateNavTargets = () => {};
 
     const playVideos = () => {
@@ -165,12 +169,8 @@ export default function About() {
 
       const point = getPointOnRoute(routeGeometry, routeState.progress);
       const cumulative = routeGeometry.cumulativeLengths;
-      const exitStart = cumulative[cumulative.length - 2];
-      const exitProgress = (point.distance - exitStart) / (routeGeometry.totalLength - exitStart);
-      const growProgress = smoothstep(exitProgress);
-      const scale = routeGeometry.smallScale + (1 - routeGeometry.smallScale) * growProgress;
 
-      gsap.set(cd, { x: point.x, y: point.y, scale });
+      gsap.set(cd, { x: point.x, y: point.y, scale: routeGeometry.smallScale });
       gsap.set(videoStage, { x: point.trackX });
 
       const videoOneOpacity = getElementOpacity(point.distance, 0, cumulative[1] * 0.75);
@@ -184,11 +184,10 @@ export default function About() {
         cumulative[5],
         cumulative[5] + (cumulative[6] - cumulative[5]) * 0.55
       );
-      const exitFade = 1 - smoothstep(exitProgress / 0.6);
       const opacities = [videoOneOpacity, videoTwoOpacity, videoThreeOpacity];
 
       videoFrames.forEach((frame, index) => {
-        gsap.set(frame, { autoAlpha: opacities[index] * exitFade });
+        gsap.set(frame, { autoAlpha: opacities[index] });
       });
     };
 
@@ -205,7 +204,11 @@ export default function About() {
       );
       const smallCdRadius = smallCdDiameter / 2;
       const edgeMargin = clamp(viewportWidth * 0.02, 8, 24);
-      const gap = clamp(viewportWidth * 0.055, smallCdDiameter + CD_CLEARANCE * 2, 88);
+      const gap = clamp(
+        viewportWidth * 0.14,
+        smallCdDiameter + CD_CLEARANCE * 2 + 16,
+        180
+      );
       const routeInset = edgeMargin + smallCdRadius + CD_CLEARANCE;
       const availableRouteHeight = Math.max(1, viewportHeight - headerHeight - routeInset * 2);
       const maxVideoWidthByHeight = availableRouteHeight * 0.62 * (16 / 9);
@@ -243,56 +246,57 @@ export default function About() {
       const bottomY = videoTwo.bottom + traceOffset;
       const firstGapX = videoOne.right + gap / 2;
       const secondGapX = videoTwo.right + gap / 2;
-      const safeLeftX = edgeMargin + smallCdRadius;
-      const safeRightX = viewportWidth - safeLeftX;
-      const firstGapViewportX = viewportWidth * 0.42;
-      const secondGapViewportX = viewportWidth * 0.58;
+      const centerX = origin.x;
+      const centerBand = clamp(viewportWidth * 0.08, 20, 64);
+      const videoOneCenteredTrackX = centerX - videoWidth / 2;
+      const firstGapEnterTrackX = centerX + centerBand - firstGapX;
+      const firstGapExitTrackX = centerX - centerBand - firstGapX;
+      const secondGapEnterTrackX = centerX + centerBand - secondGapX;
+      const secondGapExitTrackX = centerX - centerBand - secondGapX;
+      const videoThreeRightEnterTrackX =
+        centerX + centerBand - (videoThree.right + traceOffset);
+      const videoThreeRightCenteredTrackX = centerX - (videoThree.right + traceOffset);
       const points = [
         { x: 0, y: 0, trackX: viewportWidth + edgeMargin },
         {
-          x: safeLeftX - origin.x,
+          x: -videoWidth / 2 - traceOffset,
           y: videoOne.top + videoHeight / 2 - origin.y,
-          trackX: safeLeftX - (videoOne.left - traceOffset)
+          trackX: videoOneCenteredTrackX
         },
         {
-          x: safeLeftX - origin.x,
+          x: -videoWidth / 2 - traceOffset,
           y: topY - origin.y,
-          trackX: safeLeftX - (videoOne.left - traceOffset)
+          trackX: videoOneCenteredTrackX
         },
         {
-          x: firstGapViewportX - origin.x,
+          x: centerBand,
           y: topY - origin.y,
-          trackX: firstGapViewportX - firstGapX
+          trackX: firstGapEnterTrackX
         },
         {
-          x: firstGapViewportX - origin.x,
+          x: -centerBand,
           y: bottomY - origin.y,
-          trackX: firstGapViewportX - firstGapX
+          trackX: firstGapExitTrackX
         },
         {
-          x: secondGapViewportX - origin.x,
+          x: centerBand,
           y: bottomY - origin.y,
-          trackX: secondGapViewportX - secondGapX
+          trackX: secondGapEnterTrackX
         },
         {
-          x: secondGapViewportX - origin.x,
+          x: -centerBand,
           y: topY - origin.y,
-          trackX: secondGapViewportX - secondGapX
+          trackX: secondGapExitTrackX
         },
         {
-          x: safeRightX - origin.x,
+          x: centerBand,
           y: topY - origin.y,
-          trackX: safeRightX - (videoThree.right + traceOffset)
+          trackX: videoThreeRightEnterTrackX
         },
         {
-          x: safeRightX - origin.x,
+          x: 0,
           y: videoThree.top + videoHeight / 2 - origin.y,
-          trackX: safeRightX - (videoThree.right + traceOffset)
-        },
-        {
-          x: viewportWidth + baseCdDiameter / 2 + edgeMargin - origin.x,
-          y: 0,
-          trackX: -rowWidth - edgeMargin
+          trackX: videoThreeRightCenteredTrackX
         }
       ];
       const cumulativeLengths = [0];
@@ -317,6 +321,8 @@ export default function About() {
         totalLength: cumulativeLengths[cumulativeLengths.length - 1],
         smallScale: smallCdDiameter / baseCdDiameter
       };
+      videoTrackExitX = -rowWidth - edgeMargin;
+      cdExitX = viewportWidth + baseCdDiameter / 2 + edgeMargin - origin.x;
 
       gsap.set(videoStage, {
         left: 0,
@@ -328,7 +334,10 @@ export default function About() {
       });
       gsap.set(cd, { left: origin.x, top: origin.y });
 
-      if (timeline && timeline.time() >= (timeline.labels.routeStart ?? Number.POSITIVE_INFINITY)) {
+      const routeStart = timeline?.labels.routeStart ?? Number.POSITIVE_INFINITY;
+      const routeComplete = timeline?.labels.routeComplete ?? Number.NEGATIVE_INFINITY;
+
+      if (timeline && timeline.time() >= routeStart && timeline.time() <= routeComplete) {
         renderRoute();
       }
     };
@@ -394,8 +403,11 @@ export default function About() {
         .to(
           cd,
           {
-            rotation: 360 + CD_SPIN_DEGREES_PER_UNIT * (SHRINK_DURATION + ROUTE_DURATION),
-            duration: SHRINK_DURATION + ROUTE_DURATION
+            rotation:
+              360 +
+              CD_SPIN_DEGREES_PER_UNIT *
+                (SHRINK_DURATION + ROUTE_DURATION + GROW_DURATION + EXIT_DURATION),
+            duration: SHRINK_DURATION + ROUTE_DURATION + GROW_DURATION + EXIT_DURATION
           },
           "fullTurn"
         )
@@ -409,7 +421,21 @@ export default function About() {
           },
           "routeStart"
         )
-        .addLabel("cdGone", `routeStart+=${ROUTE_DURATION}`)
+        .addLabel("routeComplete", `routeStart+=${ROUTE_DURATION}`)
+        .to(cd, { scale: 1, duration: GROW_DURATION, ease: "power2.inOut" }, "routeComplete")
+        .to(
+          videoStage,
+          { x: () => videoTrackExitX, duration: GROW_DURATION, ease: "none" },
+          "routeComplete"
+        )
+        .to(
+          videoFrames,
+          { autoAlpha: 0, duration: GROW_DURATION * 0.65 },
+          `routeComplete+=${GROW_DURATION * 0.35}`
+        )
+        .addLabel("fullSize", `routeComplete+=${GROW_DURATION}`)
+        .to(cd, { x: () => cdExitX, duration: EXIT_DURATION, ease: "power1.in" }, "fullSize")
+        .addLabel("cdGone", `fullSize+=${EXIT_DURATION}`)
         .to(nextChars, { autoAlpha: 1, y: 0, duration: 0.4, stagger: { each: 0.018 } }, "cdGone")
         .addLabel("nextTitleRevealed")
         .to({}, { duration: 0.15 });
