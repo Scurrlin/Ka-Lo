@@ -179,8 +179,10 @@ img {
   --wave-hue: 342.8;
   --wave-saturation: 100%;
   --wave-lightness: 56.9%;
+  -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
+  touch-action: pan-y;
   user-select: none;
   opacity: 0;
   transform: translate3d(0, 5.75rem, 0) scale(0.96);

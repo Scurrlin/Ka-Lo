@@ -129,7 +129,7 @@ export default function Hero() {
         revealWhiteTo.forEach((reveal) => reveal(1));
       };
 
-      const handlePointerMove = (event: PointerEvent) => {
+      const updateWaveFromPointer = (event: PointerEvent) => {
         const waveBounds = wave.getBoundingClientRect();
         const influenceRadius = window.matchMedia(TAILWIND_MEDIUM_QUERY).matches
           ? MEDIUM_CURSOR_INFLUENCE_RADIUS
@@ -153,25 +153,56 @@ export default function Hero() {
         });
       };
 
-      const handlePointerEnd = (event: PointerEvent) => {
-        if (event.pointerType !== "mouse") {
-          resetWave();
+      const handleSectionPointerMove = (event: PointerEvent) => {
+        if (event.pointerType === "mouse") {
+          updateWaveFromPointer(event);
         }
       };
 
-      section.addEventListener("pointerdown", handlePointerMove);
-      section.addEventListener("pointermove", handlePointerMove);
-      section.addEventListener("pointerup", handlePointerEnd);
-      section.addEventListener("pointercancel", handlePointerEnd);
+      const handleWavePointerDown = (event: PointerEvent) => {
+        if (event.pointerType === "mouse") {
+          return;
+        }
+
+        wave.setPointerCapture(event.pointerId);
+        updateWaveFromPointer(event);
+      };
+
+      const handleWavePointerMove = (event: PointerEvent) => {
+        if (event.pointerType !== "mouse" && wave.hasPointerCapture(event.pointerId)) {
+          updateWaveFromPointer(event);
+        }
+      };
+
+      const handleWavePointerEnd = (event: PointerEvent) => {
+        if (event.pointerType === "mouse") {
+          return;
+        }
+
+        if (wave.hasPointerCapture(event.pointerId)) {
+          wave.releasePointerCapture(event.pointerId);
+        }
+
+        resetWave();
+      };
+
+      section.addEventListener("pointerdown", handleSectionPointerMove);
+      section.addEventListener("pointermove", handleSectionPointerMove);
       section.addEventListener("pointerleave", resetWave);
+      wave.addEventListener("pointerdown", handleWavePointerDown);
+      wave.addEventListener("pointermove", handleWavePointerMove);
+      wave.addEventListener("pointerup", handleWavePointerEnd);
+      wave.addEventListener("pointercancel", handleWavePointerEnd);
       window.addEventListener("blur", resetWave);
 
     return () => {
-      section.removeEventListener("pointerdown", handlePointerMove);
-      section.removeEventListener("pointermove", handlePointerMove);
-      section.removeEventListener("pointerup", handlePointerEnd);
-      section.removeEventListener("pointercancel", handlePointerEnd);
+      section.removeEventListener("pointerdown", handleSectionPointerMove);
+      section.removeEventListener("pointermove", handleSectionPointerMove);
       section.removeEventListener("pointerleave", resetWave);
+      wave.removeEventListener("pointerdown", handleWavePointerDown);
+      wave.removeEventListener("pointermove", handleWavePointerMove);
+      wave.removeEventListener("pointerup", handleWavePointerEnd);
+      wave.removeEventListener("pointercancel", handleWavePointerEnd);
       window.removeEventListener("blur", resetWave);
       gradientTween.kill();
       gsap.killTweensOf([...gradientBars, ...whiteBars]);
@@ -215,7 +246,7 @@ export default function Hero() {
 
         <div
           ref={waveRef}
-          className="hero-sound-wave pointer-events-none flex h-[var(--hero-wave-height)] w-[var(--hero-wave-width)] items-center justify-center"
+          className="hero-sound-wave flex h-[var(--hero-wave-height)] w-[var(--hero-wave-width)] items-center justify-center"
           aria-hidden="true"
         >
           <div className="flex h-full w-full items-center justify-between gap-[clamp(0.1rem,0.4vw,0.4rem)]">
