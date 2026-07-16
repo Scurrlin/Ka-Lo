@@ -283,14 +283,34 @@ img {
   gap: var(--about-video-gap, 96px);
 }
 
-.about-video-frame {
+.about-video-item {
   flex: 0 0 var(--about-video-width, 320px);
   width: var(--about-video-width, 320px);
+}
+
+.about-video-frame {
+  width: 100%;
   background: var(--ink);
   box-shadow:
     0 22px 60px rgba(0, 0, 0, 0.72),
     0 0 0 1px rgba(248, 248, 245, 0.14);
   will-change: opacity, visibility;
+}
+
+.about-video-caption {
+  position: absolute;
+  left: 50%;
+  width: min(92vw, 38rem);
+  text-align: center;
+  will-change: transform, opacity, visibility;
+}
+
+.about-video-caption-above {
+  bottom: calc(100% + clamp(1.25rem, 4vh, 2.5rem));
+}
+
+.about-video-caption-below {
+  top: calc(100% + clamp(1.25rem, 4vh, 2.5rem));
 }
 
 .album-cover {

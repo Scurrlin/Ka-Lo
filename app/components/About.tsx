@@ -12,14 +12,21 @@ const VIDEO_SOURCES = [
   "/videos/birds-10s.mp4",
   "/videos/driving-10s.mp4"
 ] as const;
+const VIDEO_CAPTIONS = [
+  { text: "People see a new website", position: "below" as const },
+  { text: "And all of a sudden...", position: "above" as const },
+  { text: "Everyone's a web developer lmao", position: "below" as const }
+] as const;
+const FINAL_MESSAGE = "Lol jk jk 😂 Love you!";
 
-const CD_CLEARANCE = 6;
-const CD_MIN_DIAMETER = 36;
-const CD_MAX_DIAMETER = 78;
-const VIDEO_MAX_WIDTH = 560;
+const CD_CLEARANCE = 18;
+const CD_MIN_DIAMETER = 44;
+const CD_MAX_DIAMETER = 96;
+const VIDEO_MAX_WIDTH = 680;
 const SHRINK_DURATION = 1.25;
 const ROUTE_DURATION = 8;
 const GROW_DURATION = 1.35;
+const FULL_SIZE_HOLD_DURATION = 0.65;
 const EXIT_DURATION = 0.9;
 const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
 
@@ -116,7 +123,9 @@ export default function About() {
   const cdRef = useRef<HTMLImageElement>(null);
   const videoStageRef = useRef<HTMLDivElement>(null);
   const videoFrameRefs = useRef<HTMLDivElement[]>([]);
+  const videoCaptionRefs = useRef<HTMLHeadingElement[]>([]);
   const videoRefs = useRef<HTMLVideoElement[]>([]);
+  const finalMessageRef = useRef<HTMLHeadingElement>(null);
   const charRefs = useRef<HTMLSpanElement[]>([]);
   const nextTitleRef = useRef<HTMLHeadingElement>(null);
   const nextCharRefs = useRef<HTMLSpanElement[]>([]);
@@ -128,13 +137,15 @@ export default function About() {
     const title = titleRef.current;
     const cd = cdRef.current;
     const videoStage = videoStageRef.current;
+    const finalMessage = finalMessageRef.current;
     const nextTitle = nextTitleRef.current;
 
-    if (!section || !title || !cd || !videoStage || !nextTitle) {
+    if (!section || !title || !cd || !videoStage || !finalMessage || !nextTitle) {
       return;
     }
 
     const videoFrames = videoFrameRefs.current.filter(Boolean);
+    const videoCaptions = videoCaptionRefs.current.filter(Boolean);
     const videos = videoRefs.current.filter(Boolean);
     const routeState = { progress: 0 };
     let routeGeometry: RouteGeometry | null = null;
@@ -189,6 +200,10 @@ export default function About() {
       videoFrames.forEach((frame, index) => {
         gsap.set(frame, { autoAlpha: opacities[index] });
       });
+      videoCaptions.forEach((caption, index) => {
+        const opacity = opacities[index];
+        gsap.set(caption, { autoAlpha: opacity, y: (1 - opacity) * 12 });
+      });
     };
 
     const updateLayout = () => {
@@ -198,23 +213,23 @@ export default function About() {
       const headerHeight = header?.offsetHeight ?? (viewportWidth >= 768 ? 80 : 64);
       const baseCdDiameter = cd.offsetWidth;
       const smallCdDiameter = clamp(
-        Math.min(viewportWidth, viewportHeight) * 0.0625,
+        Math.min(viewportWidth, viewportHeight) * 0.075,
         CD_MIN_DIAMETER,
         CD_MAX_DIAMETER
       );
       const smallCdRadius = smallCdDiameter / 2;
       const edgeMargin = clamp(viewportWidth * 0.02, 8, 24);
       const gap = clamp(
-        viewportWidth * 0.16,
-        smallCdDiameter + CD_CLEARANCE * 2 + 36,
-        220
+        viewportWidth * 0.22,
+        smallCdDiameter + CD_CLEARANCE * 2 + 48,
+        300
       );
       const routeInset = edgeMargin + smallCdRadius + CD_CLEARANCE;
       const availableRouteHeight = Math.max(1, viewportHeight - headerHeight - routeInset * 2);
-      const maxVideoWidthByHeight = availableRouteHeight * 0.62 * (16 / 9);
+      const maxVideoWidthByHeight = availableRouteHeight * 0.72 * (16 / 9);
       const videoWidth = Math.max(
         1,
-        Math.min(VIDEO_MAX_WIDTH, viewportWidth * 0.68, maxVideoWidthByHeight)
+        Math.min(VIDEO_MAX_WIDTH, viewportWidth * 0.78, maxVideoWidthByHeight)
       );
       const videoHeight = videoWidth * (9 / 16);
       const rowWidth = videoWidth * 3 + gap * 2;
@@ -334,6 +349,10 @@ export default function About() {
       videoStage.style.setProperty("--about-video-width", `${videoWidth}px`);
       videoStage.style.setProperty("--about-video-gap", `${gap}px`);
       gsap.set(cd, { left: origin.x, top: origin.y });
+      gsap.set(finalMessage, {
+        left: origin.x,
+        top: origin.y - baseCdDiameter / 2 - clamp(viewportHeight * 0.035, 20, 36)
+      });
 
       const routeStart = timeline?.labels.routeStart ?? Number.POSITIVE_INFINITY;
       const routeComplete = timeline?.labels.routeComplete ?? Number.NEGATIVE_INFINITY;
@@ -360,6 +379,8 @@ export default function About() {
         scale: 1
       });
       gsap.set(videoFrames, { autoAlpha: 0 });
+      gsap.set(videoCaptions, { autoAlpha: 0, xPercent: -50, y: 12 });
+      gsap.set(finalMessage, { autoAlpha: 0, xPercent: -50, yPercent: -100, y: 16 });
       gsap.set(nextChars, { autoAlpha: 0, y: 26 });
       gsap.set(nextTitle, { y: 0 });
 
@@ -407,8 +428,17 @@ export default function About() {
             rotation:
               360 +
               CD_SPIN_DEGREES_PER_UNIT *
-                (SHRINK_DURATION + ROUTE_DURATION + GROW_DURATION + EXIT_DURATION),
-            duration: SHRINK_DURATION + ROUTE_DURATION + GROW_DURATION + EXIT_DURATION
+                (SHRINK_DURATION +
+                  ROUTE_DURATION +
+                  GROW_DURATION +
+                  FULL_SIZE_HOLD_DURATION +
+                  EXIT_DURATION),
+            duration:
+              SHRINK_DURATION +
+              ROUTE_DURATION +
+              GROW_DURATION +
+              FULL_SIZE_HOLD_DURATION +
+              EXIT_DURATION
           },
           "fullTurn"
         )
@@ -430,13 +460,24 @@ export default function About() {
           "routeComplete"
         )
         .to(
-          videoFrames,
+          [...videoFrames, ...videoCaptions],
           { autoAlpha: 0, duration: GROW_DURATION * 0.65 },
           `routeComplete+=${GROW_DURATION * 0.35}`
         )
         .addLabel("fullSize", `routeComplete+=${GROW_DURATION}`)
-        .to(cd, { x: () => cdExitX, duration: EXIT_DURATION, ease: "power1.in" }, "fullSize")
-        .addLabel("cdGone", `fullSize+=${EXIT_DURATION}`)
+        .to(
+          finalMessage,
+          { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" },
+          `fullSize-=${0.2}`
+        )
+        .addLabel("exitStart", `fullSize+=${FULL_SIZE_HOLD_DURATION}`)
+        .to(cd, { x: () => cdExitX, duration: EXIT_DURATION, ease: "power1.in" }, "exitStart")
+        .to(
+          finalMessage,
+          { autoAlpha: 0, x: 24, duration: EXIT_DURATION * 0.6, ease: "power1.in" },
+          "exitStart"
+        )
+        .addLabel("cdGone", `exitStart+=${EXIT_DURATION}`)
         .to(nextChars, { autoAlpha: 1, y: 0, duration: 0.4, stagger: { each: 0.018 } }, "cdGone")
         .addLabel("nextTitleRevealed")
         .to({}, { duration: 0.15 });
@@ -489,31 +530,45 @@ export default function About() {
       <div
         ref={videoStageRef}
         className="about-video-stage pointer-events-none absolute z-10"
-        aria-hidden="true"
       >
         {VIDEO_SOURCES.map((src, index) => (
           <div
             key={`${src}-${index}`}
-            ref={(node) => {
-              if (node) {
-                videoFrameRefs.current[index] = node;
-              }
-            }}
-            className="about-video-frame invisible relative aspect-video overflow-hidden rounded-md opacity-0"
+            className="about-video-item relative"
           >
-            <video
+            <div
               ref={(node) => {
                 if (node) {
-                  videoRefs.current[index] = node;
+                  videoFrameRefs.current[index] = node;
                 }
               }}
-              src={src}
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              className="block h-full w-full object-cover"
-            />
+              className="about-video-frame invisible relative aspect-video overflow-hidden rounded-md opacity-0"
+            >
+              <video
+                ref={(node) => {
+                  if (node) {
+                    videoRefs.current[index] = node;
+                  }
+                }}
+                src={src}
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-hidden="true"
+                className="block h-full w-full object-cover"
+              />
+            </div>
+            <h3
+              ref={(node) => {
+                if (node) {
+                  videoCaptionRefs.current[index] = node;
+                }
+              }}
+              className={`about-video-caption about-video-caption-${VIDEO_CAPTIONS[index].position} invisible font-display text-xl leading-tight text-white opacity-0 sm:text-2xl md:text-3xl`}
+            >
+              {VIDEO_CAPTIONS[index].text}
+            </h3>
           </div>
         ))}
       </div>
@@ -527,6 +582,13 @@ export default function About() {
         onLoad={() => ScrollTrigger.refresh()}
         className="silver-disc pointer-events-none absolute z-30 aspect-square w-[45vmin] max-w-[620px] min-w-[240px] select-none"
       />
+
+      <h3
+        ref={finalMessageRef}
+        className="pointer-events-none invisible absolute z-40 w-[min(90vw,44rem)] text-center font-display text-2xl leading-tight text-white opacity-0 sm:text-3xl md:text-4xl"
+      >
+        {FINAL_MESSAGE}
+      </h3>
 
       <div
         ref={titleRef}
