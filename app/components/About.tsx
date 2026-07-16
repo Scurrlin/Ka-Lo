@@ -16,7 +16,7 @@ const VIDEO_SOURCES = [
 const CD_CLEARANCE = 6;
 const CD_MIN_DIAMETER = 28;
 const CD_MAX_DIAMETER = 64;
-const VIDEO_MAX_WIDTH = 420;
+const VIDEO_MAX_WIDTH = 560;
 const SHRINK_DURATION = 1.25;
 const ROUTE_DURATION = 8;
 const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
@@ -24,6 +24,7 @@ const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
 type Point = {
   x: number;
   y: number;
+  trackX: number;
 };
 
 type RouteGeometry = {
@@ -76,7 +77,8 @@ function getPointOnRoute(geometry: RouteGeometry, progress: number) {
   return {
     distance,
     x: start.x + (end.x - start.x) * segmentProgress,
-    y: start.y + (end.y - start.y) * segmentProgress
+    y: start.y + (end.y - start.y) * segmentProgress,
+    trackX: start.trackX + (end.trackX - start.trackX) * segmentProgress
   };
 }
 
@@ -169,6 +171,7 @@ export default function About() {
       const scale = routeGeometry.smallScale + (1 - routeGeometry.smallScale) * growProgress;
 
       gsap.set(cd, { x: point.x, y: point.y, scale });
+      gsap.set(videoStage, { x: point.trackX });
 
       const videoOneOpacity = getElementOpacity(point.distance, 0, cumulative[1] * 0.75);
       const videoTwoOpacity = getElementOpacity(
@@ -202,41 +205,36 @@ export default function About() {
       );
       const smallCdRadius = smallCdDiameter / 2;
       const edgeMargin = clamp(viewportWidth * 0.02, 8, 24);
-      const gap = smallCdDiameter + CD_CLEARANCE * 2;
+      const gap = clamp(viewportWidth * 0.055, smallCdDiameter + CD_CLEARANCE * 2, 88);
       const routeInset = edgeMargin + smallCdRadius + CD_CLEARANCE;
-      const maxVideoWidthByViewport = (viewportWidth - routeInset * 2 - gap * 2) / 3;
-      const availableRouteHeight = Math.max(
-        1,
-        viewportHeight - headerHeight - routeInset * 2
-      );
-      const maxVideoWidthByHeight = availableRouteHeight * (16 / 9);
+      const availableRouteHeight = Math.max(1, viewportHeight - headerHeight - routeInset * 2);
+      const maxVideoWidthByHeight = availableRouteHeight * 0.62 * (16 / 9);
       const videoWidth = Math.max(
         1,
-        Math.min(VIDEO_MAX_WIDTH, maxVideoWidthByViewport, maxVideoWidthByHeight)
+        Math.min(VIDEO_MAX_WIDTH, viewportWidth * 0.68, maxVideoWidthByHeight)
       );
       const videoHeight = videoWidth * (9 / 16);
       const rowWidth = videoWidth * 3 + gap * 2;
-      const rowLeft = (viewportWidth - rowWidth) / 2;
       const rowTop = headerHeight + (viewportHeight - headerHeight - videoHeight) / 2;
       const origin = {
         x: viewportWidth / 2,
         y: headerHeight + (viewportHeight - headerHeight) / 2
       };
       const videoOne = {
-        left: rowLeft,
-        right: rowLeft + videoWidth,
+        left: 0,
+        right: videoWidth,
         top: rowTop,
         bottom: rowTop + videoHeight
       };
       const videoTwo = {
-        left: rowLeft + videoWidth + gap,
-        right: rowLeft + videoWidth * 2 + gap,
+        left: videoWidth + gap,
+        right: videoWidth * 2 + gap,
         top: rowTop,
         bottom: rowTop + videoHeight
       };
       const videoThree = {
-        left: rowLeft + videoWidth * 2 + gap * 2,
-        right: rowLeft + videoWidth * 3 + gap * 2,
+        left: videoWidth * 2 + gap * 2,
+        right: rowWidth,
         top: rowTop,
         bottom: rowTop + videoHeight
       };
@@ -245,28 +243,71 @@ export default function About() {
       const bottomY = videoTwo.bottom + traceOffset;
       const firstGapX = videoOne.right + gap / 2;
       const secondGapX = videoTwo.right + gap / 2;
+      const safeLeftX = edgeMargin + smallCdRadius;
+      const safeRightX = viewportWidth - safeLeftX;
+      const firstGapViewportX = viewportWidth * 0.42;
+      const secondGapViewportX = viewportWidth * 0.58;
       const points = [
-        { x: 0, y: 0 },
-        { x: videoOne.left - traceOffset - origin.x, y: videoOne.top + videoHeight / 2 - origin.y },
-        { x: videoOne.left - traceOffset - origin.x, y: topY - origin.y },
-        { x: firstGapX - origin.x, y: topY - origin.y },
-        { x: firstGapX - origin.x, y: bottomY - origin.y },
-        { x: secondGapX - origin.x, y: bottomY - origin.y },
-        { x: secondGapX - origin.x, y: topY - origin.y },
-        { x: videoThree.right + traceOffset - origin.x, y: topY - origin.y },
+        { x: 0, y: 0, trackX: viewportWidth + edgeMargin },
         {
-          x: videoThree.right + traceOffset - origin.x,
-          y: videoThree.top + videoHeight / 2 - origin.y
+          x: safeLeftX - origin.x,
+          y: videoOne.top + videoHeight / 2 - origin.y,
+          trackX: safeLeftX - (videoOne.left - traceOffset)
         },
-        { x: viewportWidth + baseCdDiameter / 2 + edgeMargin - origin.x, y: 0 }
+        {
+          x: safeLeftX - origin.x,
+          y: topY - origin.y,
+          trackX: safeLeftX - (videoOne.left - traceOffset)
+        },
+        {
+          x: firstGapViewportX - origin.x,
+          y: topY - origin.y,
+          trackX: firstGapViewportX - firstGapX
+        },
+        {
+          x: firstGapViewportX - origin.x,
+          y: bottomY - origin.y,
+          trackX: firstGapViewportX - firstGapX
+        },
+        {
+          x: secondGapViewportX - origin.x,
+          y: bottomY - origin.y,
+          trackX: secondGapViewportX - secondGapX
+        },
+        {
+          x: secondGapViewportX - origin.x,
+          y: topY - origin.y,
+          trackX: secondGapViewportX - secondGapX
+        },
+        {
+          x: safeRightX - origin.x,
+          y: topY - origin.y,
+          trackX: safeRightX - (videoThree.right + traceOffset)
+        },
+        {
+          x: safeRightX - origin.x,
+          y: videoThree.top + videoHeight / 2 - origin.y,
+          trackX: safeRightX - (videoThree.right + traceOffset)
+        },
+        {
+          x: viewportWidth + baseCdDiameter / 2 + edgeMargin - origin.x,
+          y: 0,
+          trackX: -rowWidth - edgeMargin
+        }
       ];
       const cumulativeLengths = [0];
 
       for (let index = 1; index < points.length; index += 1) {
         const previous = points[index - 1];
         const current = points[index];
+        const previousLocalX = origin.x + previous.x - previous.trackX;
+        const currentLocalX = origin.x + current.x - current.trackX;
+        const segmentLength =
+          index === 1
+            ? Math.hypot(current.x - previous.x, current.y - previous.y)
+            : Math.hypot(currentLocalX - previousLocalX, current.y - previous.y);
         cumulativeLengths.push(
-          cumulativeLengths[index - 1] + Math.hypot(current.x - previous.x, current.y - previous.y)
+          cumulativeLengths[index - 1] + segmentLength
         );
       }
 
@@ -278,11 +319,12 @@ export default function About() {
       };
 
       gsap.set(videoStage, {
-        left: rowLeft,
+        left: 0,
         top: rowTop,
         width: rowWidth,
         height: videoHeight,
-        columnGap: gap
+        columnGap: gap,
+        x: points[0].trackX
       });
       gsap.set(cd, { left: origin.x, top: origin.y });
 
