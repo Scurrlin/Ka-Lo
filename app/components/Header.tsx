@@ -459,10 +459,10 @@ export default function Header() {
 
       <div
         aria-hidden="true"
-        className={`fixed inset-0 z-40 bg-black/70 transition-[opacity,visibility,backdrop-filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed inset-0 z-40 bg-black/70 transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isNavigating
-            ? "visible pointer-events-auto opacity-100 backdrop-blur-xl"
-            : "invisible pointer-events-none opacity-0 backdrop-blur-none"
+            ? "visible pointer-events-auto opacity-100 backdrop-blur-xl duration-500"
+            : "invisible pointer-events-none opacity-0 backdrop-blur-none duration-250"
         }`}
       />
     </>
