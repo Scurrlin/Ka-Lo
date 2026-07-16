@@ -53,14 +53,14 @@ export const SOCIAL_LINKS = [
     label: "Spotify",
     href: "https://open.spotify.com/artist/2H4CCRqWu55CNW312itg0r",
     compactIcon: { src: "/logos/Spotify1.svg", width: 227, height: 227 },
-    wordmarkIcon: { src: "/logos/Spotify2.svg", width: 726, height: 251 }
+    wordmarkIcon: { src: "/logos/Spotify2.png", width: 2048, height: 561 }
   },
   {
     id: "youtube",
     label: "YouTube",
     href: "https://www.youtube.com/@Ka-LoHan%C3%A9",
     compactIcon: { src: "/logos/YouTube1.svg", width: 235, height: 165 },
-    wordmarkIcon: { src: "/logos/YouTube2White.svg", width: 508, height: 113 }
+    wordmarkIcon: { src: "/logos/YouTube2.svg", width: 508, height: 113 }
   },
   {
     id: "instagram",
