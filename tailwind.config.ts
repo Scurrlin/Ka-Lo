@@ -8,8 +8,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ["var(--font-display)", "Inter", "ui-sans-serif", "system-ui"],
-        sans: ["var(--font-sans)", "Inter", "ui-sans-serif", "system-ui"]
+        display: ["var(--font-display)", "ui-sans-serif", "system-ui"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"]
       },
       screens: {
         xs: "420px",

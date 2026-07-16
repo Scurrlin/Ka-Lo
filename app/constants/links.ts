@@ -53,7 +53,7 @@ export const SOCIAL_LINKS = [
     label: "Spotify",
     href: "https://open.spotify.com/artist/2H4CCRqWu55CNW312itg0r",
     compactIcon: { src: "/logos/Spotify1.svg", width: 227, height: 227 },
-    wordmarkIcon: { src: "/logos/Spotify2.png", width: 2048, height: 561 }
+    wordmarkIcon: { src: "/logos/Spotify2.svg", width: 726, height: 251 }
   },
   {
     id: "youtube",
