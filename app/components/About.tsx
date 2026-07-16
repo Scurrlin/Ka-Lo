@@ -229,7 +229,7 @@ export default function About() {
     <section ref={sectionRef} id="about" className="relative h-screen overflow-hidden bg-black text-white">
       <Image
         ref={cdRef}
-        src="/assets/Silver-Cracks.png"
+        src="/assets/silver-cracks.png"
         alt="Silver Cracks CD"
         width={1024}
         height={1024}

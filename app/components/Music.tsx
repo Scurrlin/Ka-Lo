@@ -33,7 +33,7 @@ const ALBUMS: Album[] = [
   {
     id: "silver-cracks",
     name: "Silver Cracks",
-    image: "/assets/Silver-Cracks.png",
+    image: "/assets/silver-cracks.png",
     href: MUSIC_PROJECT_LINKS["silver-cracks"]
   },
   {
