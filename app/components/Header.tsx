@@ -125,10 +125,6 @@ export default function Header() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // Tracks whether the menu has ever been opened, so the hamburger icon's
-  // closing keyframe animation only plays after an actual open -> close
-  // transition, never on first page load (which also starts "closed").
-  const [hasOpenedMenuOnce, setHasOpenedMenuOnce] = useState(false);
 
   useEffect(() => {
     const desktopMedia = window.matchMedia(DESKTOP_MEDIA_QUERY);
@@ -258,13 +254,7 @@ export default function Header() {
               aria-controls={MOBILE_MENU_ID}
               aria-expanded={isMenuOpen}
               data-menu-open={isMenuOpen}
-              data-menu-opened-before={hasOpenedMenuOnce}
-              onClick={() => {
-                if (!isMenuOpen) {
-                  setHasOpenedMenuOnce(true);
-                }
-                setIsMenuOpen((isOpen) => !isOpen);
-              }}
+              onClick={() => setIsMenuOpen((isOpen) => !isOpen)}
             >
               <span className="sr-only">{isMenuOpen ? "Close menu" : "Open menu"}</span>
               <span
@@ -273,7 +263,11 @@ export default function Header() {
               />
               <span
                 aria-hidden="true"
-                className="mobile-menu-line mobile-menu-line-middle pointer-events-none absolute left-1/2 h-0.5 w-6 rounded-full bg-current"
+                className="mobile-menu-line mobile-menu-line-cross-a pointer-events-none absolute left-1/2 h-0.5 w-6 rounded-full bg-current"
+              />
+              <span
+                aria-hidden="true"
+                className="mobile-menu-line mobile-menu-line-cross-b pointer-events-none absolute left-1/2 h-0.5 w-6 rounded-full bg-current"
               />
               <span
                 aria-hidden="true"
