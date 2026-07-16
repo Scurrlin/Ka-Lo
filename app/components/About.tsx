@@ -14,8 +14,8 @@ const VIDEO_SOURCES = [
 ] as const;
 
 const CD_CLEARANCE = 6;
-const CD_MIN_DIAMETER = 28;
-const CD_MAX_DIAMETER = 64;
+const CD_MIN_DIAMETER = 36;
+const CD_MAX_DIAMETER = 78;
 const VIDEO_MAX_WIDTH = 560;
 const SHRINK_DURATION = 1.25;
 const ROUTE_DURATION = 8;
@@ -198,16 +198,16 @@ export default function About() {
       const headerHeight = header?.offsetHeight ?? (viewportWidth >= 768 ? 80 : 64);
       const baseCdDiameter = cd.offsetWidth;
       const smallCdDiameter = clamp(
-        Math.min(viewportWidth, viewportHeight) * 0.05,
+        Math.min(viewportWidth, viewportHeight) * 0.0625,
         CD_MIN_DIAMETER,
         CD_MAX_DIAMETER
       );
       const smallCdRadius = smallCdDiameter / 2;
       const edgeMargin = clamp(viewportWidth * 0.02, 8, 24);
       const gap = clamp(
-        viewportWidth * 0.14,
-        smallCdDiameter + CD_CLEARANCE * 2 + 16,
-        180
+        viewportWidth * 0.16,
+        smallCdDiameter + CD_CLEARANCE * 2 + 36,
+        220
       );
       const routeInset = edgeMargin + smallCdRadius + CD_CLEARANCE;
       const availableRouteHeight = Math.max(1, viewportHeight - headerHeight - routeInset * 2);
@@ -329,9 +329,10 @@ export default function About() {
         top: rowTop,
         width: rowWidth,
         height: videoHeight,
-        columnGap: gap,
         x: points[0].trackX
       });
+      videoStage.style.setProperty("--about-video-width", `${videoWidth}px`);
+      videoStage.style.setProperty("--about-video-gap", `${gap}px`);
       gsap.set(cd, { left: origin.x, top: origin.y });
 
       const routeStart = timeline?.labels.routeStart ?? Number.POSITIVE_INFINITY;
@@ -487,7 +488,7 @@ export default function About() {
     <section ref={sectionRef} id="about" className="relative h-screen overflow-hidden bg-black text-white">
       <div
         ref={videoStageRef}
-        className="pointer-events-none absolute z-10 grid grid-cols-3"
+        className="about-video-stage pointer-events-none absolute z-10"
         aria-hidden="true"
       >
         {VIDEO_SOURCES.map((src, index) => (

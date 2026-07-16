@@ -278,7 +278,14 @@ img {
   will-change: transform, opacity;
 }
 
+.about-video-stage {
+  display: flex;
+  gap: var(--about-video-gap, 96px);
+}
+
 .about-video-frame {
+  flex: 0 0 var(--about-video-width, 320px);
+  width: var(--about-video-width, 320px);
   background: var(--ink);
   box-shadow:
     0 22px 60px rgba(0, 0, 0, 0.72),
