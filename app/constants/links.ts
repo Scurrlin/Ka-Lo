@@ -46,7 +46,7 @@ export const SOCIAL_LINKS = [
     label: "Apple Music",
     href: "https://music.apple.com/mz/artist/ka-lo-han%C3%A9/1834501310",
     compactIcon: { src: "/logos/Apple1.svg", width: 361, height: 361 },
-    wordmarkIcon: { src: "/logos/Apple2.png", width: 83, height: 20 }
+    wordmarkIcon: { src: "/logos/Apple2.webp", width: 500, height: 123 }
   },
   {
     id: "spotify",

@@ -10,6 +10,7 @@ const COLUMN_STAGGER = 0.56;
 const WAVE_BAR_COUNT = 48;
 const SMALL_CURSOR_INFLUENCE_RADIUS = 50;
 const MEDIUM_CURSOR_INFLUENCE_RADIUS = 100;
+const TAILWIND_SMALL_QUERY = "(min-width: 640px)";
 const TAILWIND_MEDIUM_QUERY = "(min-width: 768px)";
 const GRADIENT_CYCLE_DURATION = 24;
 const GRADIENT_COLORS = [
@@ -88,6 +89,7 @@ export default function Hero() {
     const waveBars = waveBarRefs.current.filter(Boolean);
     const gradientBars = gradientBarRefs.current.filter(Boolean);
     const whiteBars = whiteBarRefs.current.filter(Boolean);
+    const interactiveMedia = window.matchMedia(TAILWIND_SMALL_QUERY);
     const revealGradientTo = gradientBars.map((bar) =>
       gsap.quickTo(bar, "opacity", {
         duration: 0.22,
@@ -130,6 +132,10 @@ export default function Hero() {
       };
 
       const updateWaveFromPointer = (event: PointerEvent) => {
+        if (!interactiveMedia.matches) {
+          return;
+        }
+
         const waveBounds = wave.getBoundingClientRect();
         const influenceRadius = window.matchMedia(TAILWIND_MEDIUM_QUERY).matches
           ? MEDIUM_CURSOR_INFLUENCE_RADIUS
@@ -160,7 +166,7 @@ export default function Hero() {
       };
 
       const handleWavePointerDown = (event: PointerEvent) => {
-        if (event.pointerType === "mouse") {
+        if (!interactiveMedia.matches || event.pointerType === "mouse") {
           return;
         }
 
@@ -169,7 +175,11 @@ export default function Hero() {
       };
 
       const handleWavePointerMove = (event: PointerEvent) => {
-        if (event.pointerType !== "mouse" && wave.hasPointerCapture(event.pointerId)) {
+        if (
+          interactiveMedia.matches &&
+          event.pointerType !== "mouse" &&
+          wave.hasPointerCapture(event.pointerId)
+        ) {
           updateWaveFromPointer(event);
         }
       };
@@ -193,6 +203,7 @@ export default function Hero() {
       wave.addEventListener("pointermove", handleWavePointerMove);
       wave.addEventListener("pointerup", handleWavePointerEnd);
       wave.addEventListener("pointercancel", handleWavePointerEnd);
+      interactiveMedia.addEventListener("change", resetWave);
       window.addEventListener("blur", resetWave);
 
     return () => {
@@ -203,6 +214,7 @@ export default function Hero() {
       wave.removeEventListener("pointermove", handleWavePointerMove);
       wave.removeEventListener("pointerup", handleWavePointerEnd);
       wave.removeEventListener("pointercancel", handleWavePointerEnd);
+      interactiveMedia.removeEventListener("change", resetWave);
       window.removeEventListener("blur", resetWave);
       gradientTween.kill();
       gsap.killTweensOf([...gradientBars, ...whiteBars]);

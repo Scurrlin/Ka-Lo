@@ -125,7 +125,7 @@ export default function Next() {
         </div>
         <div ref={imageRef} className="flex justify-center md:justify-end">
           <Image
-            src="/assets/solus-album-cover.png"
+            src="/assets/My-Solus.png"
             alt="My Solus album cover"
             width={1024}
             height={1024}

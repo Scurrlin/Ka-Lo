@@ -182,12 +182,19 @@ img {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  touch-action: pan-y;
-  user-select: none;
+  pointer-events: none;
   opacity: 0;
   transform: translate3d(0, 5.75rem, 0) scale(0.96);
+  user-select: none;
   animation: hero-wave-rise 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: calc(var(--hero-reveal-duration, 4s) + 0.2s);
+}
+
+@media (min-width: 640px) {
+  .hero-sound-wave {
+    pointer-events: auto;
+    touch-action: pan-y;
+  }
 }
 
 .hero-sound-wave * {

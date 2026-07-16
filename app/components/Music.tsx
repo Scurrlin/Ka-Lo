@@ -33,19 +33,19 @@ const ALBUMS: Album[] = [
   {
     id: "silver-cracks",
     name: "Silver Cracks",
-    image: "/assets/silver-cracks.png",
+    image: "/assets/Silver-Cracks.png",
     href: MUSIC_PROJECT_LINKS["silver-cracks"]
   },
   {
     id: "deep-end",
     name: "Deep End",
-    image: "/assets/Deep End - Single.png",
+    image: "/assets/Deep-End.png",
     href: MUSIC_PROJECT_LINKS["deep-end"]
   },
   {
     id: "kings-road",
     name: "King's Road",
-    image: "/assets/Kings Road - Single.png",
+    image: "/assets/Kings-Road.png",
     href: MUSIC_PROJECT_LINKS["kings-road"]
   }
 ];
@@ -105,7 +105,7 @@ function AlbumCard({ album }: { album: Album }) {
 
   return (
     <div className="album-card w-full text-center">
-      <h3 className="mb-3 font-display text-lg uppercase leading-none tracking-wide text-white sm:text-xl md:text-2xl">
+      <h3 className="mb-3 font-display text-2xl uppercase leading-none tracking-wide text-white sm:text-[26px] md:text-[28px]">
         {album.href ? (
           <a
             href={album.href}
@@ -157,6 +157,8 @@ export default function Music() {
       return;
     }
 
+    let updateNavTarget = () => {};
+
     const ctx = gsap.context(() => {
       const introTitle = introTitleRef.current;
       const introTitleChars = introTitleCharsRef.current.filter(Boolean);
@@ -182,7 +184,27 @@ export default function Music() {
 
       introTl
         .to(introTitleChars, { autoAlpha: 1, y: 0, duration: 0.5, stagger: { each: 0.03 } }, 0)
+        .addLabel("titleRevealed")
         .to({}, { duration: 0.25 });
+
+      updateNavTarget = () => {
+        const scrollTrigger = introTl.scrollTrigger;
+        const titleRevealedAt = introTl.labels.titleRevealed;
+
+        if (!scrollTrigger || titleRevealedAt === undefined || introTl.duration() === 0) {
+          return;
+        }
+
+        const targetScroll =
+          scrollTrigger.start +
+          (titleRevealedAt / introTl.duration()) * (scrollTrigger.end - scrollTrigger.start);
+
+        section.dataset.navScrollY = Math.round(targetScroll).toString();
+        section.dataset.navSettleMs = "150";
+      };
+
+      ScrollTrigger.addEventListener("refresh", updateNavTarget);
+      updateNavTarget();
 
       // Albums: a single shared trigger for the whole grid with a simple staggered
       // fade/rise as it scrolls into view. No pin, scrub, or per-cover slide/spin.
@@ -206,6 +228,9 @@ export default function Music() {
 
     return () => {
       window.removeEventListener("load", handleLoad);
+      ScrollTrigger.removeEventListener("refresh", updateNavTarget);
+      delete section.dataset.navScrollY;
+      delete section.dataset.navSettleMs;
       ctx.revert();
     };
   }, []);

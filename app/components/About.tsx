@@ -5,7 +5,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-const TITLE = "It's Crazy Right?";
+const TITLE = "Who is Ka-Lo?";
 const NEXT_TITLE = "What's Next?";
 
 const lines = [
@@ -68,6 +68,8 @@ export default function About() {
       return;
     }
 
+    let updateNavTargets = () => {};
+
     const ctx = gsap.context(() => {
       const chars = charRefs.current.filter(Boolean);
       const lineEls = lineRefs.current.filter(Boolean);
@@ -126,6 +128,7 @@ export default function About() {
 
       // "Who is Ka-Lo?" reveals character by character.
       tl.to(chars, { autoAlpha: 1, y: 0, duration: 0.6, stagger: { each: 0.03 } }, 0)
+        .addLabel("aboutTitleRevealed")
         .to({}, { duration: 0.05 })
         // The CD slides up from below the viewport into a centered resting position.
         .to(cd, { y: 0, duration: 0.7, ease: "power2.out" })
@@ -179,7 +182,32 @@ export default function About() {
         // (no exit animation): the pin releases right after, and from here on it's a
         // normal heading that scrolls away with the rest of the page like anything else.
         .to(nextChars, { autoAlpha: 1, y: 0, duration: 0.4, stagger: { each: 0.018 } }, "cdGone")
+        .addLabel("nextTitleRevealed")
         .to({}, { duration: 0.15 });
+
+      updateNavTargets = () => {
+        const scrollTrigger = tl.scrollTrigger;
+        const duration = tl.duration();
+        const nextSection = document.getElementById("next");
+
+        if (!scrollTrigger || duration === 0) {
+          return;
+        }
+
+        const scrollAtLabel = (label: "aboutTitleRevealed" | "nextTitleRevealed") =>
+          scrollTrigger.start + (tl.labels[label] / duration) * (scrollTrigger.end - scrollTrigger.start);
+
+        section.dataset.navScrollY = Math.round(scrollAtLabel("aboutTitleRevealed")).toString();
+        section.dataset.navSettleMs = "1100";
+
+        if (nextSection) {
+          nextSection.dataset.navScrollY = Math.round(scrollAtLabel("nextTitleRevealed")).toString();
+          nextSection.dataset.navSettleMs = "1100";
+        }
+      };
+
+      ScrollTrigger.addEventListener("refresh", updateNavTargets);
+      updateNavTargets();
     }, section);
 
     const handleLoad = () => ScrollTrigger.refresh();
@@ -187,6 +215,12 @@ export default function About() {
 
     return () => {
       window.removeEventListener("load", handleLoad);
+      ScrollTrigger.removeEventListener("refresh", updateNavTargets);
+      delete section.dataset.navScrollY;
+      delete section.dataset.navSettleMs;
+      const nextSection = document.getElementById("next");
+      delete nextSection?.dataset.navScrollY;
+      delete nextSection?.dataset.navSettleMs;
       ctx.revert();
     };
   }, []);
@@ -195,7 +229,7 @@ export default function About() {
     <section ref={sectionRef} id="about" className="relative h-screen overflow-hidden bg-black text-white">
       <Image
         ref={cdRef}
-        src="/assets/silver-cracks.png"
+        src="/assets/Silver-Cracks.png"
         alt="Silver Cracks CD"
         width={1024}
         height={1024}

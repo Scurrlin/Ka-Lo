@@ -24,6 +24,7 @@ const MOBILE_MENU_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
 // link finishes fading out, rather than using an unrelated fixed duration.
 const MOBILE_MENU_CLOSE_BACKDROP_DURATION =
   (MOBILE_MENU_ITEM_COUNT - 1) * MOBILE_MENU_ITEM_STAGGER + MOBILE_MENU_ITEM_REVEAL_DURATION;
+const NAV_SCROLL_MAX_FRAMES = 360;
 
 type SocialLinkProps = {
   social: SocialLink;
@@ -35,18 +36,23 @@ type SocialLinkProps = {
   hiddenFromAssistiveTechnology?: boolean;
 };
 
-function scrollToPageSection(id: SectionId | "top", header: HTMLElement | null) {
+function getPageSectionScrollTarget(id: SectionId | "top", header: HTMLElement | null) {
   const target = document.getElementById(id);
   const headerHeight = header?.offsetHeight ?? 0;
 
   if (!target) {
-    return;
+    return null;
   }
 
-  const top = target.getBoundingClientRect().top + window.scrollY - headerHeight;
+  const animatedTarget = Number(target.dataset.navScrollY);
+  const top = Number.isFinite(animatedTarget)
+    ? animatedTarget
+    : target.getBoundingClientRect().top + window.scrollY - headerHeight;
 
-  window.history.pushState(null, "", `#${id}`);
-  window.scrollTo({ top, behavior: "smooth" });
+  return {
+    top: Math.max(0, top),
+    settleMs: Number(target.dataset.navSettleMs) || 0
+  };
 }
 
 function getMobileMenuItemStyle(index: number, isMenuOpen: boolean): React.CSSProperties {
@@ -124,7 +130,9 @@ export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
+  const navigationRunRef = useRef(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     const desktopMedia = window.matchMedia(DESKTOP_MEDIA_QUERY);
@@ -138,23 +146,71 @@ export default function Header() {
     return () => desktopMedia.removeEventListener("change", closeMobileMenu);
   }, []);
 
+  const navigateToSection = (id: SectionId | "top") => {
+    const header = headerRef.current;
+    const target = getPageSectionScrollTarget(id, header);
+
+    if (!target) {
+      return;
+    }
+
+    const run = ++navigationRunRef.current;
+    let stableFrames = 0;
+    let watchedFrames = 0;
+
+    setIsNavigating(true);
+    window.history.pushState(null, "", `#${id}`);
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: target.top, behavior: "smooth" });
+
+        const watchScroll = () => {
+          if (navigationRunRef.current !== run) {
+            return;
+          }
+
+          watchedFrames += 1;
+          const isAtTarget = Math.abs(window.scrollY - target.top) <= 2;
+          stableFrames = isAtTarget ? stableFrames + 1 : 0;
+          const timedOut = watchedFrames >= NAV_SCROLL_MAX_FRAMES;
+
+          if (stableFrames >= 3 || timedOut) {
+            window.setTimeout(() => {
+              if (navigationRunRef.current === run) {
+                setIsNavigating(false);
+              }
+            }, target.settleMs);
+            return;
+          }
+
+          window.requestAnimationFrame(watchScroll);
+        };
+
+        window.requestAnimationFrame(watchScroll);
+      });
+    });
+  };
+
   const handleNavClick = (
     event: React.MouseEvent<HTMLAnchorElement>,
     id: SectionId | "top"
   ) => {
     event.preventDefault();
-    const header = headerRef.current;
 
     if (isMenuOpen) {
       setIsMenuOpen(false);
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => scrollToPageSection(id, header));
-      });
-      return;
     }
 
-    scrollToPageSection(id, header);
+    navigateToSection(id);
   };
+
+  useEffect(
+    () => () => {
+      navigationRunRef.current += 1;
+    },
+    []
+  );
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -391,7 +447,9 @@ export default function Header() {
                 interaction="none"
                 dimWhenUnavailable={false}
                 imageClassName={
-                  social.id === "spotify" || social.id === "instagram"
+                  social.id === "apple-music"
+                    ? "h-7 w-auto max-w-[9rem] object-contain brightness-0 invert"
+                    : social.id === "spotify" || social.id === "instagram"
                     ? "h-7 w-auto max-w-[9rem] object-contain"
                     : "h-6 w-auto max-w-[8rem] object-contain"
                 }
@@ -400,6 +458,15 @@ export default function Header() {
           ))}
         </nav>
       </div>
+
+      <div
+        aria-hidden="true"
+        className={`fixed inset-0 z-40 bg-black/70 transition-[opacity,visibility,backdrop-filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isNavigating
+            ? "visible pointer-events-auto opacity-100 backdrop-blur-xl"
+            : "invisible pointer-events-none opacity-0 backdrop-blur-none"
+        }`}
+      />
     </>
   );
 }
