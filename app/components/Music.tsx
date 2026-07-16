@@ -32,7 +32,7 @@ const ALBUMS: Album[] = [
   },
   {
     id: "silver-cracks",
-    name: "Silver Cr\u039Bcks",
+    name: "Silver Cracks",
     image: "/assets/silver-cracks.png",
     href: MUSIC_PROJECT_LINKS["silver-cracks"]
   },
@@ -44,8 +44,8 @@ const ALBUMS: Album[] = [
   },
   {
     id: "kings-road",
-    name: "King's Ro\u039Bd",
-    image: "/assets/King\u2019s Road - Single.png",
+    name: "King's Road",
+    image: "/assets/Kings Road - Single.png",
     href: MUSIC_PROJECT_LINKS["kings-road"]
   }
 ];
