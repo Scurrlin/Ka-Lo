@@ -24,7 +24,6 @@ const MOBILE_MENU_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
 // link finishes fading out, rather than using an unrelated fixed duration.
 const MOBILE_MENU_CLOSE_BACKDROP_DURATION =
   (MOBILE_MENU_ITEM_COUNT - 1) * MOBILE_MENU_ITEM_STAGGER + MOBILE_MENU_ITEM_REVEAL_DURATION;
-const NAV_SCROLL_MAX_FRAMES = 360;
 
 type SocialLinkProps = {
   social: SocialLink;
@@ -49,8 +48,10 @@ function getPageSectionScrollTarget(id: SectionId | "top", header: HTMLElement |
     ? animatedTarget
     : target.getBoundingClientRect().top + window.scrollY - headerHeight;
 
+  const maxScrollTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+
   return {
-    top: Math.max(0, top),
+    top: Math.min(Math.max(0, top), maxScrollTop),
     settleMs: Number(target.dataset.navSettleMs) || 0
   };
 }
@@ -156,7 +157,6 @@ export default function Header() {
 
     const run = ++navigationRunRef.current;
     let stableFrames = 0;
-    let watchedFrames = 0;
 
     setIsNavigating(true);
     window.history.pushState(null, "", `#${id}`);
@@ -170,12 +170,10 @@ export default function Header() {
             return;
           }
 
-          watchedFrames += 1;
           const isAtTarget = Math.abs(window.scrollY - target.top) <= 2;
           stableFrames = isAtTarget ? stableFrames + 1 : 0;
-          const timedOut = watchedFrames >= NAV_SCROLL_MAX_FRAMES;
 
-          if (stableFrames >= 3 || timedOut) {
+          if (stableFrames >= 3) {
             window.setTimeout(() => {
               if (navigationRunRef.current === run) {
                 setIsNavigating(false);
