@@ -5,15 +5,15 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-const TITLE = "Who is Ka-Lo?";
-const TEAM_TITLE = "Meet The Team";
+const TITLE = "It's Crazy Right?";
+const NEXT_TITLE = "What's Next?";
 
 const lines = [
-  { text: "A conscious hip-hop artist and producer", position: "above" as const },
-  { text: "With a killer pen and surgical flows", position: "below" as const },
-  { text: "He's fed up with mediocre rappers", position: "above" as const },
-  { text: "And thankfully...", position: "below" as const },
-  { text: "He's not alone", position: "above" as const }
+  { text: "People see a new website", position: "above" as const },
+  { text: "And all of a sudden...", position: "below" as const },
+  { text: "Everyone's a web developer lmao", position: "above" as const },
+  { text: "It's not even done yet!", position: "below" as const },
+  { text: "Lol jk jk 😂 Love you!", position: "above" as const }
 ];
 
 type AnimatedWordsProps = {
@@ -53,8 +53,8 @@ export default function About() {
   const cdRef = useRef<HTMLImageElement>(null);
   const charRefs = useRef<HTMLSpanElement[]>([]);
   const lineRefs = useRef<HTMLDivElement[]>([]);
-  const teamTitleRef = useRef<HTMLHeadingElement>(null);
-  const teamCharRefs = useRef<HTMLSpanElement[]>([]);
+  const nextTitleRef = useRef<HTMLHeadingElement>(null);
+  const nextCharRefs = useRef<HTMLSpanElement[]>([]);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -62,16 +62,16 @@ export default function About() {
     const section = sectionRef.current;
     const title = titleRef.current;
     const cd = cdRef.current;
-    const teamTitle = teamTitleRef.current;
+    const nextTitle = nextTitleRef.current;
 
-    if (!section || !title || !cd || !teamTitle) {
+    if (!section || !title || !cd || !nextTitle) {
       return;
     }
 
     const ctx = gsap.context(() => {
       const chars = charRefs.current.filter(Boolean);
       const lineEls = lineRefs.current.filter(Boolean);
-      const teamChars = teamCharRefs.current.filter(Boolean);
+      const nextChars = nextCharRefs.current.filter(Boolean);
 
       gsap.set(chars, { autoAlpha: 0, y: 26 });
       gsap.set(title, { autoAlpha: 1, y: 0 });
@@ -84,8 +84,8 @@ export default function About() {
       // offset, rather than mixing in a Tailwind `-translate-x-1/2` class that GSAP's inline
       // transform would otherwise silently override.
       gsap.set(lineEls, { autoAlpha: 0, xPercent: 80 });
-      gsap.set(teamChars, { autoAlpha: 0, y: 26 });
-      gsap.set(teamTitle, { y: 0 });
+      gsap.set(nextChars, { autoAlpha: 0, y: 26 });
+      gsap.set(nextTitle, { y: 0 });
 
       const tl = gsap.timeline({
         defaults: { ease: "none" },
@@ -93,7 +93,7 @@ export default function About() {
           trigger: section,
           start: "top top",
           // The extra flat 130px on top of the CD-story's own viewport-scaled distance is
-          // the fixed budget for the "Meet The Team" reveal below - it lives entirely
+          // the fixed budget for the "What's Next?" reveal below - it lives entirely
           // inside this same pin, right after the CD clears the screen, rather than
           // needing a second pinned section of its own.
           end: () => "+=" + (window.innerHeight * 5.2 + 130),
@@ -174,11 +174,11 @@ export default function About() {
           `linesDone+=${CD_EXIT_GAP}`
         )
         .addLabel("cdGone")
-        // "Meet The Team" reveals the instant the CD is fully off-screen, in this same
+        // "What's Next?" reveals the instant the CD is fully off-screen, in this same
         // pinned space - no separate section, no gap. Once revealed it just stays put
         // (no exit animation): the pin releases right after, and from here on it's a
         // normal heading that scrolls away with the rest of the page like anything else.
-        .to(teamChars, { autoAlpha: 1, y: 0, duration: 0.4, stagger: { each: 0.018 } }, "cdGone")
+        .to(nextChars, { autoAlpha: 1, y: 0, duration: 0.4, stagger: { each: 0.018 } }, "cdGone")
         .to({}, { duration: 0.15 });
     }, section);
 
@@ -240,14 +240,14 @@ export default function About() {
       {/* Centers within the space below the fixed header, not the full viewport. */}
       <div className="pointer-events-none absolute inset-x-0 top-16 bottom-0 z-20 flex items-center justify-center px-2 sm:px-5 md:top-20">
         <h2
-          ref={teamTitleRef}
+          ref={nextTitleRef}
           className="font-display text-center text-6xl leading-none text-white sm:text-8xl md:text-9xl lg:text-8xl"
         >
           <AnimatedWords
-            text={TEAM_TITLE}
+            text={NEXT_TITLE}
             registerCharacter={(node, index) => {
               if (node) {
-                teamCharRefs.current[index] = node;
+                nextCharRefs.current[index] = node;
               }
             }}
           />
