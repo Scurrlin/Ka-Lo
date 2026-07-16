@@ -446,8 +446,10 @@ export default function Header() {
                 dimWhenUnavailable={false}
                 imageClassName={
                   social.id === "apple-music"
-                    ? "h-7 w-auto max-w-[9rem] object-contain brightness-0 invert"
-                    : social.id === "spotify" || social.id === "instagram"
+                    ? "h-6 w-auto max-w-[8rem] object-contain brightness-0 invert"
+                    : social.id === "spotify"
+                    ? "h-8 w-auto max-w-[10rem] object-contain"
+                    : social.id === "instagram"
                     ? "h-7 w-auto max-w-[9rem] object-contain"
                     : "h-6 w-auto max-w-[8rem] object-contain"
                 }
