@@ -19,15 +19,17 @@ const VIDEO_CAPTIONS = [
 ] as const;
 const FINAL_MESSAGE = "Lol jk jk 😂 Love you!";
 
+const CD_CLEARANCE = 18;
+const CD_VERTICAL_CLEARANCE = 36;
 const CD_MIN_DIAMETER = 88;
 const CD_MAX_DIAMETER = 192;
 const VIDEO_MAX_WIDTH = 680;
-const VIDEO_GAP_RATIO = 0.08;
-const VIDEO_GAP_MIN = 36;
-const VIDEO_GAP_MAX = 88;
+const VIDEO_GAP_RATIO = 0.18;
+const VIDEO_GAP_MIN = 56;
+const VIDEO_GAP_MAX = 160;
 const RUNNING_SLOT_WIDTH_RATIO = 0.5;
 const RUNNING_VIDEO_SCALE = 1.9;
-const ROUTE_SAMPLES_PER_SEGMENT = 18;
+const MIDDLE_ARC_SAMPLES = 18;
 const SHRINK_DURATION = 1.25;
 const ROUTE_DURATION = 8;
 const GROW_DURATION = 1.35;
@@ -51,11 +53,9 @@ type LocalPoint = {
 type RouteGeometry = {
   points: Point[];
   cumulativeLengths: number[];
-  videoFocusDistances: number[];
-  videoRevealWindow: number;
+  videoRevealRanges: ReadonlyArray<{ start: number; end: number }>;
   captionRevealDistances: number[];
   captionRevealWindow: number;
-  captionFadeWindow: number;
   totalLength: number;
   smallScale: number;
 };
@@ -96,44 +96,6 @@ function getCubicBezierPoint(
       3 * inverse * progressSquared * controlTwo.y +
       progressSquared * progress * end.y
   };
-}
-
-function sampleSmoothRoute(waypoints: LocalPoint[]) {
-  const samples: LocalPoint[] = [];
-  const controlStrength = 0.75 / 6;
-
-  for (let index = 0; index < waypoints.length - 1; index += 1) {
-    const previous = waypoints[Math.max(0, index - 1)];
-    const start = waypoints[index];
-    const end = waypoints[index + 1];
-    const next = waypoints[Math.min(waypoints.length - 1, index + 2)];
-    const controlOne = {
-      x: start.x + (end.x - previous.x) * controlStrength,
-      y: start.y + (end.y - previous.y) * controlStrength
-    };
-    const controlTwo = {
-      x: end.x - (next.x - start.x) * controlStrength,
-      y: end.y - (next.y - start.y) * controlStrength
-    };
-
-    for (let step = 0; step <= ROUTE_SAMPLES_PER_SEGMENT; step += 1) {
-      if (index > 0 && step === 0) {
-        continue;
-      }
-
-      samples.push(
-        getCubicBezierPoint(
-          start,
-          controlOne,
-          controlTwo,
-          end,
-          step / ROUTE_SAMPLES_PER_SEGMENT
-        )
-      );
-    }
-  }
-
-  return samples;
 }
 
 function smoothstep(value: number) {
@@ -342,15 +304,14 @@ export default function About() {
       gsap.set(videoStage, { x: point.trackX });
 
       videoFrames.forEach((frame, index) => {
-        const focusDistance = geometry.videoFocusDistances[index];
-        const revealStart = index === 0 ? 0 : focusDistance - geometry.videoRevealWindow;
-        const revealEnd =
-          index === 0
-            ? Math.max(1, focusDistance * 0.75)
-            : focusDistance - geometry.videoRevealWindow * 0.2;
+        const revealRange = geometry.videoRevealRanges[index];
 
         gsap.set(frame, {
-          autoAlpha: getElementOpacity(point.distance, revealStart, revealEnd)
+          autoAlpha: getElementOpacity(
+            point.distance,
+            revealRange.start,
+            revealRange.end
+          )
         });
       });
       videoCaptionChars.forEach((characters, captionIndex) => {
@@ -361,21 +322,13 @@ export default function About() {
           1
         );
         const staggerSpan = characters.length + 5;
-        const nextRevealDistance = geometry.captionRevealDistances[captionIndex + 1];
-        const fadeProgress = Number.isFinite(nextRevealDistance)
-          ? smoothstep(
-              (point.distance - (nextRevealDistance - geometry.captionFadeWindow)) /
-                geometry.captionFadeWindow
-            )
-          : 0;
-        const captionOpacity = 1 - fadeProgress;
 
         characters.forEach((character, characterIndex) => {
           const characterProgress = smoothstep(
             clamp(revealProgress * staggerSpan - characterIndex, 0, 1)
           );
           gsap.set(character, {
-            autoAlpha: characterProgress * captionOpacity,
+            autoAlpha: characterProgress,
             y: (1 - characterProgress) * 20
           });
         });
@@ -395,8 +348,11 @@ export default function About() {
       );
       const smallCdRadius = smallCdDiameter / 2;
       const edgeMargin = clamp(viewportWidth * 0.02, 8, 24);
+      const verticalClearance =
+        viewportHeight <= 700 ? 16 : CD_VERTICAL_CLEARANCE;
       const routeClearance =
-        smallCdRadius + clamp(viewportWidth * 0.018, 20, 28);
+        smallCdRadius +
+        Math.max(verticalClearance, clamp(viewportWidth * 0.018, 20, 28));
       const availableRouteHeight = Math.max(
         1,
         viewportHeight -
@@ -440,58 +396,103 @@ export default function About() {
         top: rowTop,
         bottom: rowTop + videoHeight
       };
+      const horizontalTraceOffset = smallCdRadius + CD_CLEARANCE;
+      const verticalTraceOffset = smallCdRadius + verticalClearance;
+      const topY = videoOne.top - verticalTraceOffset;
+      const bottomY = videoTwo.bottom + verticalTraceOffset;
+      const firstGapX = videoOne.right + gap / 2;
+      const secondGapX = videoTwo.right + gap / 2;
       const centerX = origin.x;
+      const centerBand = clamp(viewportWidth * 0.08, 20, 64);
       const videoOneCenteredTrackX = centerX - videoWidth / 2;
-      const videoThreeCenteredTrackX = centerX - (videoThree.left + videoWidth / 2);
-      const runningCenterX = videoTwo.left + runningSlotWidth / 2;
-      const routeWaypoints: LocalPoint[] = [
-        {
-          x: videoOne.right - routeClearance * 0.15,
-          y: -routeClearance
-        },
-        {
-          x: videoOne.right + routeClearance,
-          y: videoHeight * 0.48
-        },
-        {
-          x: videoOne.right + routeClearance * 1.1,
-          y: videoHeight + routeClearance * 0.15
-        },
-        {
-          x: runningCenterX,
-          y: videoHeight + routeClearance
-        },
-        {
-          x: videoThree.left - routeClearance * 1.1,
-          y: videoHeight + routeClearance * 0.15
-        },
-        {
-          x: videoThree.left - routeClearance,
-          y: videoHeight * 0.48
-        },
-        {
-          x: videoThree.left + routeClearance * 0.15,
-          y: -routeClearance
-        }
-      ];
-      const localRoutePoints = sampleSmoothRoute(routeWaypoints);
-      const curvedRoutePoints = localRoutePoints.map((localPoint, index) => {
-        const routeProgress = index / Math.max(1, localRoutePoints.length - 1);
-        const trackX = interpolate(
-          videoOneCenteredTrackX,
-          videoThreeCenteredTrackX,
-          smoothstep(routeProgress)
-        );
+      const firstGapEnterTrackX = centerX + centerBand - firstGapX;
+      const firstGapExitTrackX = centerX - centerBand - firstGapX;
+      const secondGapEnterTrackX = centerX + centerBand - secondGapX;
+      const secondGapExitTrackX = centerX - centerBand - secondGapX;
+      const videoThreeRightEnterTrackX =
+        centerX + centerBand - (videoThree.right + horizontalTraceOffset);
+      const videoThreeRightCenteredTrackX =
+        centerX - (videoThree.right + horizontalTraceOffset);
+      const middleArcStart: LocalPoint = {
+        x: firstGapX,
+        y: videoHeight + verticalTraceOffset
+      };
+      const middleArcEnd: LocalPoint = {
+        x: secondGapX,
+        y: videoHeight + verticalTraceOffset
+      };
+      const middleArcSpan = middleArcEnd.x - middleArcStart.x;
+      const middleArcDepth = clamp(videoHeight * 0.045, 12, 26);
+      const middleArcControlOne: LocalPoint = {
+        x: middleArcStart.x + middleArcSpan * 0.32,
+        y: middleArcStart.y + middleArcDepth
+      };
+      const middleArcControlTwo: LocalPoint = {
+        x: middleArcEnd.x - middleArcSpan * 0.32,
+        y: middleArcEnd.y + middleArcDepth
+      };
+      const middleArcPoints = Array.from(
+        { length: MIDDLE_ARC_SAMPLES },
+        (_, index): Point => {
+          const progress = (index + 1) / MIDDLE_ARC_SAMPLES;
+          const localPoint = getCubicBezierPoint(
+            middleArcStart,
+            middleArcControlOne,
+            middleArcControlTwo,
+            middleArcEnd,
+            progress
+          );
+          const trackX = interpolate(
+            firstGapExitTrackX,
+            secondGapEnterTrackX,
+            smoothstep(progress)
+          );
 
-        return {
-          x: localPoint.x + trackX - origin.x,
-          y: rowTop + localPoint.y - origin.y,
-          trackX
-        };
-      });
+          return {
+            x: localPoint.x + trackX - origin.x,
+            y: rowTop + localPoint.y - origin.y,
+            trackX
+          };
+        }
+      );
       const points = [
         { x: 0, y: 0, trackX: viewportWidth + edgeMargin },
-        ...curvedRoutePoints
+        {
+          x: -videoWidth / 2 - horizontalTraceOffset,
+          y: videoOne.top + videoHeight / 2 - origin.y,
+          trackX: videoOneCenteredTrackX
+        },
+        {
+          x: -videoWidth / 2 - horizontalTraceOffset,
+          y: topY - origin.y,
+          trackX: videoOneCenteredTrackX
+        },
+        {
+          x: centerBand,
+          y: topY - origin.y,
+          trackX: firstGapEnterTrackX
+        },
+        {
+          x: -centerBand,
+          y: bottomY - origin.y,
+          trackX: firstGapExitTrackX
+        },
+        ...middleArcPoints,
+        {
+          x: -centerBand,
+          y: topY - origin.y,
+          trackX: secondGapExitTrackX
+        },
+        {
+          x: centerBand,
+          y: topY - origin.y,
+          trackX: videoThreeRightEnterTrackX
+        },
+        {
+          x: 0,
+          y: videoThree.top + videoHeight / 2 - origin.y,
+          trackX: videoThreeRightCenteredTrackX
+        }
       ];
       const cumulativeLengths = [0];
 
@@ -509,28 +510,46 @@ export default function About() {
         );
       }
 
+      const middleArcEndIndex = 4 + MIDDLE_ARC_SAMPLES;
+      const videoRevealRanges = [
+        {
+          start: 0,
+          end: cumulativeLengths[1] * 0.75
+        },
+        {
+          start: cumulativeLengths[3],
+          end: interpolate(
+            cumulativeLengths[3],
+            cumulativeLengths[4],
+            0.55
+          )
+        },
+        {
+          start: cumulativeLengths[middleArcEndIndex],
+          end: interpolate(
+            cumulativeLengths[middleArcEndIndex],
+            cumulativeLengths[middleArcEndIndex + 1],
+            0.55
+          )
+        }
+      ];
       const videoCenterTrackPositions = [
         videoOneCenteredTrackX,
-        centerX - runningCenterX,
-        videoThreeCenteredTrackX
+        centerX - (videoTwo.left + runningSlotWidth / 2),
+        centerX - (videoThree.left + videoWidth / 2)
       ];
-      const videoFocusDistances = videoCenterTrackPositions.map((trackX) =>
+      const captionRevealDistances = videoCenterTrackPositions.map((trackX) =>
         getDistanceAtTrackPosition(points, cumulativeLengths, trackX)
       );
       const captionRevealWindow = clamp(videoWidth * 0.42, 110, 260);
-      const captionRevealDistances = videoFocusDistances.map((distance) =>
-        Math.max(0, distance - captionRevealWindow)
-      );
       const totalRouteLength = cumulativeLengths[cumulativeLengths.length - 1];
 
       routeGeometry = {
         points,
         cumulativeLengths,
-        videoFocusDistances,
-        videoRevealWindow: clamp(videoWidth * 0.72, 160, 460),
+        videoRevealRanges,
         captionRevealDistances,
         captionRevealWindow,
-        captionFadeWindow: clamp(videoWidth * 0.35, 100, 220),
         totalLength: totalRouteLength,
         smallScale: smallCdDiameter / baseCdDiameter
       };
