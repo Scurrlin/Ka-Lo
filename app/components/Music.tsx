@@ -77,7 +77,11 @@ function CharSpans({
             {word.split("").map((char) => {
               const index = charIndex++;
               return (
-                <span key={index} ref={(node) => onCharRef(node, index)} className="inline-block">
+                <span
+                  key={index}
+                  ref={(node) => onCharRef(node, index)}
+                  className="invisible inline-block opacity-0"
+                >
                   {char}
                 </span>
               );
@@ -167,17 +171,16 @@ export default function Music() {
       gsap.set(introTitleChars, { autoAlpha: 0, y: 26 });
       gsap.set(introTitle, { y: 0 });
 
-      // Reveal "The Music" directly in a short, scroll-scrubbed pin before handing off
-      // to the existing album grid below.
+      // Reveal "The Music" across the sticky intro track. CSS owns the sticky
+      // positioning so ScrollTrigger never has to insert or recalculate a pin spacer
+      // as the section crosses the top of the viewport.
       const introTl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
           trigger: introSection,
           start: "top top",
-          end: () => "+=" + window.innerHeight * 1.1,
+          end: "bottom bottom",
           scrub: true,
-          pin: introSection,
-          anticipatePin: 1,
           invalidateOnRefresh: true
         }
       });
@@ -241,28 +244,27 @@ export default function Music() {
       id="music"
       className="relative bg-black px-5 pb-20 pt-12 text-white sm:px-8 sm:pt-16 md:pt-20"
     >
-        {/* The pin target itself, exactly like the `<section>` in About.tsx - real height
-            (one full viewport), and the containing block for the text absolutely
-            positioned inside it below. Since that text is `absolute` (not `fixed`), it
-            rides along with GSAP's pin transform instead of fighting it, and once the pin
-            releases this whole block just scrolls away in normal flow, handing off
-            straight to the album grid right after it. */}
-        <div ref={introSectionRef} className="relative h-screen overflow-hidden">
-          {/* Centered in the viewport space below the fixed header. */}
-          <div className="pointer-events-none absolute inset-x-0 top-16 bottom-0 z-20 flex items-center justify-center px-5 text-center md:top-20">
-            <h2
-              ref={introTitleRef}
-              className="w-full max-w-4xl text-center font-display text-5xl leading-none text-white sm:text-7xl md:text-8xl"
-            >
-              <CharSpans
-                text={INTRO_TITLE}
-                onCharRef={(el, index) => {
-                  if (el) {
-                    introTitleCharsRef.current[index] = el;
-                  }
-                }}
-              />
-            </h2>
+        {/* The outer track creates the same 1.1-viewport reveal distance as the old
+            GSAP pin. The inner stage stays put with native sticky positioning, which
+            avoids a pin-boundary jump before the album grid takes over. */}
+        <div ref={introSectionRef} className="relative h-[210svh]">
+          <div className="sticky top-0 h-[100svh] overflow-hidden">
+            {/* Centered in the viewport space below the fixed header. */}
+            <div className="pointer-events-none absolute inset-x-0 top-16 bottom-0 z-20 flex items-center justify-center px-5 text-center md:top-20">
+              <h2
+                ref={introTitleRef}
+                className="w-full max-w-4xl text-center font-display text-5xl leading-none text-white sm:text-7xl md:text-8xl"
+              >
+                <CharSpans
+                  text={INTRO_TITLE}
+                  onCharRef={(el, index) => {
+                    if (el) {
+                      introTitleCharsRef.current[index] = el;
+                    }
+                  }}
+                />
+              </h2>
+            </div>
           </div>
         </div>
 

@@ -112,7 +112,7 @@ export default function Next() {
               }}
             />
           </h2>
-          <p className="mt-7 text-lg font-bold uppercase tracking-wide text-[#d7d7d0] sm:text-xl">
+          <p className="mt-7 text-lg font-bold uppercase tracking-wide text-white sm:text-xl">
             <CharSpans
               text="Coming Soon"
               onCharRef={(el, index) => {

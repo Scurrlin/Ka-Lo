@@ -29,6 +29,8 @@ const ROUTE_DURATION = 8;
 const GROW_DURATION = 1.35;
 const FULL_SIZE_HOLD_DURATION = 0.65;
 const EXIT_DURATION = 0.9;
+const NEXT_TITLE_HOLD_DURATION = 1.25;
+const NEXT_TITLE_EXTRA_SCROLL_SCREENS = 0.75;
 const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
 
 type Point = {
@@ -466,7 +468,12 @@ export default function About() {
           start: "top top",
           end: () => {
             const routeLength = routeGeometry?.totalLength ?? window.innerWidth * 2;
-            return `+=${Math.max(window.innerHeight * 7, window.innerHeight * 2.5 + routeLength * 2.4)}`;
+            const storyDistance = Math.max(
+              window.innerHeight * 7,
+              window.innerHeight * 2.5 + routeLength * 2.4
+            );
+
+            return `+=${storyDistance + window.innerHeight * NEXT_TITLE_EXTRA_SCROLL_SCREENS}`;
           },
           scrub: 1,
           pin: section,
@@ -564,7 +571,7 @@ export default function About() {
         .addLabel("cdGone", `exitStart+=${EXIT_DURATION}`)
         .to(nextChars, { autoAlpha: 1, y: 0, duration: 0.4, stagger: { each: 0.018 } }, "cdGone")
         .addLabel("nextTitleRevealed")
-        .to({}, { duration: 0.15 });
+        .to({}, { duration: NEXT_TITLE_HOLD_DURATION });
 
       updateNavTargets = () => {
         const currentTimeline = timeline;
