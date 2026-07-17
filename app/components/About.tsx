@@ -13,9 +13,9 @@ const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4"
 ] as const;
 const VIDEO_CAPTIONS = [
-  { text: "People see a new website", position: "below" as const },
+  { text: "People see one website", position: "below" as const },
   { text: "And all of a sudden...", position: "above" as const },
-  { text: "Everyone's a web developer lmao", position: "below" as const }
+  { text: "Everyone's a developer lmao", position: "below" as const }
 ] as const;
 const FINAL_MESSAGE = "Lol jk jk 😂 Love you!";
 
@@ -314,7 +314,9 @@ export default function About() {
         bottom: rowTop + videoHeight
       };
       const horizontalTraceOffset = smallCdRadius + CD_CLEARANCE;
-      const verticalTraceOffset = smallCdRadius + CD_VERTICAL_CLEARANCE;
+      const verticalClearance =
+        viewportHeight <= 700 ? 16 : CD_VERTICAL_CLEARANCE;
+      const verticalTraceOffset = smallCdRadius + verticalClearance;
       const topY = videoOne.top - verticalTraceOffset;
       const bottomY = videoTwo.bottom + verticalTraceOffset;
       const firstGapX = videoOne.right + gap / 2;
