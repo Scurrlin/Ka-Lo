@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import ScrollRestoration from "./components/ScrollRestoration";
+import MemeGate from "./components/MemeGate";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -22,8 +23,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={instrumentSans.variable}>
       <body>
-        <ScrollRestoration />
-        {children}
+        <div id="site-content">
+          <ScrollRestoration />
+          {children}
+        </div>
+        <MemeGate />
       </body>
     </html>
   );

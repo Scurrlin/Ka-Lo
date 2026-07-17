@@ -50,6 +50,94 @@ img {
   color: var(--black);
 }
 
+.viewport-blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  background: var(--black);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.viewport-blackout-meme {
+  width: auto;
+  height: auto;
+  max-width: min(80vw, 420px);
+  max-height: 75dvh;
+  object-fit: contain;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viewport-blackout-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.75rem, 3dvh, 1.25rem);
+}
+
+.viewport-blackout-caption {
+  margin: 0;
+  color: var(--white);
+  font-size: clamp(0.875rem, 2.8vw, 1.125rem);
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+}
+
+html.viewport-blackout-active,
+html.viewport-blackout-active body {
+  overflow: hidden;
+  background: var(--black) !important;
+}
+
+html.viewport-blackout-active #site-content {
+  visibility: hidden;
+}
+
+html.viewport-blackout-active .viewport-blackout {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+html.viewport-blackout-active.viewport-blackout-meme-active
+  .viewport-blackout-meme,
+html.viewport-blackout-active.viewport-blackout-meme-active
+  .viewport-blackout-caption {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Paint the blackout before React hydrates on short or mobile-landscape screens. */
+@media (max-height: 499px),
+  (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  html,
+  body {
+    overflow: hidden;
+    background: var(--black) !important;
+  }
+
+  #site-content {
+    visibility: hidden;
+  }
+
+  .viewport-blackout {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
 .font-display {
   font-family: var(--font-display);
 }
