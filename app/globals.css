@@ -377,7 +377,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
 .about-video-frame {
   height: var(--about-video-height, 240px);
   width: 100%;
-  background: var(--ink);
+  background: var(--black);
   box-shadow:
     0 22px 60px rgba(0, 0, 0, 0.72),
     0 0 0 1px rgba(248, 248, 245, 0.14);
