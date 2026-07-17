@@ -8,9 +8,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 const TITLE = "Who is Ka-Lo?";
 const NEXT_TITLE = "What's Next?";
 const VIDEO_SOURCES = [
-  "/videos/driving-10s.mp4",
-  "/videos/birds-10s.mp4",
-  "/videos/driving-10s.mp4"
+  "/videos/driving-6.5s.mp4",
+  "/videos/birds-13s.mp4",
+  "/videos/driving-6.5s.mp4"
 ] as const;
 const VIDEO_CAPTIONS = [
   { text: "People see a new website", position: "below" as const },
@@ -131,7 +131,7 @@ function AnimatedWords({ text, registerCharacter }: AnimatedWordsProps) {
   return words.map((word, wordIndex) => (
     <Fragment key={`${word}-${wordIndex}`}>
       <span className="inline-block whitespace-nowrap">
-        {word.split("").map((char) => {
+        {Array.from(word).map((char) => {
           const index = characterIndex++;
 
           return (
@@ -288,7 +288,7 @@ export default function About() {
         1,
         Math.min(VIDEO_MAX_WIDTH, viewportWidth * 0.78, maxVideoWidthByHeight)
       );
-      const videoHeight = videoWidth * (9 / 16);
+      const videoHeight = videoWidth * (3 / 4);
       const rowWidth = videoWidth * 3 + gap * 2;
       const rowTop = headerHeight + (viewportHeight - headerHeight - videoHeight) / 2;
       const origin = {
@@ -417,6 +417,7 @@ export default function About() {
         x: points[0].trackX
       });
       videoStage.style.setProperty("--about-video-width", `${videoWidth}px`);
+      videoStage.style.setProperty("--about-video-height", `${videoHeight}px`);
       videoStage.style.setProperty("--about-video-gap", `${gap}px`);
       gsap.set(cd, { left: origin.x, top: origin.y });
       gsap.set(finalMessage, {
@@ -623,7 +624,7 @@ export default function About() {
                   videoFrameRefs.current[index] = node;
                 }
               }}
-              className="about-video-frame invisible relative aspect-video overflow-hidden rounded-md opacity-0"
+              className="about-video-frame invisible relative overflow-hidden rounded-md opacity-0"
             >
               <video
                 ref={(node) => {
@@ -667,7 +668,7 @@ export default function About() {
 
       <Image
         ref={cdRef}
-        src="/assets/silver-cracks.png"
+        src="/assets/Silver-Cracks.webp"
         alt="Silver Cracks CD"
         width={1024}
         height={1024}

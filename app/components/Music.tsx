@@ -21,31 +21,31 @@ const ALBUMS: Album[] = [
   {
     id: "melody",
     name: "Melody",
-    image: "/assets/Melody.jpeg",
+    image: "/assets/Melody.webp",
     href: MUSIC_PROJECT_LINKS.melody
   },
   {
     id: "exercises",
     name: "Exercises",
-    image: "/assets/Exercises.png",
+    image: "/assets/Exercises.webp",
     href: MUSIC_PROJECT_LINKS.exercises
   },
   {
     id: "silver-cracks",
     name: "Silver Cracks",
-    image: "/assets/silver-cracks.png",
+    image: "/assets/Silver-Cracks.webp",
     href: MUSIC_PROJECT_LINKS["silver-cracks"]
   },
   {
     id: "deep-end",
     name: "Deep End",
-    image: "/assets/Deep-End.png",
+    image: "/assets/Deep-End.webp",
     href: MUSIC_PROJECT_LINKS["deep-end"]
   },
   {
     id: "kings-road",
     name: "King's Road",
-    image: "/assets/Kings-Road.png",
+    image: "/assets/Kings-Road.webp",
     href: MUSIC_PROJECT_LINKS["kings-road"]
   }
 ];
