@@ -633,7 +633,9 @@ export default function About() {
                   videoFrameRefs.current[index] = node;
                 }
               }}
-              className="about-video-frame invisible relative overflow-hidden rounded-md opacity-0"
+              className={`about-video-frame invisible relative overflow-hidden rounded-md opacity-0 ${
+                index === 1 ? "about-video-frame-borderless" : ""
+              }`}
             >
               <video
                 ref={(node) => {

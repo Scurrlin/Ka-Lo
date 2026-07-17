@@ -384,6 +384,10 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   will-change: opacity, visibility;
 }
 
+.about-video-frame-borderless {
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.72);
+}
+
 .about-video-caption {
   position: absolute;
   left: 50%;
