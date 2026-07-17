@@ -19,11 +19,15 @@ const VIDEO_CAPTIONS = [
 ] as const;
 const FINAL_MESSAGE = "Lol jk jk 😂 Love you!";
 
-const CD_CLEARANCE = 18;
-const CD_VERTICAL_CLEARANCE = 36;
 const CD_MIN_DIAMETER = 88;
 const CD_MAX_DIAMETER = 192;
 const VIDEO_MAX_WIDTH = 680;
+const VIDEO_GAP_RATIO = 0.08;
+const VIDEO_GAP_MIN = 36;
+const VIDEO_GAP_MAX = 88;
+const RUNNING_SLOT_WIDTH_RATIO = 0.5;
+const RUNNING_VIDEO_SCALE = 1.9;
+const ROUTE_SAMPLES_PER_SEGMENT = 18;
 const SHRINK_DURATION = 1.25;
 const ROUTE_DURATION = 8;
 const GROW_DURATION = 1.35;
@@ -39,11 +43,19 @@ type Point = {
   trackX: number;
 };
 
+type LocalPoint = {
+  x: number;
+  y: number;
+};
+
 type RouteGeometry = {
   points: Point[];
   cumulativeLengths: number[];
+  videoFocusDistances: number[];
+  videoRevealWindow: number;
   captionRevealDistances: number[];
   captionRevealWindow: number;
+  captionFadeWindow: number;
   totalLength: number;
   smallScale: number;
 };
@@ -55,6 +67,73 @@ type AnimatedWordsProps = {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function interpolate(start: number, end: number, progress: number) {
+  return start + (end - start) * progress;
+}
+
+function getCubicBezierPoint(
+  start: LocalPoint,
+  controlOne: LocalPoint,
+  controlTwo: LocalPoint,
+  end: LocalPoint,
+  progress: number
+) {
+  const inverse = 1 - progress;
+  const inverseSquared = inverse * inverse;
+  const progressSquared = progress * progress;
+
+  return {
+    x:
+      inverseSquared * inverse * start.x +
+      3 * inverseSquared * progress * controlOne.x +
+      3 * inverse * progressSquared * controlTwo.x +
+      progressSquared * progress * end.x,
+    y:
+      inverseSquared * inverse * start.y +
+      3 * inverseSquared * progress * controlOne.y +
+      3 * inverse * progressSquared * controlTwo.y +
+      progressSquared * progress * end.y
+  };
+}
+
+function sampleSmoothRoute(waypoints: LocalPoint[]) {
+  const samples: LocalPoint[] = [];
+  const controlStrength = 0.75 / 6;
+
+  for (let index = 0; index < waypoints.length - 1; index += 1) {
+    const previous = waypoints[Math.max(0, index - 1)];
+    const start = waypoints[index];
+    const end = waypoints[index + 1];
+    const next = waypoints[Math.min(waypoints.length - 1, index + 2)];
+    const controlOne = {
+      x: start.x + (end.x - previous.x) * controlStrength,
+      y: start.y + (end.y - previous.y) * controlStrength
+    };
+    const controlTwo = {
+      x: end.x - (next.x - start.x) * controlStrength,
+      y: end.y - (next.y - start.y) * controlStrength
+    };
+
+    for (let step = 0; step <= ROUTE_SAMPLES_PER_SEGMENT; step += 1) {
+      if (index > 0 && step === 0) {
+        continue;
+      }
+
+      samples.push(
+        getCubicBezierPoint(
+          start,
+          controlOne,
+          controlTwo,
+          end,
+          step / ROUTE_SAMPLES_PER_SEGMENT
+        )
+      );
+    }
+  }
+
+  return samples;
 }
 
 function smoothstep(value: number) {
@@ -154,6 +233,7 @@ function AnimatedWords({ text, registerCharacter }: AnimatedWordsProps) {
 
 export default function About() {
   const sectionRef = useRef<HTMLElement>(null);
+  const stickyStageRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const cdRef = useRef<HTMLImageElement>(null);
   const videoStageRef = useRef<HTMLDivElement>(null);
@@ -171,13 +251,22 @@ export default function About() {
     gsap.registerPlugin(ScrollTrigger);
 
     const section = sectionRef.current;
+    const stickyStage = stickyStageRef.current;
     const title = titleRef.current;
     const cd = cdRef.current;
     const videoStage = videoStageRef.current;
     const finalMessage = finalMessageRef.current;
     const nextTitle = nextTitleRef.current;
 
-    if (!section || !title || !cd || !videoStage || !finalMessage || !nextTitle) {
+    if (
+      !section ||
+      !stickyStage ||
+      !title ||
+      !cd ||
+      !videoStage ||
+      !finalMessage ||
+      !nextTitle
+    ) {
       return;
     }
 
@@ -194,15 +283,18 @@ export default function About() {
     let videoTrackExitX = 0;
     let cdExitX = 0;
     let finalMessageExitX = 0;
+    let videosArePlaying = false;
     let updateNavTargets = () => {};
 
     const playVideos = () => {
+      if (videosArePlaying) {
+        return;
+      }
+
+      videosArePlaying = true;
+
       videos.forEach((video) => {
         video.muted = true;
-
-        if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
-          video.currentTime = 0;
-        }
 
         void video.play().catch(() => {
           // Muted inline playback is permitted in modern browsers, but a rejected
@@ -212,7 +304,29 @@ export default function About() {
     };
 
     const pauseVideos = () => {
+      videosArePlaying = false;
       videos.forEach((video) => video.pause());
+    };
+
+    const syncVideoPlayback = () => {
+      const currentTimeline = timeline;
+
+      if (!currentTimeline) {
+        pauseVideos();
+        return;
+      }
+
+      const routeStart = currentTimeline.labels.routeStart ?? Number.POSITIVE_INFINITY;
+      const routeComplete = currentTimeline.labels.routeComplete ?? Number.NEGATIVE_INFINITY;
+      const currentTime = currentTimeline.time();
+      const videosShouldPlay =
+        currentTime >= routeStart && currentTime <= routeComplete + GROW_DURATION;
+
+      if (videosShouldPlay) {
+        playVideos();
+      } else if (videosArePlaying) {
+        pauseVideos();
+      }
     };
 
     const renderRoute = () => {
@@ -223,26 +337,21 @@ export default function About() {
       }
 
       const point = getPointOnRoute(geometry, routeState.progress);
-      const cumulative = geometry.cumulativeLengths;
 
       gsap.set(cd, { x: point.x, y: point.y, scale: geometry.smallScale });
       gsap.set(videoStage, { x: point.trackX });
 
-      const videoOneOpacity = getElementOpacity(point.distance, 0, cumulative[1] * 0.75);
-      const videoTwoOpacity = getElementOpacity(
-        point.distance,
-        cumulative[3],
-        cumulative[3] + (cumulative[4] - cumulative[3]) * 0.55
-      );
-      const videoThreeOpacity = getElementOpacity(
-        point.distance,
-        cumulative[5],
-        cumulative[5] + (cumulative[6] - cumulative[5]) * 0.55
-      );
-      const opacities = [videoOneOpacity, videoTwoOpacity, videoThreeOpacity];
-
       videoFrames.forEach((frame, index) => {
-        gsap.set(frame, { autoAlpha: opacities[index] });
+        const focusDistance = geometry.videoFocusDistances[index];
+        const revealStart = index === 0 ? 0 : focusDistance - geometry.videoRevealWindow;
+        const revealEnd =
+          index === 0
+            ? Math.max(1, focusDistance * 0.75)
+            : focusDistance - geometry.videoRevealWindow * 0.2;
+
+        gsap.set(frame, {
+          autoAlpha: getElementOpacity(point.distance, revealStart, revealEnd)
+        });
       });
       videoCaptionChars.forEach((characters, captionIndex) => {
         const revealStart = geometry.captionRevealDistances[captionIndex];
@@ -252,13 +361,21 @@ export default function About() {
           1
         );
         const staggerSpan = characters.length + 5;
+        const nextRevealDistance = geometry.captionRevealDistances[captionIndex + 1];
+        const fadeProgress = Number.isFinite(nextRevealDistance)
+          ? smoothstep(
+              (point.distance - (nextRevealDistance - geometry.captionFadeWindow)) /
+                geometry.captionFadeWindow
+            )
+          : 0;
+        const captionOpacity = 1 - fadeProgress;
 
         characters.forEach((character, characterIndex) => {
           const characterProgress = smoothstep(
             clamp(revealProgress * staggerSpan - characterIndex, 0, 1)
           );
           gsap.set(character, {
-            autoAlpha: characterProgress,
+            autoAlpha: characterProgress * captionOpacity,
             y: (1 - characterProgress) * 20
           });
         });
@@ -278,20 +395,28 @@ export default function About() {
       );
       const smallCdRadius = smallCdDiameter / 2;
       const edgeMargin = clamp(viewportWidth * 0.02, 8, 24);
-      const gap = clamp(
-        viewportWidth * 0.22,
-        smallCdDiameter / 2 + CD_CLEARANCE * 2 + 48,
-        300
+      const routeClearance =
+        smallCdRadius + clamp(viewportWidth * 0.018, 20, 28);
+      const availableRouteHeight = Math.max(
+        1,
+        viewportHeight -
+          headerHeight -
+          edgeMargin * 2 -
+          (routeClearance + smallCdRadius) * 2
       );
-      const routeInset = edgeMargin + smallCdRadius + CD_VERTICAL_CLEARANCE;
-      const availableRouteHeight = Math.max(1, viewportHeight - headerHeight - routeInset * 2);
-      const maxVideoWidthByHeight = availableRouteHeight * 0.72 * (16 / 9);
+      const maxVideoWidthByHeight = availableRouteHeight * (4 / 3);
       const videoWidth = Math.max(
         1,
         Math.min(VIDEO_MAX_WIDTH, viewportWidth * 0.78, maxVideoWidthByHeight)
       );
+      const gap = clamp(
+        videoWidth * VIDEO_GAP_RATIO,
+        VIDEO_GAP_MIN,
+        VIDEO_GAP_MAX
+      );
+      const runningSlotWidth = videoWidth * RUNNING_SLOT_WIDTH_RATIO;
       const videoHeight = videoWidth * (3 / 4);
-      const rowWidth = videoWidth * 3 + gap * 2;
+      const rowWidth = videoWidth * 2 + runningSlotWidth + gap * 2;
       const rowTop = headerHeight + (viewportHeight - headerHeight - videoHeight) / 2;
       const origin = {
         x: viewportWidth / 2,
@@ -305,76 +430,68 @@ export default function About() {
       };
       const videoTwo = {
         left: videoWidth + gap,
-        right: videoWidth * 2 + gap,
+        right: videoWidth + gap + runningSlotWidth,
         top: rowTop,
         bottom: rowTop + videoHeight
       };
       const videoThree = {
-        left: videoWidth * 2 + gap * 2,
+        left: videoWidth + runningSlotWidth + gap * 2,
         right: rowWidth,
         top: rowTop,
         bottom: rowTop + videoHeight
       };
-      const horizontalTraceOffset = smallCdRadius + CD_CLEARANCE;
-      const verticalClearance =
-        viewportHeight <= 700 ? 16 : CD_VERTICAL_CLEARANCE;
-      const verticalTraceOffset = smallCdRadius + verticalClearance;
-      const topY = videoOne.top - verticalTraceOffset;
-      const bottomY = videoTwo.bottom + verticalTraceOffset;
-      const firstGapX = videoOne.right + gap / 2;
-      const secondGapX = videoTwo.right + gap / 2;
       const centerX = origin.x;
-      const centerBand = clamp(viewportWidth * 0.08, 20, 64);
       const videoOneCenteredTrackX = centerX - videoWidth / 2;
-      const firstGapEnterTrackX = centerX + centerBand - firstGapX;
-      const firstGapExitTrackX = centerX - centerBand - firstGapX;
-      const secondGapEnterTrackX = centerX + centerBand - secondGapX;
-      const secondGapExitTrackX = centerX - centerBand - secondGapX;
-      const videoThreeRightEnterTrackX =
-        centerX + centerBand - (videoThree.right + horizontalTraceOffset);
-      const videoThreeRightCenteredTrackX = centerX - (videoThree.right + horizontalTraceOffset);
+      const videoThreeCenteredTrackX = centerX - (videoThree.left + videoWidth / 2);
+      const runningCenterX = videoTwo.left + runningSlotWidth / 2;
+      const routeWaypoints: LocalPoint[] = [
+        {
+          x: videoOne.right - routeClearance * 0.15,
+          y: -routeClearance
+        },
+        {
+          x: videoOne.right + routeClearance,
+          y: videoHeight * 0.48
+        },
+        {
+          x: videoOne.right + routeClearance * 1.1,
+          y: videoHeight + routeClearance * 0.15
+        },
+        {
+          x: runningCenterX,
+          y: videoHeight + routeClearance
+        },
+        {
+          x: videoThree.left - routeClearance * 1.1,
+          y: videoHeight + routeClearance * 0.15
+        },
+        {
+          x: videoThree.left - routeClearance,
+          y: videoHeight * 0.48
+        },
+        {
+          x: videoThree.left + routeClearance * 0.15,
+          y: -routeClearance
+        }
+      ];
+      const localRoutePoints = sampleSmoothRoute(routeWaypoints);
+      const curvedRoutePoints = localRoutePoints.map((localPoint, index) => {
+        const routeProgress = index / Math.max(1, localRoutePoints.length - 1);
+        const trackX = interpolate(
+          videoOneCenteredTrackX,
+          videoThreeCenteredTrackX,
+          smoothstep(routeProgress)
+        );
+
+        return {
+          x: localPoint.x + trackX - origin.x,
+          y: rowTop + localPoint.y - origin.y,
+          trackX
+        };
+      });
       const points = [
         { x: 0, y: 0, trackX: viewportWidth + edgeMargin },
-        {
-          x: -videoWidth / 2 - horizontalTraceOffset,
-          y: videoOne.top + videoHeight / 2 - origin.y,
-          trackX: videoOneCenteredTrackX
-        },
-        {
-          x: -videoWidth / 2 - horizontalTraceOffset,
-          y: topY - origin.y,
-          trackX: videoOneCenteredTrackX
-        },
-        {
-          x: centerBand,
-          y: topY - origin.y,
-          trackX: firstGapEnterTrackX
-        },
-        {
-          x: -centerBand,
-          y: bottomY - origin.y,
-          trackX: firstGapExitTrackX
-        },
-        {
-          x: centerBand,
-          y: bottomY - origin.y,
-          trackX: secondGapEnterTrackX
-        },
-        {
-          x: -centerBand,
-          y: topY - origin.y,
-          trackX: secondGapExitTrackX
-        },
-        {
-          x: centerBand,
-          y: topY - origin.y,
-          trackX: videoThreeRightEnterTrackX
-        },
-        {
-          x: 0,
-          y: videoThree.top + videoHeight / 2 - origin.y,
-          trackX: videoThreeRightCenteredTrackX
-        }
+        ...curvedRoutePoints
       ];
       const cumulativeLengths = [0];
 
@@ -393,22 +510,39 @@ export default function About() {
       }
 
       const videoCenterTrackPositions = [
-        centerX - (videoOne.left + videoWidth / 2),
-        centerX - (videoTwo.left + videoWidth / 2),
-        centerX - (videoThree.left + videoWidth / 2)
+        videoOneCenteredTrackX,
+        centerX - runningCenterX,
+        videoThreeCenteredTrackX
       ];
-      const captionRevealDistances = videoCenterTrackPositions.map((trackX) =>
+      const videoFocusDistances = videoCenterTrackPositions.map((trackX) =>
         getDistanceAtTrackPosition(points, cumulativeLengths, trackX)
       );
+      const captionRevealWindow = clamp(videoWidth * 0.42, 110, 260);
+      const captionRevealDistances = videoFocusDistances.map((distance) =>
+        Math.max(0, distance - captionRevealWindow)
+      );
+      const totalRouteLength = cumulativeLengths[cumulativeLengths.length - 1];
 
       routeGeometry = {
         points,
         cumulativeLengths,
+        videoFocusDistances,
+        videoRevealWindow: clamp(videoWidth * 0.72, 160, 460),
         captionRevealDistances,
-        captionRevealWindow: clamp(videoWidth * 0.42, 110, 260),
-        totalLength: cumulativeLengths[cumulativeLengths.length - 1],
+        captionRevealWindow,
+        captionFadeWindow: clamp(videoWidth * 0.35, 100, 220),
+        totalLength: totalRouteLength,
         smallScale: smallCdDiameter / baseCdDiameter
       };
+      const storyScrollDistance =
+        Math.max(
+          viewportHeight * 7,
+          viewportHeight * 2.5 + totalRouteLength * 2.4
+        ) +
+        viewportHeight * NEXT_TITLE_EXTRA_SCROLL_SCREENS;
+
+      section.style.height = `${viewportHeight + storyScrollDistance}px`;
+      stickyStage.style.height = `${viewportHeight}px`;
       videoTrackExitX = -rowWidth - edgeMargin;
       cdExitX = viewportWidth + baseCdDiameter / 2 + edgeMargin - origin.x;
       finalMessageExitX = -viewportWidth / 2 - finalMessage.offsetWidth / 2 - edgeMargin;
@@ -423,6 +557,8 @@ export default function About() {
       videoStage.style.setProperty("--about-video-width", `${videoWidth}px`);
       videoStage.style.setProperty("--about-video-height", `${videoHeight}px`);
       videoStage.style.setProperty("--about-video-gap", `${gap}px`);
+      videoStage.style.setProperty("--about-running-slot-width", `${runningSlotWidth}px`);
+      videoStage.style.setProperty("--about-running-scale", RUNNING_VIDEO_SCALE.toString());
       gsap.set(cd, { left: origin.x, top: origin.y });
       gsap.set(finalMessage, {
         left: origin.x,
@@ -466,22 +602,11 @@ export default function About() {
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: () => {
-            const routeLength = routeGeometry?.totalLength ?? window.innerWidth * 2;
-            const storyDistance = Math.max(
-              window.innerHeight * 7,
-              window.innerHeight * 2.5 + routeLength * 2.4
-            );
-
-            return `+=${storyDistance + window.innerHeight * NEXT_TITLE_EXTRA_SCROLL_SCREENS}`;
-          },
-          scrub: 1,
-          pin: section,
-          anticipatePin: 1,
+          end: "bottom bottom",
+          scrub: true,
           invalidateOnRefresh: true,
           onRefreshInit: updateLayout,
-          onEnter: playVideos,
-          onEnterBack: playVideos,
+          onUpdate: syncVideoPlayback,
           onLeave: pauseVideos,
           onLeaveBack: pauseVideos
         }
@@ -535,7 +660,11 @@ export default function About() {
           "routeStart"
         )
         .addLabel("routeComplete", `routeStart+=${ROUTE_DURATION}`)
-        .to(cd, { scale: 1, duration: GROW_DURATION, ease: "power2.inOut" }, "routeComplete")
+        .to(
+          cd,
+          { x: 0, y: 0, scale: 1, duration: GROW_DURATION, ease: "power2.inOut" },
+          "routeComplete"
+        )
         .to(
           videoStage,
           { x: () => videoTrackExitX, duration: GROW_DURATION, ease: "none" },
@@ -573,6 +702,8 @@ export default function About() {
         .addLabel("nextTitleRevealed")
         .to({}, { duration: NEXT_TITLE_HOLD_DURATION });
 
+      syncVideoPlayback();
+
       updateNavTargets = () => {
         const currentTimeline = timeline;
         const scrollTrigger = currentTimeline?.scrollTrigger;
@@ -609,6 +740,8 @@ export default function About() {
       pauseVideos();
       delete section.dataset.navScrollY;
       delete section.dataset.navSettleMs;
+      section.style.removeProperty("height");
+      stickyStage.style.removeProperty("height");
       const nextSection = document.getElementById("next");
       delete nextSection?.dataset.navScrollY;
       delete nextSection?.dataset.navSettleMs;
@@ -617,7 +750,11 @@ export default function About() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="about" className="relative h-screen overflow-hidden bg-black text-white">
+    <section ref={sectionRef} id="about" className="relative h-screen bg-black text-white">
+      <div
+        ref={stickyStageRef}
+        className="sticky top-0 h-screen overflow-hidden bg-black"
+      >
       <div
         ref={videoStageRef}
         className="about-video-stage pointer-events-none absolute z-10"
@@ -625,7 +762,9 @@ export default function About() {
         {VIDEO_SOURCES.map((src, index) => (
           <div
             key={`${src}-${index}`}
-            className="about-video-item relative"
+            className={`about-video-item relative ${
+              index === 1 ? "about-video-item-running" : "about-video-item-side"
+            }`}
           >
             <div
               ref={(node) => {
@@ -633,8 +772,10 @@ export default function About() {
                   videoFrameRefs.current[index] = node;
                 }
               }}
-              className={`about-video-frame invisible relative overflow-hidden rounded-md opacity-0 ${
-                index === 1 ? "about-video-frame-borderless" : ""
+              className={`about-video-frame invisible opacity-0 ${
+                index === 1
+                  ? "about-video-frame-running"
+                  : "relative overflow-hidden rounded-md"
               }`}
             >
               <video
@@ -649,7 +790,9 @@ export default function About() {
                 playsInline
                 preload="metadata"
                 aria-hidden="true"
-                className="block h-full w-full object-cover"
+                className={`block h-full w-full object-cover ${
+                  index === 1 ? "about-running-video" : ""
+                }`}
               />
             </div>
             <h3
@@ -684,12 +827,12 @@ export default function About() {
         width={1024}
         height={1024}
         onLoad={() => ScrollTrigger.refresh()}
-        className="silver-disc pointer-events-none absolute z-30 aspect-square w-[45vmin] max-w-[620px] min-w-[240px] select-none"
+        className="silver-disc pointer-events-none absolute z-40 aspect-square w-[45vmin] max-w-[620px] min-w-[240px] select-none"
       />
 
       <h3
         ref={finalMessageRef}
-        className="pointer-events-none invisible absolute z-40 w-[min(90vw,44rem)] text-center font-display text-2xl leading-tight text-white opacity-0 sm:text-3xl md:text-4xl"
+        className="pointer-events-none invisible absolute z-50 w-[min(90vw,44rem)] text-center font-display text-2xl leading-tight text-white opacity-0 sm:text-3xl md:text-4xl"
       >
         <AnimatedWords
           text={FINAL_MESSAGE}
@@ -703,7 +846,7 @@ export default function About() {
 
       <div
         ref={titleRef}
-        className="pointer-events-none absolute left-1/2 top-[16%] z-20 w-full max-w-4xl -translate-x-1/2 px-5 text-center"
+        className="pointer-events-none absolute left-1/2 top-[16%] z-50 w-full max-w-4xl -translate-x-1/2 px-5 text-center"
       >
         <h2 className="font-display text-5xl leading-none text-white sm:text-6xl md:text-7xl lg:text-6xl">
           <AnimatedWords
@@ -717,7 +860,7 @@ export default function About() {
         </h2>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 top-16 bottom-0 z-40 flex items-center justify-center px-2 sm:px-5 md:top-20">
+      <div className="pointer-events-none absolute inset-x-0 top-16 bottom-0 z-50 flex items-center justify-center px-2 sm:px-5 md:top-20">
         <h2
           ref={nextTitleRef}
           className="font-display text-center text-6xl leading-none text-white sm:text-8xl md:text-9xl lg:text-8xl"
@@ -731,6 +874,7 @@ export default function About() {
             }}
           />
         </h2>
+      </div>
       </div>
     </section>
   );

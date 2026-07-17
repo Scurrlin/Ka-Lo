@@ -366,15 +366,26 @@ html.viewport-blackout-active.viewport-blackout-meme-active
 
 .about-video-stage {
   display: flex;
+  align-items: flex-start;
   gap: var(--about-video-gap, 96px);
 }
 
 .about-video-item {
+  height: var(--about-video-height, 240px);
+}
+
+.about-video-item-side {
   flex: 0 0 var(--about-video-width, 320px);
   width: var(--about-video-width, 320px);
 }
 
+.about-video-item-running {
+  flex: 0 0 var(--about-running-slot-width, 160px);
+  width: var(--about-running-slot-width, 160px);
+}
+
 .about-video-frame {
+  z-index: 20;
   height: var(--about-video-height, 240px);
   width: 100%;
   background: var(--black);
@@ -384,13 +395,27 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   will-change: opacity, visibility;
 }
 
-.about-video-frame-borderless {
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.72);
+.about-video-frame-running {
+  position: absolute;
+  left: 50%;
+  z-index: 10;
+  width: var(--about-video-width, 320px);
+  overflow: visible;
+  translate: -50% 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.about-running-video {
+  scale: var(--about-running-scale, 1.9);
+  transform-origin: 50% 50%;
 }
 
 .about-video-caption {
   position: absolute;
   left: 50%;
+  z-index: 30;
   width: min(92vw, 38rem);
   text-align: center;
   will-change: transform, opacity, visibility;
