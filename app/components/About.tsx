@@ -10,7 +10,7 @@ const NEXT_TITLE = "What's Next?";
 const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
   "/videos/running-10s.mp4",
-  "/videos/driving-6.5s.mp4"
+  "/videos/birds-13s.mp4"
 ] as const;
 const VIDEO_CAPTIONS = [
   { text: "People see one website", position: "below" as const },
