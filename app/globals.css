@@ -177,6 +177,17 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   transform: translate3d(-50%, 0, 0);
 }
 
+.intro-skip-control-exiting {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(
+    -50%,
+    calc(100% + 3rem + env(safe-area-inset-bottom)),
+    0
+  );
+  transition-duration: 650ms;
+}
+
 .intro-skip-button {
   min-width: 4.25rem;
   min-height: 2.5rem;

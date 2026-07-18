@@ -7,6 +7,9 @@ import Hero from "./Hero";
 const INTRO_SCROLL_LOCK_CLASS = "intro-scroll-locked";
 const INTRO_SKIPPED_CLASS = "intro-skip-complete";
 const SKIP_REVEAL_DELAY_MS = 1000;
+const INTRO_NATURAL_COMPLETION_MS = 5250;
+const SKIP_EXIT_LEAD_MS = 1500;
+const SKIP_EXIT_DELAY_MS = INTRO_NATURAL_COMPLETION_MS - SKIP_EXIT_LEAD_MS;
 const NATURAL_COMPLETION_FALLBACK_MS = 6500;
 const BLACKOUT_COVER_DURATION_MS = 180;
 const BLACKOUT_REVEAL_DURATION_MS = 250;
@@ -17,6 +20,7 @@ type IntroPhase = "running" | "covering" | "revealing" | "complete";
 export default function Intro() {
   const [phase, setPhase] = useState<IntroPhase>("running");
   const [isSkipAvailable, setIsSkipAvailable] = useState(false);
+  const [isSkipExiting, setIsSkipExiting] = useState(false);
   const phaseRef = useRef<IntroPhase>("running");
 
   const changePhase = useCallback((nextPhase: IntroPhase) => {
@@ -66,6 +70,11 @@ export default function Intro() {
         setIsSkipAvailable(true);
       }
     }, SKIP_REVEAL_DELAY_MS);
+    const skipExitTimer = window.setTimeout(() => {
+      if (phaseRef.current === "running") {
+        setIsSkipExiting(true);
+      }
+    }, SKIP_EXIT_DELAY_MS);
     const naturalCompletionFallback = window.setTimeout(
       completeNaturally,
       NATURAL_COMPLETION_FALLBACK_MS
@@ -73,6 +82,7 @@ export default function Intro() {
 
     return () => {
       window.clearTimeout(skipRevealTimer);
+      window.clearTimeout(skipExitTimer);
       window.clearTimeout(naturalCompletionFallback);
     };
   }, [completeNaturally]);
@@ -108,7 +118,7 @@ export default function Intro() {
   );
 
   const handleSkip = () => {
-    if (phaseRef.current !== "running" || !isSkipAvailable) {
+    if (phaseRef.current !== "running" || !isSkipAvailable || isSkipExiting) {
       return;
     }
 
@@ -126,14 +136,18 @@ export default function Intro() {
       {isSkipAvailable && (phase === "running" || phase === "covering") ? (
         <div
           className={`intro-skip-control ${
-            phase === "running" ? "intro-skip-control-visible" : ""
+            phase === "running"
+              ? isSkipExiting
+                ? "intro-skip-control-exiting"
+                : "intro-skip-control-visible"
+              : ""
           }`}
         >
           <button
             type="button"
             className="intro-skip-button"
             onClick={handleSkip}
-            disabled={phase !== "running"}
+            disabled={phase !== "running" || isSkipExiting}
             aria-label="Skip intro animation"
           >
             Skip
