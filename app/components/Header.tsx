@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
   INSTAGRAM_LINK,
+  LYRIC_NAVIGATION,
   SECTION_LINKS,
   SOCIAL_LINKS,
   type SectionId,
@@ -21,11 +22,9 @@ const MOBILE_MENU_ITEM_STAGGER = 60;
 // Must stay in sync with the `duration-[600ms]` Tailwind class on each mobile
 // menu item below (kept as a literal there so Tailwind's scanner picks it up).
 const MOBILE_MENU_ITEM_REVEAL_DURATION = 600;
-const MOBILE_MENU_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
-// The backdrop's un-blur is timed to finish right as the last (bottom-most)
-// link finishes fading out, rather than using an unrelated fixed duration.
-const MOBILE_MENU_CLOSE_BACKDROP_DURATION =
-  (MOBILE_MENU_ITEM_COUNT - 1) * MOBILE_MENU_ITEM_STAGGER + MOBILE_MENU_ITEM_REVEAL_DURATION;
+const MOBILE_MAIN_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
+
+type MobileMenuView = "main" | "lyrics" | "silver-cracks" | "exercises";
 
 type SocialLinkProps = {
   social: SocialLink;
@@ -41,7 +40,7 @@ type HeaderProps = {
   isIntroComplete: boolean;
 };
 
-function getPageSectionScrollTarget(id: SectionId | "top") {
+function getPageSectionScrollTarget(id: string) {
   const target = document.getElementById(id);
 
   if (!target) {
@@ -61,14 +60,44 @@ function getPageSectionScrollTarget(id: SectionId | "top") {
   };
 }
 
-function getMobileMenuItemStyle(index: number, isMenuOpen: boolean): React.CSSProperties {
+function getMobileMenuItemStyle(index: number, isVisible: boolean): React.CSSProperties {
   // Same top-down order both ways: the topmost item leads on the way in
   // (after the initial delay) and leads on the way out too.
   return {
-    transitionDelay: isMenuOpen
+    transitionDelay: isVisible
       ? `${MOBILE_MENU_ITEM_DELAY + index * MOBILE_MENU_ITEM_STAGGER}ms`
       : `${index * MOBILE_MENU_ITEM_STAGGER}ms`
   };
+}
+
+function getMobileMenuTransitionDuration(itemCount: number) {
+  return (
+    Math.max(0, itemCount - 1) * MOBILE_MENU_ITEM_STAGGER +
+    MOBILE_MENU_ITEM_REVEAL_DURATION
+  );
+}
+
+function MobileMenuItem({
+  index,
+  isVisible,
+  children
+}: {
+  index: number;
+  isVisible: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`transform-gpu transition-[opacity,transform] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isVisible
+          ? "translate-y-0 opacity-100"
+          : "pointer-events-none translate-y-3 opacity-0"
+      }`}
+      style={getMobileMenuItemStyle(index, isVisible)}
+    >
+      {children}
+    </div>
+  );
 }
 
 function SocialDestination({
@@ -141,10 +170,97 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const scrollAnchorYRef = useRef(0);
   const scrollDirectionRef = useRef<"up" | "down" | null>(null);
   const scrollFrameRef = useRef<number | null>(null);
+  const mobileMenuTransitionTimerRef = useRef<number | null>(null);
+  const mobileMenuRevealFrameRef = useRef<number | null>(null);
+  const mobileMenuFocusFrameRef = useRef<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isHeaderFocused, setIsHeaderFocused] = useState(false);
+  const [isLyricsHeaderPinned, setIsLyricsHeaderPinned] = useState(false);
+  const [mobileMenuView, setMobileMenuView] = useState<MobileMenuView>("main");
+  const [isMobileMenuViewVisible, setIsMobileMenuViewVisible] = useState(true);
+  const activeLyricProject =
+    mobileMenuView === "silver-cracks" || mobileMenuView === "exercises"
+      ? LYRIC_NAVIGATION.find(
+          (release) => release.projectId === mobileMenuView
+        ) ?? null
+      : null;
+  const mobileMenuItemCount =
+    mobileMenuView === "main"
+      ? MOBILE_MAIN_ITEM_COUNT
+      : mobileMenuView === "lyrics"
+        ? LYRIC_NAVIGATION.length + 2
+        : (activeLyricProject?.songs.length ?? 0) + 2;
+  const areMobileMenuItemsVisible =
+    isMenuOpen && isMobileMenuViewVisible;
+
+  const transitionMobileMenuView = (nextView: MobileMenuView) => {
+    if (
+      !isMenuOpen ||
+      !isMobileMenuViewVisible ||
+      nextView === mobileMenuView
+    ) {
+      return;
+    }
+
+    setIsMobileMenuViewVisible(false);
+    mobileMenuTransitionTimerRef.current = window.setTimeout(() => {
+      mobileMenuTransitionTimerRef.current = null;
+      setMobileMenuView(nextView);
+
+      mobileMenuRevealFrameRef.current = window.requestAnimationFrame(() => {
+        mobileMenuRevealFrameRef.current = null;
+        setIsMobileMenuViewVisible(true);
+
+        mobileMenuFocusFrameRef.current = window.requestAnimationFrame(() => {
+          mobileMenuFocusFrameRef.current = null;
+          const firstMenuLink =
+            menuPanelRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+          firstMenuLink?.focus();
+        });
+      });
+    }, getMobileMenuTransitionDuration(mobileMenuItemCount));
+  };
+
+  useEffect(() => {
+    if (isMenuOpen) {
+      return;
+    }
+
+    if (mobileMenuTransitionTimerRef.current !== null) {
+      window.clearTimeout(mobileMenuTransitionTimerRef.current);
+      mobileMenuTransitionTimerRef.current = null;
+    }
+
+    if (mobileMenuRevealFrameRef.current !== null) {
+      window.cancelAnimationFrame(mobileMenuRevealFrameRef.current);
+      mobileMenuRevealFrameRef.current = null;
+    }
+
+    if (mobileMenuFocusFrameRef.current !== null) {
+      window.cancelAnimationFrame(mobileMenuFocusFrameRef.current);
+      mobileMenuFocusFrameRef.current = null;
+    }
+
+  }, [isMenuOpen]);
+
+  useEffect(
+    () => () => {
+      if (mobileMenuTransitionTimerRef.current !== null) {
+        window.clearTimeout(mobileMenuTransitionTimerRef.current);
+      }
+
+      if (mobileMenuRevealFrameRef.current !== null) {
+        window.cancelAnimationFrame(mobileMenuRevealFrameRef.current);
+      }
+
+      if (mobileMenuFocusFrameRef.current !== null) {
+        window.cancelAnimationFrame(mobileMenuFocusFrameRef.current);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     lastScrollYRef.current = window.scrollY;
@@ -155,6 +271,23 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
       const currentScrollY = Math.max(0, window.scrollY);
       const previousScrollY = lastScrollYRef.current;
+      const lyricsSection = document.getElementById("lyrics");
+      const lyricsBounds = lyricsSection?.getBoundingClientRect();
+      const lyricsTop = lyricsBounds ? lyricsBounds.top + currentScrollY : Infinity;
+      const lyricsBottom = lyricsBounds ? lyricsTop + lyricsBounds.height : -Infinity;
+      const isInsideLyrics =
+        currentScrollY >= lyricsTop - HEADER_TOP_THRESHOLD &&
+        currentScrollY < lyricsBottom - HEADER_TOP_THRESHOLD;
+
+      setIsLyricsHeaderPinned(isInsideLyrics);
+
+      if (isInsideLyrics) {
+        setIsHeaderVisible(true);
+        scrollDirectionRef.current = null;
+        scrollAnchorYRef.current = currentScrollY;
+        lastScrollYRef.current = currentScrollY;
+        return;
+      }
 
       if (currentScrollY <= HEADER_TOP_THRESHOLD) {
         setIsHeaderVisible(true);
@@ -212,7 +345,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     return () => desktopMedia.removeEventListener("change", closeMobileMenu);
   }, []);
 
-  const navigateToSection = (id: SectionId | "top") => {
+  const navigateToTarget = (id: string) => {
     const target = getPageSectionScrollTarget(id);
 
     if (!target) {
@@ -264,7 +397,16 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       setIsMenuOpen(false);
     }
 
-    navigateToSection(id);
+    navigateToTarget(id);
+  };
+
+  const handleLyricNavClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    id: string
+  ) => {
+    event.preventDefault();
+    setIsMenuOpen(false);
+    navigateToTarget(id);
   };
 
   useEffect(
@@ -360,9 +502,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       <header
         ref={headerRef}
         data-site-header
+        data-lyrics-pinned={isLyricsHeaderPinned || undefined}
         className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(248,248,245,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
           isIntroComplete
-            ? isHeaderVisible || isMenuOpen || isHeaderFocused
+            ? isHeaderVisible ||
+              isMenuOpen ||
+              isHeaderFocused ||
+              isLyricsHeaderPinned
               ? "translate-y-0"
               : "pointer-events-none -translate-y-[115%]"
             : "site-header-intro pointer-events-none"
@@ -384,7 +530,16 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               aria-controls={MOBILE_MENU_ID}
               aria-expanded={isMenuOpen}
               data-menu-open={isMenuOpen}
-              onClick={() => setIsMenuOpen((isOpen) => !isOpen)}
+              onClick={() => {
+                if (isMenuOpen) {
+                  setIsMenuOpen(false);
+                  return;
+                }
+
+                setMobileMenuView("main");
+                setIsMobileMenuViewVisible(true);
+                setIsMenuOpen(true);
+              }}
             >
               <span className="sr-only">{isMenuOpen ? "Close menu" : "Open menu"}</span>
               <span
@@ -476,7 +631,9 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         // Opening keeps its own fixed duration; closing is computed above so
         // the un-blur finishes in sync with the last staggered link.
         style={{
-          transitionDuration: isMenuOpen ? "650ms" : `${MOBILE_MENU_CLOSE_BACKDROP_DURATION}ms`
+          transitionDuration: isMenuOpen
+            ? "650ms"
+            : `${getMobileMenuTransitionDuration(mobileMenuItemCount)}ms`
         }}
         onClick={(event) => {
           if (event.target === event.currentTarget) {
@@ -485,53 +642,162 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         }}
       >
         <nav
-          className="flex max-h-full w-full max-w-sm flex-col items-center justify-center gap-6 overflow-y-auto py-6"
-          aria-label="Mobile navigation"
+          className="flex max-h-full w-full max-w-sm flex-col items-center justify-[safe_center] gap-5 overflow-y-auto py-6"
+          aria-label={
+            mobileMenuView === "main"
+              ? "Mobile navigation"
+              : activeLyricProject
+                ? `${activeLyricProject.label} lyrics navigation`
+                : "Lyrics navigation"
+          }
+          aria-busy={!isMobileMenuViewVisible}
+          inert={!areMobileMenuItemsVisible}
         >
-          {SECTION_LINKS.map((link, index) => (
-            <div
-              key={link.id}
-              className={`transform-gpu transition-[opacity,transform] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                isMenuOpen ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
-              }`}
-              style={getMobileMenuItemStyle(index, isMenuOpen)}
-            >
-              <a
-                className="font-display text-2xl uppercase leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-                href={link.href}
-                onClick={(event) => handleNavClick(event, link.id)}
-              >
-                {link.label}
-              </a>
-            </div>
-          ))}
+          {mobileMenuView === "main" ? (
+            <>
+              {SECTION_LINKS.map((link, index) => (
+                <MobileMenuItem
+                  key={link.id}
+                  index={index}
+                  isVisible={areMobileMenuItemsVisible}
+                >
+                  <a
+                    className="font-display text-2xl uppercase leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    href={link.href}
+                    onClick={(event) => {
+                      if (link.id === "lyrics") {
+                        event.preventDefault();
+                        transitionMobileMenuView("lyrics");
+                        return;
+                      }
 
-          {SOCIAL_LINKS.map((social, index) => (
-            <div
-              key={social.id}
-              className={`transform-gpu transition-[opacity,transform] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                isMenuOpen ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
-              }`}
-              style={getMobileMenuItemStyle(SECTION_LINKS.length + index, isMenuOpen)}
-            >
-              <SocialDestination
-                social={social}
-                variant="wordmark"
-                className="min-h-9 min-w-36"
-                interaction="none"
-                dimWhenUnavailable={false}
-                imageClassName={
-                  social.id === "apple-music"
-                    ? "h-6 w-auto max-w-[8rem] object-contain brightness-0 invert"
-                    : social.id === "spotify"
-                    ? "h-8 w-auto max-w-[10rem] object-contain"
-                    : social.id === "instagram"
-                    ? "h-7 w-auto max-w-[9rem] object-contain"
-                    : "h-6 w-auto max-w-[8rem] object-contain"
-                }
-              />
-            </div>
-          ))}
+                      handleNavClick(event, link.id);
+                    }}
+                  >
+                    {link.label}
+                  </a>
+                </MobileMenuItem>
+              ))}
+
+              {SOCIAL_LINKS.map((social, index) => (
+                <MobileMenuItem
+                  key={social.id}
+                  index={SECTION_LINKS.length + index}
+                  isVisible={areMobileMenuItemsVisible}
+                >
+                  <SocialDestination
+                    social={social}
+                    variant="wordmark"
+                    className="min-h-9 min-w-36"
+                    interaction="none"
+                    dimWhenUnavailable={false}
+                    imageClassName={
+                      social.id === "apple-music"
+                        ? "h-6 w-auto max-w-[8rem] object-contain brightness-0 invert"
+                        : social.id === "spotify"
+                          ? "h-8 w-auto max-w-[10rem] object-contain"
+                          : social.id === "instagram"
+                            ? "h-7 w-auto max-w-[9rem] object-contain"
+                            : "h-6 w-auto max-w-[8rem] object-contain"
+                    }
+                  />
+                </MobileMenuItem>
+              ))}
+            </>
+          ) : mobileMenuView === "lyrics" ? (
+            <>
+              <MobileMenuItem index={0} isVisible={areMobileMenuItemsVisible}>
+                <a
+                  className="font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  href="#lyrics"
+                  onClick={(event) => handleLyricNavClick(event, "lyrics")}
+                >
+                  Top
+                </a>
+              </MobileMenuItem>
+
+              {LYRIC_NAVIGATION.map((release, index) => (
+                <MobileMenuItem
+                  key={release.projectId}
+                  index={index + 1}
+                  isVisible={areMobileMenuItemsVisible}
+                >
+                  <a
+                    className="font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    href={release.href}
+                    onClick={(event) => {
+                      if (
+                        release.projectId === "silver-cracks" ||
+                        release.projectId === "exercises"
+                      ) {
+                        event.preventDefault();
+                        transitionMobileMenuView(release.projectId);
+                        return;
+                      }
+
+                      handleLyricNavClick(event, release.id);
+                    }}
+                  >
+                    {release.label}
+                  </a>
+                </MobileMenuItem>
+              ))}
+
+              <MobileMenuItem
+                index={LYRIC_NAVIGATION.length + 1}
+                isVisible={areMobileMenuItemsVisible}
+              >
+                <button
+                  type="button"
+                  className="cursor-pointer font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  onClick={() => transitionMobileMenuView("main")}
+                >
+                  &lt; Back
+                </button>
+              </MobileMenuItem>
+            </>
+          ) : activeLyricProject ? (
+            <>
+              <MobileMenuItem index={0} isVisible={areMobileMenuItemsVisible}>
+                <a
+                  className="font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  href="#lyrics"
+                  onClick={(event) => handleLyricNavClick(event, "lyrics")}
+                >
+                  Top
+                </a>
+              </MobileMenuItem>
+
+              {activeLyricProject.songs.map((song, index) => (
+                <MobileMenuItem
+                  key={song.id}
+                  index={index + 1}
+                  isVisible={areMobileMenuItemsVisible}
+                >
+                  <a
+                    className="font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    href={song.href}
+                    onClick={(event) => handleLyricNavClick(event, song.id)}
+                  >
+                    {song.label}
+                  </a>
+                </MobileMenuItem>
+              ))}
+
+              <MobileMenuItem
+                index={activeLyricProject.songs.length + 1}
+                isVisible={areMobileMenuItemsVisible}
+              >
+                <button
+                  type="button"
+                  className="cursor-pointer font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  onClick={() => transitionMobileMenuView("lyrics")}
+                >
+                  &lt; Back
+                </button>
+              </MobileMenuItem>
+            </>
+          ) : null}
         </nav>
       </div>
 
