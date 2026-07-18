@@ -12,6 +12,7 @@ import {
 } from "../constants/links";
 
 const MOBILE_MENU_ID = "mobile-site-navigation";
+const DESKTOP_LYRICS_MENU_ID = "desktop-lyrics-navigation";
 const DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
 const HEADER_DIRECTION_THRESHOLD = 6;
 const HEADER_TOP_THRESHOLD = 2;
@@ -25,6 +26,7 @@ const MOBILE_MENU_ITEM_REVEAL_DURATION = 600;
 const MOBILE_MAIN_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
 
 type MobileMenuView = "main" | "lyrics" | "silver-cracks" | "exercises";
+type DesktopLyricProject = "silver-cracks" | "exercises";
 
 type SocialLinkProps = {
   social: SocialLink;
@@ -165,6 +167,9 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
+  const desktopLyricsButtonRef = useRef<HTMLButtonElement>(null);
+  const desktopLyricsLayerRef = useRef<HTMLDivElement>(null);
+  const desktopLyricsPanelRef = useRef<HTMLDivElement>(null);
   const navigationRunRef = useRef(0);
   const lastScrollYRef = useRef(0);
   const scrollAnchorYRef = useRef(0);
@@ -173,7 +178,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const mobileMenuTransitionTimerRef = useRef<number | null>(null);
   const mobileMenuRevealFrameRef = useRef<number | null>(null);
   const mobileMenuFocusFrameRef = useRef<number | null>(null);
+  const desktopTrackFocusFrameRef = useRef<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDesktopLyricsMenuOpen, setIsDesktopLyricsMenuOpen] = useState(false);
+  const [desktopLyricProject, setDesktopLyricProject] =
+    useState<DesktopLyricProject | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isHeaderFocused, setIsHeaderFocused] = useState(false);
@@ -194,6 +203,9 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         : (activeLyricProject?.songs.length ?? 0) + 2;
   const areMobileMenuItemsVisible =
     isMenuOpen && isMobileMenuViewVisible;
+  const desktopLyricProjects = LYRIC_NAVIGATION.filter(
+    (release) => release.songs.length > 0
+  );
 
   const transitionMobileMenuView = (nextView: MobileMenuView) => {
     if (
@@ -335,14 +347,17 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
   useEffect(() => {
     const desktopMedia = window.matchMedia(DESKTOP_MEDIA_QUERY);
-    const closeMobileMenu = (event: MediaQueryListEvent) => {
+    const closeIncompatibleMenu = (event: MediaQueryListEvent) => {
       if (event.matches) {
         setIsMenuOpen(false);
+      } else {
+        setIsDesktopLyricsMenuOpen(false);
       }
     };
 
-    desktopMedia.addEventListener("change", closeMobileMenu);
-    return () => desktopMedia.removeEventListener("change", closeMobileMenu);
+    desktopMedia.addEventListener("change", closeIncompatibleMenu);
+    return () =>
+      desktopMedia.removeEventListener("change", closeIncompatibleMenu);
   }, []);
 
   const navigateToTarget = (id: string) => {
@@ -397,6 +412,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       setIsMenuOpen(false);
     }
 
+    if (isDesktopLyricsMenuOpen) {
+      setIsDesktopLyricsMenuOpen(false);
+    }
+
     navigateToTarget(id);
   };
 
@@ -406,6 +425,16 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   ) => {
     event.preventDefault();
     setIsMenuOpen(false);
+    setIsDesktopLyricsMenuOpen(false);
+    navigateToTarget(id);
+  };
+
+  const handleDesktopLyricNavClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    id: string
+  ) => {
+    event.preventDefault();
+    setIsDesktopLyricsMenuOpen(false);
     navigateToTarget(id);
   };
 
@@ -497,16 +526,146 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     };
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    if (!isDesktopLyricsMenuOpen) {
+      return;
+    }
+
+    const layer = desktopLyricsLayerRef.current;
+    const panel = desktopLyricsPanelRef.current;
+    const header = headerRef.current;
+    const trigger = desktopLyricsButtonRef.current;
+    const body = document.body;
+
+    if (!layer || !panel || !trigger) {
+      return;
+    }
+
+    const previousBodyOverflow = body.style.overflow;
+    const siblingStates = Array.from(header?.parentElement?.children ?? [])
+      .filter(
+        (element): element is HTMLElement =>
+          element instanceof HTMLElement &&
+          element !== header &&
+          element !== layer
+      )
+      .map((element) => ({
+        element,
+        inert: element.inert,
+        ariaHidden: element.getAttribute("aria-hidden")
+      }));
+
+    body.style.setProperty("overflow", "hidden");
+    siblingStates.forEach(({ element }) => {
+      element.inert = true;
+      element.setAttribute("aria-hidden", "true");
+    });
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      panel
+        .querySelector<HTMLElement>("[data-desktop-lyrics-top]")
+        ?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setIsDesktopLyricsMenuOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const panelFocusables = Array.from(
+        panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+      );
+      const focusables = [trigger, ...panelFocusables];
+      const currentIndex = focusables.indexOf(
+        document.activeElement as HTMLElement
+      );
+      const lastIndex = focusables.length - 1;
+
+      if (event.shiftKey) {
+        if (currentIndex <= 0) {
+          event.preventDefault();
+          focusables[lastIndex]?.focus();
+        } else if (currentIndex === 1) {
+          event.preventDefault();
+          trigger.focus();
+        }
+      } else if (currentIndex === 0) {
+        event.preventDefault();
+        panelFocusables[0]?.focus();
+      } else if (currentIndex === lastIndex) {
+        event.preventDefault();
+        trigger.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener("keydown", handleKeyDown);
+
+      if (previousBodyOverflow) {
+        body.style.setProperty("overflow", previousBodyOverflow);
+      } else {
+        body.style.removeProperty("overflow");
+      }
+
+      siblingStates.forEach(({ element, inert, ariaHidden }) => {
+        element.inert = inert;
+
+        if (ariaHidden === null) {
+          element.removeAttribute("aria-hidden");
+        } else {
+          element.setAttribute("aria-hidden", ariaHidden);
+        }
+      });
+
+      if (trigger.isConnected) {
+        trigger.focus({ preventScroll: true });
+      }
+    };
+  }, [isDesktopLyricsMenuOpen]);
+
+  useEffect(() => {
+    if (!isDesktopLyricsMenuOpen || !desktopLyricProject) {
+      return;
+    }
+
+    desktopTrackFocusFrameRef.current = window.requestAnimationFrame(() => {
+      desktopTrackFocusFrameRef.current = null;
+      desktopLyricsPanelRef.current
+        ?.querySelector<HTMLElement>(
+          `[data-desktop-track-panel="${desktopLyricProject}"] a[href]`
+        )
+        ?.focus();
+    });
+
+    return () => {
+      if (desktopTrackFocusFrameRef.current !== null) {
+        window.cancelAnimationFrame(desktopTrackFocusFrameRef.current);
+        desktopTrackFocusFrameRef.current = null;
+      }
+    };
+  }, [desktopLyricProject, isDesktopLyricsMenuOpen]);
+
   return (
     <>
       <header
         ref={headerRef}
         data-site-header
         data-lyrics-pinned={isLyricsHeaderPinned || undefined}
+        data-desktop-lyrics-open={isDesktopLyricsMenuOpen || undefined}
         className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(248,248,245,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
           isIntroComplete
             ? isHeaderVisible ||
               isMenuOpen ||
+              isDesktopLyricsMenuOpen ||
               isHeaderFocused ||
               isLyricsHeaderPinned
               ? "translate-y-0"
@@ -517,6 +676,14 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
             setIsHeaderFocused(false);
+          }
+        }}
+        onClickCapture={(event) => {
+          if (
+            isDesktopLyricsMenuOpen &&
+            !desktopLyricsButtonRef.current?.contains(event.target as Node)
+          ) {
+            setIsDesktopLyricsMenuOpen(false);
           }
         }}
       >
@@ -564,16 +731,41 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               className="hidden min-w-0 items-center gap-4 text-base font-semibold uppercase sm:flex md:gap-6 md:text-lg"
               aria-label="Section navigation"
             >
-              {SECTION_LINKS.map((link) => (
-                <a
-                  key={link.id}
-                  className="relative py-1 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100"
-                  href={link.href}
-                  onClick={(event) => handleNavClick(event, link.id)}
-                >
-                  {link.label}
-                </a>
-              ))}
+              {SECTION_LINKS.map((link) =>
+                link.id === "lyrics" ? (
+                  <button
+                    key={link.id}
+                    ref={desktopLyricsButtonRef}
+                    type="button"
+                    className={`relative cursor-pointer bg-transparent py-1 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 ${
+                      isDesktopLyricsMenuOpen ? "after:scale-x-100" : ""
+                    }`}
+                    aria-controls={DESKTOP_LYRICS_MENU_ID}
+                    aria-expanded={isDesktopLyricsMenuOpen}
+                    aria-haspopup="dialog"
+                    onClick={() => {
+                      if (isDesktopLyricsMenuOpen) {
+                        setIsDesktopLyricsMenuOpen(false);
+                        return;
+                      }
+
+                      setDesktopLyricProject(null);
+                      setIsDesktopLyricsMenuOpen(true);
+                    }}
+                  >
+                    {link.label}
+                  </button>
+                ) : (
+                  <a
+                    key={link.id}
+                    className="relative py-1 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100"
+                    href={link.href}
+                    onClick={(event) => handleNavClick(event, link.id)}
+                  >
+                    {link.label}
+                  </a>
+                )
+              )}
             </nav>
           </div>
 
@@ -615,6 +807,146 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           </div>
         </div>
       </header>
+
+      <div
+        ref={desktopLyricsLayerRef}
+        aria-hidden={!isDesktopLyricsMenuOpen}
+        inert={!isDesktopLyricsMenuOpen}
+        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden transition-[opacity,visibility,background-color,backdrop-filter] duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] sm:block md:top-20 ${
+          isDesktopLyricsMenuOpen
+            ? "visible pointer-events-auto bg-black/70 opacity-100 backdrop-blur-xl"
+            : "invisible pointer-events-none bg-black/0 opacity-0 backdrop-blur-none"
+        }`}
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) {
+            setIsDesktopLyricsMenuOpen(false);
+          }
+        }}
+      >
+        <div
+          id={DESKTOP_LYRICS_MENU_ID}
+          ref={desktopLyricsPanelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Lyrics navigation"
+          className={`max-h-[calc(100svh-4rem)] w-full transform-gpu overflow-y-auto border-b border-white bg-black text-white shadow-[0_24px_64px_rgba(0,0,0,0.45)] transition-[opacity,transform] duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] md:max-h-[calc(100svh-5rem)] ${
+            isDesktopLyricsMenuOpen
+              ? "translate-y-0 opacity-100"
+              : "-translate-y-3 opacity-0"
+          }`}
+        >
+          <div className="mx-auto grid min-h-[22rem] w-full max-w-7xl grid-cols-[minmax(13rem,0.8fr)_minmax(0,1.2fr)] gap-8 px-8 py-10 md:min-h-[25rem] md:gap-12 md:py-12 lg:gap-20">
+            <nav
+              className="flex flex-col items-start justify-center gap-4 md:gap-5"
+              aria-label="Lyrics releases"
+            >
+              <a
+                data-desktop-lyrics-top
+                href="#lyrics"
+                className="relative font-display text-2xl leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-3xl"
+                onClick={(event) =>
+                  handleDesktopLyricNavClick(event, "lyrics")
+                }
+              >
+                Top
+              </a>
+
+              {LYRIC_NAVIGATION.map((release) => {
+                const opensTrackColumn =
+                  release.projectId === "silver-cracks" ||
+                  release.projectId === "exercises";
+                const isSelected =
+                  opensTrackColumn &&
+                  desktopLyricProject === release.projectId;
+
+                const itemClassName =
+                  "group relative inline-flex items-center gap-3 bg-transparent font-display text-2xl leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-3xl";
+
+                if (!opensTrackColumn) {
+                  return (
+                    <a
+                      key={release.projectId}
+                      href={release.href}
+                      className={itemClassName}
+                      onClick={(event) =>
+                        handleDesktopLyricNavClick(event, release.id)
+                      }
+                    >
+                      {release.label}
+                    </a>
+                  );
+                }
+
+                return (
+                  <button
+                    key={release.projectId}
+                    type="button"
+                    className={`${itemClassName} cursor-pointer`}
+                    aria-controls={`desktop-lyrics-tracks-${release.projectId}`}
+                    aria-expanded={isSelected}
+                    onClick={() => setDesktopLyricProject(release.projectId)}
+                  >
+                    {release.label}
+                    <span
+                      aria-hidden="true"
+                      className={`text-[0.7em] transition-opacity duration-200 ${
+                        isSelected
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-45 group-focus-visible:opacity-45"
+                      }`}
+                    >
+                      →
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            <div
+              className={`grid border-l pl-8 transition-colors duration-[250ms] md:pl-12 lg:pl-20 ${
+                desktopLyricProject
+                  ? "border-white/25"
+                  : "border-transparent"
+              }`}
+            >
+              {desktopLyricProjects.map((release) => {
+                const isSelected =
+                  desktopLyricProject === release.projectId;
+
+                return (
+                  <nav
+                    key={release.projectId}
+                    id={`desktop-lyrics-tracks-${release.projectId}`}
+                    data-desktop-track-panel={release.projectId}
+                    aria-label={`${release.label} tracks`}
+                    aria-hidden={!isSelected}
+                    inert={!isSelected}
+                    className={`col-start-1 row-start-1 flex transform-gpu flex-col items-start justify-center gap-4 transition-[opacity,transform] duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] md:gap-5 ${
+                      isSelected
+                        ? "pointer-events-auto translate-x-0 opacity-100"
+                        : "pointer-events-none translate-x-3 opacity-0"
+                    }`}
+                  >
+                    {release.songs.map((song) => (
+                      <a
+                        key={song.id}
+                        href={song.href}
+                        tabIndex={isSelected ? undefined : -1}
+                        className="relative font-display text-2xl leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-3xl"
+                        onClick={(event) =>
+                          handleDesktopLyricNavClick(event, song.id)
+                        }
+                      >
+                        {song.label}
+                      </a>
+                    ))}
+                  </nav>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div
         id={MOBILE_MENU_ID}
