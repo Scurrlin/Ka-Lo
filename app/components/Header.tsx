@@ -360,11 +360,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       <header
         ref={headerRef}
         data-site-header
-        className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(248,248,245,1)] transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform md:h-20 ${
+        className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(248,248,245,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
           isIntroComplete
             ? isHeaderVisible || isMenuOpen || isHeaderFocused
-              ? "translate-y-0 opacity-100"
-              : "pointer-events-none -translate-y-full opacity-0"
+              ? "translate-y-0"
+              : "pointer-events-none -translate-y-[115%]"
             : "site-header-intro pointer-events-none"
         }`}
         onFocusCapture={() => setIsHeaderFocused(true)}
