@@ -24,12 +24,9 @@ const CD_VERTICAL_CLEARANCE = 36;
 const CD_MIN_DIAMETER = 88;
 const CD_MAX_DIAMETER = 192;
 const VIDEO_MAX_WIDTH = 680;
-const VIDEO_GAP_RATIO = 0.36;
-const VIDEO_GAP_MIN = 112;
-const VIDEO_GAP_MAX = 300;
 const RUNNING_SLOT_WIDTH_RATIO = 0.5;
 const RUNNING_VIDEO_SCALE = 1.9;
-const MIDDLE_ARC_SAMPLES = 18;
+const MIDDLE_ARC_SAMPLES_PER_HALF = 28;
 const SHRINK_DURATION = 1.25;
 const ROUTE_DURATION = 8;
 const GROW_DURATION = 1.35;
@@ -365,12 +362,16 @@ export default function About() {
         1,
         Math.min(VIDEO_MAX_WIDTH, viewportWidth * 0.78, maxVideoWidthByHeight)
       );
-      const gap = clamp(
-        videoWidth * VIDEO_GAP_RATIO,
-        VIDEO_GAP_MIN,
-        VIDEO_GAP_MAX
-      );
+      const baseGap =
+        clamp(
+          viewportWidth * 0.22,
+          smallCdRadius + CD_CLEARANCE * 2 + 48,
+          300
+        ) * 0.85;
       const runningSlotWidth = videoWidth * RUNNING_SLOT_WIDTH_RATIO;
+      const runningOverhang =
+        (videoWidth * (RUNNING_VIDEO_SCALE - RUNNING_SLOT_WIDTH_RATIO)) / 2;
+      const gap = baseGap + runningOverhang;
       const videoHeight = videoWidth * (3 / 4);
       const rowWidth = videoWidth * 2 + runningSlotWidth + gap * 2;
       const rowTop = headerHeight + (viewportHeight - headerHeight - videoHeight) / 2;
@@ -399,15 +400,12 @@ export default function About() {
       const horizontalTraceOffset = smallCdRadius + CD_CLEARANCE;
       const verticalTraceOffset = smallCdRadius + verticalClearance;
       const topY = videoOne.top - verticalTraceOffset;
-      const bottomY = videoTwo.bottom + verticalTraceOffset;
-      const firstGapX = videoOne.right + gap / 2;
-      const secondGapX = videoTwo.right + gap / 2;
+      const firstGapX = videoOne.right + horizontalTraceOffset;
+      const secondGapX = videoThree.left - horizontalTraceOffset;
       const centerX = origin.x;
       const centerBand = clamp(viewportWidth * 0.08, 20, 64);
       const videoOneCenteredTrackX = centerX - videoWidth / 2;
       const firstGapEnterTrackX = centerX + centerBand - firstGapX;
-      const firstGapExitTrackX = centerX - centerBand - firstGapX;
-      const secondGapEnterTrackX = centerX + centerBand - secondGapX;
       const secondGapExitTrackX = centerX - centerBand - secondGapX;
       const videoThreeRightEnterTrackX =
         centerX + centerBand - (videoThree.right + horizontalTraceOffset);
@@ -415,44 +413,78 @@ export default function About() {
         centerX - (videoThree.right + horizontalTraceOffset);
       const middleArcStart: LocalPoint = {
         x: firstGapX,
-        y: videoHeight + verticalTraceOffset
+        y: -verticalTraceOffset
       };
       const middleArcEnd: LocalPoint = {
         x: secondGapX,
-        y: videoHeight + verticalTraceOffset
+        y: -verticalTraceOffset
       };
       const middleArcSpan = middleArcEnd.x - middleArcStart.x;
-      const middleArcDepth = clamp(videoHeight * 0.045, 12, 26);
-      const middleArcControlOne: LocalPoint = {
-        x: middleArcStart.x + middleArcSpan * 0.32,
-        y: middleArcStart.y + middleArcDepth
+      const middleArcDepth = clamp(videoHeight * 0.08, 16, 32);
+      const middleArcBottom: LocalPoint = {
+        x: middleArcStart.x + middleArcSpan / 2,
+        y: videoHeight + verticalTraceOffset + middleArcDepth
       };
-      const middleArcControlTwo: LocalPoint = {
-        x: middleArcEnd.x - middleArcSpan * 0.32,
-        y: middleArcEnd.y + middleArcDepth
+      const middleArcLeftControlOne: LocalPoint = {
+        x: middleArcStart.x + middleArcSpan * 0.12,
+        y: middleArcStart.y
       };
-      const middleArcPoints = Array.from(
-        { length: MIDDLE_ARC_SAMPLES },
+      const middleArcLeftControlTwo: LocalPoint = {
+        x: middleArcBottom.x - middleArcSpan * 0.25,
+        y: middleArcBottom.y
+      };
+      const middleArcRightControlOne: LocalPoint = {
+        x: middleArcBottom.x + middleArcSpan * 0.25,
+        y: middleArcBottom.y
+      };
+      const middleArcRightControlTwo: LocalPoint = {
+        x: middleArcEnd.x - middleArcSpan * 0.12,
+        y: middleArcEnd.y
+      };
+      const getMiddleArcPoint = (
+        localPoint: LocalPoint,
+        routeProgress: number
+      ): Point => {
+        const trackX = interpolate(
+          firstGapEnterTrackX,
+          secondGapExitTrackX,
+          smoothstep(routeProgress)
+        );
+
+        return {
+          x: localPoint.x + trackX - origin.x,
+          y: rowTop + localPoint.y - origin.y,
+          trackX
+        };
+      };
+      const middleArcLeftPoints = Array.from(
+        { length: MIDDLE_ARC_SAMPLES_PER_HALF },
         (_, index): Point => {
-          const progress = (index + 1) / MIDDLE_ARC_SAMPLES;
+          const progress = (index + 1) / MIDDLE_ARC_SAMPLES_PER_HALF;
           const localPoint = getCubicBezierPoint(
             middleArcStart,
-            middleArcControlOne,
-            middleArcControlTwo,
+            middleArcLeftControlOne,
+            middleArcLeftControlTwo,
+            middleArcBottom,
+            progress
+          );
+
+          return getMiddleArcPoint(localPoint, progress / 2);
+        }
+      );
+      const middleArcRightPoints = Array.from(
+        { length: MIDDLE_ARC_SAMPLES_PER_HALF },
+        (_, index): Point => {
+          const progress = (index + 1) / MIDDLE_ARC_SAMPLES_PER_HALF;
+          const localPoint = getCubicBezierPoint(
+            middleArcBottom,
+            middleArcRightControlOne,
+            middleArcRightControlTwo,
             middleArcEnd,
             progress
           );
-          const trackX = interpolate(
-            firstGapExitTrackX,
-            secondGapEnterTrackX,
-            smoothstep(progress)
-          );
 
-          return {
-            x: localPoint.x + trackX - origin.x,
-            y: rowTop + localPoint.y - origin.y,
-            trackX
-          };
+          return getMiddleArcPoint(localPoint, 0.5 + progress / 2);
         }
       );
       const points = [
@@ -472,17 +504,8 @@ export default function About() {
           y: topY - origin.y,
           trackX: firstGapEnterTrackX
         },
-        {
-          x: -centerBand,
-          y: bottomY - origin.y,
-          trackX: firstGapExitTrackX
-        },
-        ...middleArcPoints,
-        {
-          x: -centerBand,
-          y: topY - origin.y,
-          trackX: secondGapExitTrackX
-        },
+        ...middleArcLeftPoints,
+        ...middleArcRightPoints,
         {
           x: centerBand,
           y: topY - origin.y,
@@ -510,17 +533,21 @@ export default function About() {
         );
       }
 
-      const middleArcEndIndex = 4 + MIDDLE_ARC_SAMPLES;
+      const middleArcStartIndex = 3;
+      const middleArcBottomIndex =
+        middleArcStartIndex + MIDDLE_ARC_SAMPLES_PER_HALF;
+      const middleArcEndIndex =
+        middleArcBottomIndex + MIDDLE_ARC_SAMPLES_PER_HALF;
       const videoRevealRanges = [
         {
           start: 0,
           end: cumulativeLengths[1] * 0.75
         },
         {
-          start: cumulativeLengths[3],
+          start: cumulativeLengths[middleArcStartIndex],
           end: interpolate(
-            cumulativeLengths[3],
-            cumulativeLengths[4],
+            cumulativeLengths[middleArcStartIndex],
+            cumulativeLengths[middleArcBottomIndex],
             0.55
           )
         },
