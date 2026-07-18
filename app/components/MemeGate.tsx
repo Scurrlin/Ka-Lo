@@ -139,7 +139,7 @@ export default function MemeGate() {
           preload
         />
         <p className="viewport-blackout-caption">
-          Does this look like AI to you Jeffrey?
+          Please increase your screen height
         </p>
       </div>
     </div>

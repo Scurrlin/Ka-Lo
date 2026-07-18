@@ -1,5 +1,4 @@
-import Header from "./components/Header";
-import Hero from "./components/Hero";
+import Intro from "./components/Intro";
 import Music from "./components/Music";
 import About from "./components/About";
 import Lyrics from "./components/Lyrics";
@@ -8,8 +7,7 @@ import Footer from "./components/Footer";
 export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white">
-      <Header />
-      <Hero />
+      <Intro />
       <Music />
       <About />
       <Lyrics />

@@ -23,6 +23,11 @@ const GRADIENT_COLORS = [
   { hue: 660, saturation: 100, lightness: 50 },
   { hue: 702.8, saturation: 100, lightness: 56.9 }
 ] as const;
+
+type HeroProps = {
+  onIntroComplete: () => void;
+};
+
 const WAVE_BARS = Array.from({ length: WAVE_BAR_COUNT }, (_, index) => {
   const t = index / (WAVE_BAR_COUNT - 1);
   const envelope = Math.sin(t * Math.PI);
@@ -71,7 +76,7 @@ function getWaveColor(hue: number) {
   };
 }
 
-export default function Hero() {
+export default function Hero({ onIntroComplete }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const waveRef = useRef<HTMLDivElement>(null);
   const waveBarRefs = useRef<HTMLSpanElement[]>([]);
@@ -229,7 +234,8 @@ export default function Hero() {
     <section
       ref={sectionRef}
       id="top"
-      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white md:min-h-screen"
+      tabIndex={-1}
+      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen"
     >
       <div className="pointer-events-none absolute inset-0 z-10 bg-white" aria-hidden="true" />
 
@@ -260,6 +266,14 @@ export default function Hero() {
           ref={waveRef}
           className="hero-sound-wave flex h-[var(--hero-wave-height)] w-[var(--hero-wave-width)] items-center justify-center"
           aria-hidden="true"
+          onAnimationEnd={(event) => {
+            if (
+              event.currentTarget === event.target &&
+              event.animationName === "hero-wave-rise"
+            ) {
+              onIntroComplete();
+            }
+          }}
         >
           <div className="flex h-full w-full items-center justify-between gap-[clamp(0.1rem,0.4vw,0.4rem)]">
             {WAVE_BARS.map((height, index) => (
