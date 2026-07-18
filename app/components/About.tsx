@@ -417,7 +417,7 @@ export default function About() {
         y: -verticalTraceOffset
       };
       const middleArcSpan = middleArcEnd.x - middleArcStart.x;
-      const middleArcDepth = clamp(videoHeight * 0.08, 16, 32);
+      const middleArcDepth = clamp(videoHeight * 0.07, 14, 28);
       const middleArcBottom: LocalPoint = {
         x: middleArcStart.x + middleArcSpan / 2,
         y: videoHeight + verticalTraceOffset + middleArcDepth
@@ -427,11 +427,11 @@ export default function About() {
         y: middleArcStart.y
       };
       const middleArcLeftControlTwo: LocalPoint = {
-        x: middleArcBottom.x - middleArcSpan * 0.25,
+        x: middleArcBottom.x - middleArcSpan * 0.28,
         y: middleArcBottom.y
       };
       const middleArcRightControlOne: LocalPoint = {
-        x: middleArcBottom.x + middleArcSpan * 0.25,
+        x: middleArcBottom.x + middleArcSpan * 0.28,
         y: middleArcBottom.y
       };
       const middleArcRightControlTwo: LocalPoint = {
