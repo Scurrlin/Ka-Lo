@@ -1,4 +1,4 @@
-export type SectionId = "music" | "about" | "next";
+export type SectionId = "music" | "about" | "lyrics";
 export type MusicProjectId =
   | "melody"
   | "exercises"
@@ -29,7 +29,7 @@ export type SocialLink = Readonly<{
 export const SECTION_LINKS = [
   { id: "music", label: "Music", href: "#music" },
   { id: "about", label: "About", href: "#about" },
-  { id: "next", label: "Next", href: "#next" }
+  { id: "lyrics", label: "Lyrics", href: "#lyrics" }
 ] as const satisfies readonly SectionLink[];
 
 export const MUSIC_PROJECT_LINKS: Readonly<Record<MusicProjectId, string | null>> = {

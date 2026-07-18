@@ -335,8 +335,6 @@ export default function About() {
     const updateLayout = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const header = document.querySelector<HTMLElement>("[data-site-header]");
-      const headerHeight = header?.offsetHeight ?? (viewportWidth >= 768 ? 80 : 64);
       const baseCdDiameter = cd.offsetWidth;
       const smallCdDiameter = clamp(
         Math.min(viewportWidth, viewportHeight) * 0.15,
@@ -353,7 +351,6 @@ export default function About() {
       const availableRouteHeight = Math.max(
         1,
         viewportHeight -
-          headerHeight -
           edgeMargin * 2 -
           (routeClearance + smallCdRadius) * 2
       );
@@ -374,10 +371,10 @@ export default function About() {
       const gap = baseGap + runningOverhang;
       const videoHeight = videoWidth * (3 / 4);
       const rowWidth = videoWidth * 2 + runningSlotWidth + gap * 2;
-      const rowTop = headerHeight + (viewportHeight - headerHeight - videoHeight) / 2;
+      const rowTop = (viewportHeight - videoHeight) / 2;
       const origin = {
         x: viewportWidth / 2,
-        y: headerHeight + (viewportHeight - headerHeight) / 2
+        y: viewportHeight / 2
       };
       const videoOne = {
         left: 0,
@@ -754,23 +751,17 @@ export default function About() {
         const currentTimeline = timeline;
         const scrollTrigger = currentTimeline?.scrollTrigger;
         const duration = currentTimeline?.duration() ?? 0;
-        const nextSection = document.getElementById("next");
 
         if (!currentTimeline || !scrollTrigger || duration === 0) {
           return;
         }
 
-        const scrollAtLabel = (label: "aboutTitleRevealed" | "nextTitleRevealed") =>
+        const scrollAtLabel = (label: "aboutTitleRevealed") =>
           scrollTrigger.start +
           (currentTimeline.labels[label] / duration) * (scrollTrigger.end - scrollTrigger.start);
 
         section.dataset.navScrollY = Math.round(scrollAtLabel("aboutTitleRevealed")).toString();
         section.dataset.navSettleMs = "1100";
-
-        if (nextSection) {
-          nextSection.dataset.navScrollY = Math.round(scrollAtLabel("nextTitleRevealed")).toString();
-          nextSection.dataset.navSettleMs = "1100";
-        }
       };
 
       ScrollTrigger.addEventListener("refresh", updateNavTargets);
@@ -788,19 +779,17 @@ export default function About() {
       delete section.dataset.navSettleMs;
       section.style.removeProperty("height");
       stickyStage.style.removeProperty("height");
-      const nextSection = document.getElementById("next");
-      delete nextSection?.dataset.navScrollY;
-      delete nextSection?.dataset.navSettleMs;
       ctx.revert();
     };
   }, []);
 
   return (
-    <section ref={sectionRef} id="about" className="relative h-screen bg-black text-white">
-      <div
-        ref={stickyStageRef}
-        className="sticky top-0 h-screen overflow-hidden bg-black"
-      >
+    <>
+      <section ref={sectionRef} id="about" className="relative h-screen bg-black text-white">
+        <div
+          ref={stickyStageRef}
+          className="sticky top-0 h-screen overflow-hidden bg-black"
+        >
       <div
         ref={videoStageRef}
         className="about-video-stage pointer-events-none absolute z-10"
@@ -906,7 +895,7 @@ export default function About() {
         </h2>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 top-16 bottom-0 z-50 flex items-center justify-center px-2 sm:px-5 md:top-20">
+      <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center px-2 sm:px-5">
         <h2
           ref={nextTitleRef}
           className="font-display text-center text-6xl leading-none text-white sm:text-8xl md:text-9xl lg:text-8xl"
@@ -921,7 +910,26 @@ export default function About() {
           />
         </h2>
       </div>
-      </div>
-    </section>
+        </div>
+      </section>
+
+      <section
+        className="bg-black px-5 py-24 text-white sm:px-8 md:py-32"
+        aria-label="What's next story"
+      >
+        <div className="mx-auto max-w-3xl space-y-8 text-lg leading-relaxed text-white sm:text-xl sm:leading-relaxed">
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante
+            venenatis dapibus posuere velit aliquet. Donec ullamcorper nulla non metus auctor
+            fringilla, sed posuere consectetur est at lobortis.
+          </p>
+          <p>
+            Curabitur blandit tempus porttitor. Maecenas faucibus mollis interdum. Praesent commodo
+            cursus magna, vel scelerisque nisl consectetur et. Aenean lacinia bibendum nulla sed
+            consectetur.
+          </p>
+        </div>
+      </section>
+    </>
   );
 }

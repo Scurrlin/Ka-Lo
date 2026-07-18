@@ -229,7 +229,7 @@ export default function Hero() {
     <section
       ref={sectionRef}
       id="top"
-      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 pt-16 text-white md:min-h-screen md:pt-20"
+      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white md:min-h-screen"
     >
       <div className="pointer-events-none absolute inset-0 z-10 bg-white" aria-hidden="true" />
 

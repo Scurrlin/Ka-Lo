@@ -12,6 +12,8 @@ import {
 
 const MOBILE_MENU_ID = "mobile-site-navigation";
 const DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
+const HEADER_DIRECTION_THRESHOLD = 6;
+const HEADER_TOP_THRESHOLD = 2;
 const FOCUSABLE_SELECTOR =
   "a[href]:not([tabindex='-1']), button:not([disabled]):not([tabindex='-1'])";
 const MOBILE_MENU_ITEM_DELAY = 200;
@@ -35,9 +37,8 @@ type SocialLinkProps = {
   hiddenFromAssistiveTechnology?: boolean;
 };
 
-function getPageSectionScrollTarget(id: SectionId | "top", header: HTMLElement | null) {
+function getPageSectionScrollTarget(id: SectionId | "top") {
   const target = document.getElementById(id);
-  const headerHeight = header?.offsetHeight ?? 0;
 
   if (!target) {
     return null;
@@ -46,7 +47,7 @@ function getPageSectionScrollTarget(id: SectionId | "top", header: HTMLElement |
   const animatedTarget = Number(target.dataset.navScrollY);
   const top = Number.isFinite(animatedTarget)
     ? animatedTarget
-    : target.getBoundingClientRect().top + window.scrollY - headerHeight;
+    : target.getBoundingClientRect().top + window.scrollY;
 
   const maxScrollTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
 
@@ -132,8 +133,68 @@ export default function Header() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
   const navigationRunRef = useRef(0);
+  const lastScrollYRef = useRef(0);
+  const scrollAnchorYRef = useRef(0);
+  const scrollDirectionRef = useRef<"up" | "down" | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [isHeaderFocused, setIsHeaderFocused] = useState(false);
+
+  useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+    scrollAnchorYRef.current = window.scrollY;
+
+    const updateHeaderVisibility = () => {
+      scrollFrameRef.current = null;
+
+      const currentScrollY = Math.max(0, window.scrollY);
+      const previousScrollY = lastScrollYRef.current;
+
+      if (currentScrollY <= HEADER_TOP_THRESHOLD) {
+        setIsHeaderVisible(true);
+        scrollDirectionRef.current = null;
+        scrollAnchorYRef.current = currentScrollY;
+        lastScrollYRef.current = currentScrollY;
+        return;
+      }
+
+      if (currentScrollY === previousScrollY) {
+        return;
+      }
+
+      const direction = currentScrollY > previousScrollY ? "down" : "up";
+
+      if (direction !== scrollDirectionRef.current) {
+        scrollDirectionRef.current = direction;
+        scrollAnchorYRef.current = previousScrollY;
+      }
+
+      if (Math.abs(currentScrollY - scrollAnchorYRef.current) >= HEADER_DIRECTION_THRESHOLD) {
+        setIsHeaderVisible(direction === "up");
+        scrollAnchorYRef.current = currentScrollY;
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    const handleScroll = () => {
+      if (scrollFrameRef.current === null) {
+        scrollFrameRef.current = window.requestAnimationFrame(updateHeaderVisibility);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const desktopMedia = window.matchMedia(DESKTOP_MEDIA_QUERY);
@@ -148,8 +209,7 @@ export default function Header() {
   }, []);
 
   const navigateToSection = (id: SectionId | "top") => {
-    const header = headerRef.current;
-    const target = getPageSectionScrollTarget(id, header);
+    const target = getPageSectionScrollTarget(id);
 
     if (!target) {
       return;
@@ -296,7 +356,17 @@ export default function Header() {
       <header
         ref={headerRef}
         data-site-header
-        className="site-header fixed inset-x-0 top-0 z-50 h-16 bg-black text-white shadow-[0_1px_0_rgba(248,248,245,1)] md:h-20"
+        className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(248,248,245,1)] transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform md:h-20 ${
+          isHeaderVisible || isMenuOpen || isHeaderFocused
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-full opacity-0"
+        }`}
+        onFocusCapture={() => setIsHeaderFocused(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setIsHeaderFocused(false);
+          }
+        }}
       >
         <div className="mx-auto grid h-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-5 sm:px-8">
           <div className="flex min-w-0 items-center justify-start">

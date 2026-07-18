@@ -149,7 +149,10 @@ export default function Music() {
   const introSectionRef = useRef<HTMLDivElement>(null);
   const introTitleRef = useRef<HTMLHeadingElement>(null);
   const introTitleCharsRef = useRef<HTMLSpanElement[]>([]);
-  const albumsGridRef = useRef<HTMLDivElement>(null);
+  const mixtapeImageRef = useRef<HTMLDivElement>(null);
+  const mixtapeTextRef = useRef<HTMLDivElement>(null);
+  const mixtapeHeadingCharsRef = useRef<HTMLSpanElement[]>([]);
+  const mixtapeSubheadingCharsRef = useRef<HTMLSpanElement[]>([]);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -166,7 +169,8 @@ export default function Music() {
     const ctx = gsap.context(() => {
       const introTitle = introTitleRef.current;
       const introTitleChars = introTitleCharsRef.current.filter(Boolean);
-      const albumsGrid = albumsGridRef.current;
+      const mixtapeHeadingChars = mixtapeHeadingCharsRef.current.filter(Boolean);
+      const mixtapeSubheadingChars = mixtapeSubheadingCharsRef.current.filter(Boolean);
 
       gsap.set(introTitleChars, { autoAlpha: 0, y: 26 });
       gsap.set(introTitle, { y: 0 });
@@ -209,20 +213,46 @@ export default function Music() {
       ScrollTrigger.addEventListener("refresh", updateNavTarget);
       updateNavTarget();
 
-      // Albums: a single shared trigger for the whole grid with a simple staggered
-      // fade/rise as it scrolls into view. No pin, scrub, or per-cover slide/spin.
-      if (albumsGrid) {
-        gsap.from(albumsGrid.querySelectorAll(".album-card"), {
+      gsap.set([...mixtapeHeadingChars, ...mixtapeSubheadingChars], {
+        autoAlpha: 0,
+        y: 16
+      });
+
+      if (mixtapeImageRef.current) {
+        gsap.from(mixtapeImageRef.current, {
           autoAlpha: 0,
-          y: 60,
-          duration: 0.6,
+          x: 120,
+          duration: 0.9,
           ease: "power3.out",
-          stagger: 0.1,
           scrollTrigger: {
-            trigger: albumsGrid,
-            start: "top 90%"
+            trigger: mixtapeImageRef.current,
+            start: "top 85%"
           }
         });
+      }
+
+      if (
+        mixtapeTextRef.current &&
+        (mixtapeHeadingChars.length || mixtapeSubheadingChars.length)
+      ) {
+        const mixtapeTextTimeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: mixtapeTextRef.current,
+            start: "top 85%"
+          }
+        });
+
+        mixtapeTextTimeline
+          .to(
+            mixtapeHeadingChars,
+            { autoAlpha: 1, y: 0, duration: 0.5, stagger: { each: 0.03 } },
+            0.1
+          )
+          .to(
+            mixtapeSubheadingChars,
+            { autoAlpha: 1, y: 0, duration: 0.4, stagger: { each: 0.02 } },
+            0.4
+          );
       }
     }, section);
 
@@ -249,8 +279,7 @@ export default function Music() {
             avoids a pin-boundary jump before the album grid takes over. */}
         <div ref={introSectionRef} className="relative h-[210svh]">
           <div className="sticky top-0 h-[100svh] overflow-hidden">
-            {/* Centered in the viewport space below the fixed header. */}
-            <div className="pointer-events-none absolute inset-x-0 top-16 bottom-0 z-20 flex items-center justify-center px-5 text-center md:top-20">
+            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-5 text-center">
               <h2
                 ref={introTitleRef}
                 className="w-full max-w-4xl text-center font-display text-5xl leading-none text-white sm:text-7xl md:text-8xl"
@@ -271,7 +300,7 @@ export default function Music() {
         {/* A single column below the "sm" breakpoint - a 2x2 grid from "sm" up - with
             the fifth album in its own row underneath, centered. Simple layout, no
             absolute pixel math required. */}
-        <div ref={albumsGridRef} className="mx-auto flex max-w-xs flex-col items-center gap-y-12 sm:max-w-2xl sm:gap-y-14 md:max-w-3xl md:gap-y-16">
+        <div className="mx-auto flex max-w-xs flex-col items-center gap-y-12 sm:max-w-2xl sm:gap-y-14 md:max-w-3xl md:gap-y-16">
           <div className="grid w-full grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-14 md:gap-x-16 md:gap-y-16">
             {CORNER_ALBUMS.map((album) => (
               <AlbumCard key={album.id} album={album} />
@@ -282,6 +311,46 @@ export default function Music() {
               between columns, at each breakpoint's own gap value. */}
           <div className="w-full sm:w-[calc(50%-1.5rem)] md:w-[calc(50%-2rem)]">
             <AlbumCard album={CENTER_ALBUM} />
+          </div>
+        </div>
+
+        <div
+          className="mx-auto mt-20 grid max-w-7xl items-center gap-12 py-24 md:grid-cols-[0.9fr_1.1fr] md:py-32"
+          aria-labelledby="mixtape-title"
+        >
+          <div ref={mixtapeTextRef} className="text-center md:text-left">
+            <h2
+              id="mixtape-title"
+              className="font-display text-[2.75rem] leading-none sm:text-[clamp(3.5rem,2.5rem+2.5vw,4.5rem)]"
+            >
+              <CharSpans
+                text="New Mixtape"
+                onCharRef={(el, index) => {
+                  if (el) {
+                    mixtapeHeadingCharsRef.current[index] = el;
+                  }
+                }}
+              />
+            </h2>
+            <p className="mt-7 text-lg font-bold uppercase tracking-wide text-white sm:text-xl">
+              <CharSpans
+                text="Coming Soon"
+                onCharRef={(el, index) => {
+                  if (el) {
+                    mixtapeSubheadingCharsRef.current[index] = el;
+                  }
+                }}
+              />
+            </p>
+          </div>
+          <div ref={mixtapeImageRef} className="flex justify-center md:justify-end">
+            <Image
+              src="/assets/My-Solus.webp"
+              alt="My Solus album cover"
+              width={1024}
+              height={1024}
+              className="album-cover aspect-square w-full max-w-[520px] rounded-md object-cover"
+            />
           </div>
         </div>
     </section>
