@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   INSTAGRAM_LINK,
@@ -25,7 +26,7 @@ const MOBILE_MENU_ITEM_STAGGER = 60;
 const MOBILE_MENU_ITEM_REVEAL_DURATION = 600;
 const MOBILE_MAIN_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
 const DESKTOP_LYRICS_MENU_TEXT_CLASS =
-  "flex w-full items-center px-6 py-[clamp(0.8rem,1.6svh,1.1rem)] text-left font-display text-[clamp(1.5rem,3svh,2.25rem)] leading-[0.95] focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white md:px-8";
+  "flex w-full items-center px-6 py-[clamp(0.8rem,1.6svh,1.1rem)] text-left focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white md:px-8";
 const MOBILE_LYRICS_MENU_TEXT_CLASS =
   "whitespace-nowrap font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
 
@@ -109,7 +110,11 @@ function MobileMenuItem({
 function BackLabel() {
   return (
     <>
-      <span aria-hidden="true">←</span>
+      <ArrowLeft
+        aria-hidden="true"
+        className="h-[0.9em] w-[0.9em] shrink-0"
+        strokeWidth={1.75}
+      />
       <span>Back</span>
     </>
   );
@@ -923,13 +928,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Lyrics navigation"
-          className={`max-h-[calc(100%-1.5rem)] w-[clamp(20rem,30vw,30rem)] transform-gpu overflow-y-auto bg-black text-white transition-transform duration-[425ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className={`max-h-[calc(100%-1.5rem)] w-[clamp(20rem,30vw,30rem)] transform-gpu overflow-y-auto border-r border-white bg-black text-white transition-transform duration-[425ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isDesktopLyricsMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           <nav
             data-desktop-track-panel={desktopLyricProject ?? undefined}
-            className="flex w-full flex-col divide-y divide-white border-y border-white text-left"
+            className="flex w-full flex-col divide-y divide-white border-y border-white text-left font-display text-[clamp(1.75rem,3.5svh,2.5rem)] leading-[0.95]"
             aria-label={
               activeDesktopLyricProject
                 ? `${activeDesktopLyricProject.label} lyrics navigation`
@@ -945,10 +950,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   isVisible={areDesktopLyricsItemsVisible}
                 >
                   <a
-                    href="#lyrics"
+                    href={activeDesktopLyricProject.href}
                     className={DESKTOP_LYRICS_MENU_TEXT_CLASS}
                     onClick={(event) =>
-                      handleDesktopLyricNavClick(event, "lyrics")
+                      handleDesktopLyricNavClick(
+                        event,
+                        activeDesktopLyricProject.id
+                      )
                     }
                   >
                     Top
@@ -1204,8 +1212,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               <MobileMenuItem index={0} isVisible={areMobileMenuItemsVisible}>
                 <a
                   className={MOBILE_LYRICS_MENU_TEXT_CLASS}
-                  href="#lyrics"
-                  onClick={(event) => handleLyricNavClick(event, "lyrics")}
+                  href={activeLyricProject.href}
+                  onClick={(event) =>
+                    handleLyricNavClick(event, activeLyricProject.id)
+                  }
                 >
                   Top
                 </a>
