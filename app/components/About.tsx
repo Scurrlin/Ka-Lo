@@ -918,19 +918,10 @@ export default function About() {
       </section>
 
       <section
-        className="bg-black px-5 py-24 text-white sm:px-8 md:py-32"
+        className="bg-black px-5 pb-24 pt-8 text-white sm:px-8 md:pb-32 md:pt-12"
         aria-label="What's next story"
       >
-        <div className="relative mx-auto max-w-3xl text-lg leading-relaxed text-white sm:text-xl sm:leading-relaxed">
-          <Image
-            src="/assets/Kalo_IG.jpg"
-            alt="Ka-Lo portrait"
-            width={150}
-            height={150}
-            sizes="(min-width: 640px) 144px, 128px"
-            className="absolute left-1/2 top-0 h-32 w-32 -translate-x-1/2 -translate-y-[calc(100%+1.5rem)] rounded-full object-cover sm:h-36 sm:w-36"
-          />
-
+        <div className="mx-auto max-w-3xl text-lg leading-relaxed text-white sm:text-xl sm:leading-relaxed">
           <div className="space-y-8">
             <p>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante

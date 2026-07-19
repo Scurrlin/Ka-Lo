@@ -55,15 +55,9 @@ function AnchorTitle({
   return (
     <a
       href={href}
-      className={`group inline-block rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white ${className}`}
+      className={`inline-block rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white ${className}`}
     >
       {children}
-      <span
-        aria-hidden="true"
-        className="ml-3 align-middle text-[0.42em] text-white/0 transition-colors group-hover:text-white/40 group-focus-visible:text-white/40"
-      >
-        #
-      </span>
     </a>
   );
 }
@@ -107,7 +101,7 @@ function SingleRelease({ release }: { release: LyricRelease }) {
 function AlbumRelease({ release }: { release: LyricRelease }) {
   return (
     <article id={release.id} className="border-t border-white/20 py-20 sm:py-28">
-      <h2 className="mx-auto max-w-[11ch] text-center font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
+      <h2 className="mx-auto max-w-[11ch] text-center font-display text-6xl leading-[0.88] tracking-[-0.05em] sm:text-8xl lg:text-9xl">
         <AnchorTitle href={release.href} className="max-w-full">
           {release.title}
         </AnchorTitle>

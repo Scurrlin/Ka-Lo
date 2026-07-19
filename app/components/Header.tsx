@@ -24,6 +24,10 @@ const MOBILE_MENU_ITEM_STAGGER = 60;
 // menu item below (kept as a literal there so Tailwind's scanner picks it up).
 const MOBILE_MENU_ITEM_REVEAL_DURATION = 600;
 const MOBILE_MAIN_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
+const DESKTOP_LYRICS_MENU_TEXT_CLASS =
+  "whitespace-nowrap font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
+const MOBILE_LYRICS_MENU_TEXT_CLASS =
+  "whitespace-nowrap font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
 
 type MobileMenuView = "main" | "lyrics" | "silver-cracks" | "exercises";
 type DesktopLyricProject = "silver-cracks" | "exercises";
@@ -99,6 +103,15 @@ function MobileMenuItem({
     >
       {children}
     </div>
+  );
+}
+
+function BackLabel() {
+  return (
+    <>
+      <span aria-hidden="true">←</span>
+      <span>Back</span>
+    </>
   );
 }
 
@@ -931,7 +944,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 >
                   <a
                     href="#lyrics"
-                    className="font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className={DESKTOP_LYRICS_MENU_TEXT_CLASS}
                     onClick={(event) =>
                       handleDesktopLyricNavClick(event, "lyrics")
                     }
@@ -949,7 +962,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                     <a
                       href={song.href}
                       data-desktop-first-track={index === 0 || undefined}
-                      className="font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                      className={DESKTOP_LYRICS_MENU_TEXT_CLASS}
                       onClick={(event) =>
                         handleDesktopLyricNavClick(event, song.id)
                       }
@@ -965,10 +978,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 >
                   <button
                     type="button"
-                    className="cursor-pointer font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-[0.35em]`}
                     onClick={() => transitionDesktopLyricsView(null)}
                   >
-                    &lt; Back
+                    <BackLabel />
                   </button>
                 </MobileMenuItem>
               </>
@@ -981,7 +994,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   <a
                     data-desktop-lyrics-top
                     href="#lyrics"
-                    className="font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className={DESKTOP_LYRICS_MENU_TEXT_CLASS}
                     onClick={(event) =>
                       handleDesktopLyricNavClick(event, "lyrics")
                     }
@@ -1004,7 +1017,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                       {opensTrackList ? (
                         <button
                           type="button"
-                          className="cursor-pointer font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                          className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer`}
                           onClick={() =>
                             transitionDesktopLyricsView(release.projectId)
                           }
@@ -1014,7 +1027,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                       ) : (
                         <a
                           href={release.href}
-                          className="font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                          className={DESKTOP_LYRICS_MENU_TEXT_CLASS}
                           onClick={(event) =>
                             handleDesktopLyricNavClick(event, release.id)
                           }
@@ -1032,10 +1045,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 >
                   <button
                     type="button"
-                    className="cursor-pointer font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-[0.35em]`}
                     onClick={() => setIsDesktopLyricsMenuOpen(false)}
                   >
-                    &lt; Back
+                    <BackLabel />
                   </button>
                 </MobileMenuItem>
               </>
@@ -1136,7 +1149,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
             <>
               <MobileMenuItem index={0} isVisible={areMobileMenuItemsVisible}>
                 <a
-                  className="font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  className={MOBILE_LYRICS_MENU_TEXT_CLASS}
                   href="#lyrics"
                   onClick={(event) => handleLyricNavClick(event, "lyrics")}
                 >
@@ -1151,7 +1164,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   isVisible={areMobileMenuItemsVisible}
                 >
                   <a
-                    className="font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className={MOBILE_LYRICS_MENU_TEXT_CLASS}
                     href={release.href}
                     onClick={(event) => {
                       if (
@@ -1177,10 +1190,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className="cursor-pointer font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-[0.35em]`}
                   onClick={() => transitionMobileMenuView("main")}
                 >
-                  &lt; Back
+                  <BackLabel />
                 </button>
               </MobileMenuItem>
             </>
@@ -1188,7 +1201,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
             <>
               <MobileMenuItem index={0} isVisible={areMobileMenuItemsVisible}>
                 <a
-                  className="font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  className={MOBILE_LYRICS_MENU_TEXT_CLASS}
                   href="#lyrics"
                   onClick={(event) => handleLyricNavClick(event, "lyrics")}
                 >
@@ -1203,7 +1216,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   isVisible={areMobileMenuItemsVisible}
                 >
                   <a
-                    className="font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className={MOBILE_LYRICS_MENU_TEXT_CLASS}
                     href={song.href}
                     onClick={(event) => handleLyricNavClick(event, song.id)}
                   >
@@ -1218,10 +1231,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className="cursor-pointer font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-[0.35em]`}
                   onClick={() => transitionMobileMenuView("lyrics")}
                 >
-                  &lt; Back
+                  <BackLabel />
                 </button>
               </MobileMenuItem>
             </>

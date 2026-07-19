@@ -19,22 +19,10 @@ type Album = {
 // bottom-right); the fifth is centered in the gap between them.
 const ALBUMS: Album[] = [
   {
-    id: "melody",
-    name: "Melody",
-    image: "/assets/Melody.webp",
-    href: MUSIC_PROJECT_LINKS.melody
-  },
-  {
-    id: "exercises",
-    name: "Exercises",
-    image: "/assets/Exercises.webp",
-    href: MUSIC_PROJECT_LINKS.exercises
-  },
-  {
-    id: "silver-cracks",
-    name: "Silver Cracks",
-    image: "/assets/Silver-Cracks.webp",
-    href: MUSIC_PROJECT_LINKS["silver-cracks"]
+    id: "kings-road",
+    name: "King's Road",
+    image: "/assets/Kings-Road.webp",
+    href: MUSIC_PROJECT_LINKS["kings-road"]
   },
   {
     id: "deep-end",
@@ -43,10 +31,22 @@ const ALBUMS: Album[] = [
     href: MUSIC_PROJECT_LINKS["deep-end"]
   },
   {
-    id: "kings-road",
-    name: "King's Road",
-    image: "/assets/Kings-Road.webp",
-    href: MUSIC_PROJECT_LINKS["kings-road"]
+    id: "silver-cracks",
+    name: "Silver Cracks",
+    image: "/assets/Silver-Cracks.webp",
+    href: MUSIC_PROJECT_LINKS["silver-cracks"]
+  },
+  {
+    id: "exercises",
+    name: "Exercises",
+    image: "/assets/Exercises.webp",
+    href: MUSIC_PROJECT_LINKS.exercises
+  },
+  {
+    id: "melody",
+    name: "Melody",
+    image: "/assets/Melody.webp",
+    href: MUSIC_PROJECT_LINKS.melody
   }
 ];
 
