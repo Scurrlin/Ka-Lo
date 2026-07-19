@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const TITLE = "Who is Ka-Lo?";
-const NEXT_TITLE = "What Else?";
+const NEXT_TITLE = "Rapper";
 const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
   "/videos/running-10s.mp4",
@@ -17,7 +17,7 @@ const VIDEO_CAPTIONS = [
   { text: "And Producer", position: "above" as const },
   { text: "Pushing The Limits Of Hip-Hop", position: "below" as const }
 ] as const;
-const FINAL_MESSAGE = "He's Not Your Traditional Rapper";
+const FINAL_MESSAGE = "He's Not Your Traditional...";
 
 const CD_CLEARANCE = 18;
 const CD_VERTICAL_CLEARANCE = 36;

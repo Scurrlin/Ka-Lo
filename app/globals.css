@@ -47,6 +47,15 @@ button {
   font: inherit;
 }
 
+.lyrics-shelf-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.lyrics-shelf-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 img {
   max-width: 100%;
 }

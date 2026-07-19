@@ -107,16 +107,15 @@ function MobileMenuItem({
   );
 }
 
-function BackLabel() {
+function BackIcon() {
   return (
-    <>
+    <span aria-hidden="true" className="relative block h-8 w-12 shrink-0">
       <ArrowLeft
-        aria-hidden="true"
-        className="h-[0.9em] w-[0.9em] shrink-0"
-        strokeWidth={1.75}
+        className="absolute left-0 top-0 h-8 w-8"
+        strokeWidth={1.5}
       />
-      <span>Back</span>
-    </>
+      <span className="absolute left-6 right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current" />
+    </span>
   );
 }
 
@@ -928,13 +927,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Lyrics navigation"
-          className={`max-h-[calc(100%-1.5rem)] w-[clamp(20rem,30vw,30rem)] transform-gpu overflow-y-auto border-r border-white bg-black text-white transition-transform duration-[425ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className={`lyrics-shelf-scroll max-h-[calc(100%-1.5rem)] w-[clamp(20rem,30vw,30rem)] transform-gpu overflow-y-auto border-r border-white bg-black text-white transition-transform duration-[425ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isDesktopLyricsMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           <nav
             data-desktop-track-panel={desktopLyricProject ?? undefined}
-            className="flex w-full flex-col divide-y divide-white border-y border-white text-left font-display text-[clamp(1.75rem,3.5svh,2.5rem)] leading-[0.95]"
+            className="flex w-full flex-col divide-y divide-white border-y border-white text-left font-display text-base leading-none md:text-lg"
             aria-label={
               activeDesktopLyricProject
                 ? `${activeDesktopLyricProject.label} lyrics navigation`
@@ -988,10 +987,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 >
                   <button
                     type="button"
-                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer gap-[0.35em]`}
+                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer`}
+                    aria-label="Back"
                     onClick={() => transitionDesktopLyricsView(null)}
                   >
-                    <BackLabel />
+                    <BackIcon />
                   </button>
                 </MobileMenuItem>
               </>
@@ -1055,10 +1055,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 >
                   <button
                     type="button"
-                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer gap-[0.35em]`}
+                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer`}
+                    aria-label="Back"
                     onClick={() => setIsDesktopLyricsMenuOpen(false)}
                   >
-                    <BackLabel />
+                    <BackIcon />
                   </button>
                 </MobileMenuItem>
               </>
@@ -1200,10 +1201,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-[0.35em]`}
+                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center`}
+                  aria-label="Back"
                   onClick={() => transitionMobileMenuView("main")}
                 >
-                  <BackLabel />
+                  <BackIcon />
                 </button>
               </MobileMenuItem>
             </>
@@ -1243,10 +1245,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-[0.35em]`}
+                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center`}
+                  aria-label="Back"
                   onClick={() => transitionMobileMenuView("lyrics")}
                 >
-                  <BackLabel />
+                  <BackIcon />
                 </button>
               </MobileMenuItem>
             </>
