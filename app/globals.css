@@ -346,6 +346,23 @@ html.intro-skip-complete .hero-wave-bar {
   transition-delay: 0ms, 550ms; /* opening: rotate only after top/bottom have vanished */
 }
 
+@keyframes menu-cascade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.menu-cascade-enter {
+  animation-name: menu-cascade-in;
+  animation-duration: 600ms;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .desktop-lyrics-close-line {
   position: absolute;
   left: 50%;
@@ -604,9 +621,19 @@ html.intro-skip-complete .hero-wave-bar {
   box-shadow: 0 36px 90px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
+/* These five releases are static content, not reveal targets. Force the card
+   ancestor to remain fully painted so descendant white cannot be dimmed by
+   parent compositing or a stale/broad animation selector. */
+#music .album-card {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+
 /* Keep the entire album-title chain white, including visited anchors and
-   WebKit's separate text paint. The opacity override prevents a link state
-   from dimming the otherwise-white name. */
+   WebKit's separate text paint. */
 #music .album-card h3,
 #music .album-card h3 > a,
 #music .album-card h3 > a:link,
@@ -617,6 +644,7 @@ html.intro-skip-complete .hero-wave-bar {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* The arrow is a static SVG rendered via next/image, so a text-color utility

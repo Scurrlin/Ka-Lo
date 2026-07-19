@@ -41,8 +41,8 @@ const FOCUSABLE_SELECTOR =
 // entrances, internal page changes, and exits all use one cascade system.
 const MOBILE_MENU_ITEM_DELAY = 200;
 const MOBILE_MENU_ITEM_STAGGER = 60;
-// Must stay in sync with the `duration-[600ms]` Tailwind class on each mobile
-// menu item below (kept as a literal there so Tailwind's scanner picks it up).
+// Must stay in sync with the `duration-[600ms]` exit class below and the
+// `.menu-cascade-enter` animation in globals.css.
 const MOBILE_MENU_ITEM_REVEAL_DURATION = 600;
 const MOBILE_MAIN_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
 const DESKTOP_LYRICS_MENU_TEXT_CLASS =
@@ -94,11 +94,13 @@ function getPageSectionScrollTarget(id: string) {
 function getMobileMenuItemStyle(index: number, isVisible: boolean): React.CSSProperties {
   // Same top-down order both ways: the topmost item leads on the way in
   // (after the initial delay) and leads on the way out too.
-  return {
-    transitionDelay: isVisible
-      ? `${MOBILE_MENU_ITEM_DELAY + index * MOBILE_MENU_ITEM_STAGGER}ms`
-      : `${index * MOBILE_MENU_ITEM_STAGGER}ms`
-  };
+  return isVisible
+    ? {
+        animationDelay: `${MOBILE_MENU_ITEM_DELAY + index * MOBILE_MENU_ITEM_STAGGER}ms`
+      }
+    : {
+        transitionDelay: `${index * MOBILE_MENU_ITEM_STAGGER}ms`
+      };
 }
 
 function getMobileMenuTransitionDuration(itemCount: number) {
@@ -119,10 +121,10 @@ function MobileMenuItem({
 }) {
   return (
     <div
-      className={`text-white transition-opacity duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-opacity ${
+      className={`text-white duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-opacity ${
         isVisible
-          ? "opacity-100"
-          : "pointer-events-none opacity-0"
+          ? "menu-cascade-enter opacity-100"
+          : "pointer-events-none opacity-0 transition-opacity"
       }`}
       style={getMobileMenuItemStyle(index, isVisible)}
     >
@@ -135,7 +137,7 @@ function BackIcon() {
   return (
     <ArrowLeft
       aria-hidden="true"
-      className="h-[1em] w-[1em] shrink-0"
+      className="h-[1.25em] w-[1.25em] shrink-0"
       strokeWidth={1.5}
     />
   );
@@ -259,7 +261,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     : null;
   const desktopLyricsItemCount = activeDesktopLyricProject
     ? activeDesktopLyricProject.songs.length + 2
-    : LYRIC_NAVIGATION.length + 2;
+    : LYRIC_NAVIGATION.length + 1;
   const areDesktopLyricsItemsVisible =
     isDesktopLyricsMenuOpen && isDesktopLyricsViewVisible;
   const isSharedBackdropVisible =
@@ -406,6 +408,30 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       const previousScrollY = lastScrollYRef.current;
 
       if (navigationIsActiveRef.current) {
+        scrollDirectionRef.current = null;
+        scrollAnchorYRef.current = currentScrollY;
+        lastScrollYRef.current = currentScrollY;
+        return;
+      }
+
+      const lyricsSection = document.getElementById("lyrics");
+      const lyricsBounds = lyricsSection?.getBoundingClientRect();
+      const lyricsTop = lyricsBounds
+        ? lyricsBounds.top + currentScrollY
+        : Number.POSITIVE_INFINITY;
+      const lyricsBottom = lyricsBounds
+        ? lyricsTop + lyricsBounds.height
+        : Number.NEGATIVE_INFINITY;
+      const lyricsNavigationScrollY = Number(lyricsSection?.dataset.navScrollY);
+      const lyricsPinnedStart = Number.isFinite(lyricsNavigationScrollY)
+        ? lyricsNavigationScrollY
+        : lyricsTop;
+      const isInsideLyrics =
+        currentScrollY >= lyricsPinnedStart - HEADER_TOP_THRESHOLD &&
+        currentScrollY < lyricsBottom - HEADER_TOP_THRESHOLD;
+
+      if (isInsideLyrics) {
+        setIsHeaderVisible(true);
         scrollDirectionRef.current = null;
         scrollAnchorYRef.current = currentScrollY;
         lastScrollYRef.current = currentScrollY;
@@ -1247,7 +1273,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                     onClick={() => transitionDesktopLyricsView(null)}
                   >
                     <BackIcon />
-                    <span>Back</span>
+                    <span className="text-[1em] leading-none">Back</span>
                   </button>
                 </MobileMenuItem>
               </>
@@ -1305,19 +1331,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   );
                 })}
 
-                <MobileMenuItem
-                  index={LYRIC_NAVIGATION.length + 1}
-                  isVisible={areDesktopLyricsItemsVisible}
-                >
-                  <button
-                    type="button"
-                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer gap-2`}
-                    onClick={() => setIsDesktopLyricsMenuOpen(false)}
-                  >
-                    <BackIcon />
-                    <span>Back</span>
-                  </button>
-                </MobileMenuItem>
               </>
             )}
           </nav>
@@ -1463,7 +1476,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   onClick={() => transitionMobileMenuView("main")}
                 >
                   <BackIcon />
-                  <span>Back</span>
+                  <span className="text-[1em] leading-none">Back</span>
                 </button>
               </MobileMenuItem>
             </>
@@ -1507,7 +1520,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   onClick={() => transitionMobileMenuView("lyrics")}
                 >
                   <BackIcon />
-                  <span>Back</span>
+                  <span className="text-[1em] leading-none">Back</span>
                 </button>
               </MobileMenuItem>
             </>
