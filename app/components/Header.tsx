@@ -1460,7 +1460,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   onClick={() => transitionMobileMenuView("main")}
                 >
                   <BackIcon />
-                  <span className="text-[1em] leading-none">Back</span>
+                  <span className="font-display text-2xl leading-none">Back</span>
                 </button>
               </MobileMenuItem>
             </>
@@ -1504,7 +1504,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   onClick={() => transitionMobileMenuView("lyrics")}
                 >
                   <BackIcon />
-                  <span className="text-[1em] leading-none">Back</span>
+                  <span className="font-display text-2xl leading-none">Back</span>
                 </button>
               </MobileMenuItem>
             </>
