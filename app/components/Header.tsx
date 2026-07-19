@@ -1514,10 +1514,8 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
       <div
         aria-hidden="true"
-        className={`fixed inset-0 touch-none transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          backdropSource === "navigation"
-            ? "z-[60] bg-black/40"
-            : "z-[35] bg-black/70"
+        className={`fixed inset-0 touch-none bg-black/50 transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          backdropSource === "navigation" ? "z-[60]" : "z-[35]"
         } ${
           isSharedBackdropVisible
             ? "visible pointer-events-auto opacity-100 backdrop-blur-xl"
