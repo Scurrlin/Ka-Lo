@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
+import gsap from "gsap";
+import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { useEffect, useRef, useState } from "react";
 import {
   INSTAGRAM_LINK,
@@ -17,20 +19,7 @@ const DESKTOP_LYRICS_MENU_ID = "desktop-lyrics-navigation";
 const DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
 const HEADER_DIRECTION_THRESHOLD = 6;
 const HEADER_TOP_THRESHOLD = 2;
-const NAV_SCROLL_MIN_DURATION_MS = 500;
-const NAV_SCROLL_MAX_DURATION_MS = 1250;
-const NAV_SCROLL_MS_PER_PIXEL = 0.035;
-const NAV_SCROLL_STABLE_FRAMES = 3;
-const NAV_SCROLL_INPUT_QUIET_MS = 250;
-const NAV_SCROLL_KEYS = new Set([
-  "ArrowDown",
-  "ArrowUp",
-  "End",
-  "Home",
-  "PageDown",
-  "PageUp",
-  " "
-]);
+const NAV_SCROLL_DURATION_SECONDS = 1.2;
 const FOCUSABLE_SELECTOR =
   "a[href]:not([tabindex='-1']), button:not([disabled]):not([tabindex='-1'])";
 // Shared by every desktop lyric-shelf and mobile navigation page so their
@@ -82,13 +71,8 @@ function getPageSectionScrollTarget(id: string) {
       );
 
       return Math.min(Math.max(0, top), maxScrollTop);
-    },
-    settleMs: Number(element.dataset.navSettleMs) || 0
+    }
   };
-}
-
-function easeOutQuart(progress: number) {
-  return 1 - Math.pow(1 - progress, 4);
 }
 
 function getMobileMenuItemStyle(index: number, isVisible: boolean): React.CSSProperties {
@@ -119,10 +103,10 @@ function MobileMenuItem({
 }) {
   return (
     <div
-      className={`transform-gpu text-white transition-[opacity,transform] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[opacity,transform] ${
+      className={`text-white transition-opacity duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-opacity ${
         isVisible
-          ? "translate-y-0 opacity-100"
-          : "pointer-events-none translate-y-3 opacity-0"
+          ? "opacity-100"
+          : "pointer-events-none opacity-0"
       }`}
       style={getMobileMenuItemStyle(index, isVisible)}
     >
@@ -133,12 +117,12 @@ function MobileMenuItem({
 
 function BackIcon() {
   return (
-    <span aria-hidden="true" className="relative block h-6 w-12 shrink-0">
+    <span aria-hidden="true" className="relative block h-[1em] w-12 shrink-0">
       <ArrowLeft
-        className="absolute left-0 top-0 h-6 w-6"
+        className="absolute left-0 top-0 h-[1em] w-[1em]"
         strokeWidth={1.5}
       />
-      <span className="absolute left-[1.125rem] right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current" />
+      <span className="absolute left-[0.75em] right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current" />
     </span>
   );
 }
@@ -212,7 +196,8 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const desktopLyricsLayerRef = useRef<HTMLDivElement>(null);
   const desktopLyricsPanelRef = useRef<HTMLDivElement>(null);
   const navigationRunRef = useRef(0);
-  const navigationCleanupRef = useRef<(() => void) | null>(null);
+  const navigationFrameRef = useRef<number | null>(null);
+  const navigationTweenRef = useRef<gsap.core.Tween | null>(null);
   const lastScrollYRef = useRef(0);
   const scrollAnchorYRef = useRef(0);
   const scrollDirectionRef = useRef<"up" | "down" | null>(null);
@@ -284,7 +269,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           mobileMenuFocusFrameRef.current = null;
           const firstMenuLink =
             menuPanelRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-          firstMenuLink?.focus();
+          firstMenuLink?.focus({ preventScroll: true });
         });
       });
     }, getMobileMenuTransitionDuration(mobileMenuItemCount));
@@ -457,6 +442,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   }, []);
 
   useEffect(() => {
+    gsap.registerPlugin(ScrollToPlugin);
+  }, []);
+
+  useEffect(() => {
     const desktopMedia = window.matchMedia(DESKTOP_MEDIA_QUERY);
     const closeIncompatibleMenu = (event: MediaQueryListEvent) => {
       if (event.matches) {
@@ -478,116 +467,47 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       return;
     }
 
-    navigationCleanupRef.current?.();
+    if (navigationFrameRef.current !== null) {
+      window.cancelAnimationFrame(navigationFrameRef.current);
+      navigationFrameRef.current = null;
+    }
+
+    navigationTweenRef.current?.kill();
+    navigationTweenRef.current = null;
 
     const run = ++navigationRunRef.current;
-    const root = document.documentElement;
-    const previousScrollBehavior = root.style.scrollBehavior;
-    let animationFrame = 0;
-    let stableFrames = 0;
-    let settleStartedAt: number | null = null;
-    let lastBlockedInputAt = Number.NEGATIVE_INFINITY;
-
-    const blockScrollInput = (event: Event) => {
-      lastBlockedInputAt = performance.now();
-      event.preventDefault();
-    };
-    const blockScrollKeys = (event: KeyboardEvent) => {
-      if (NAV_SCROLL_KEYS.has(event.key)) {
-        lastBlockedInputAt = performance.now();
-        event.preventDefault();
-      }
-    };
-
-    root.style.setProperty("scroll-behavior", "auto");
-    window.addEventListener("wheel", blockScrollInput, {
-      capture: true,
-      passive: false
-    });
-    window.addEventListener("touchmove", blockScrollInput, {
-      capture: true,
-      passive: false
-    });
-    window.addEventListener("keydown", blockScrollKeys, true);
-
-    const cleanupNavigation = () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener("wheel", blockScrollInput, true);
-      window.removeEventListener("touchmove", blockScrollInput, true);
-      window.removeEventListener("keydown", blockScrollKeys, true);
-
-      if (previousScrollBehavior) {
-        root.style.setProperty("scroll-behavior", previousScrollBehavior);
-      } else {
-        root.style.removeProperty("scroll-behavior");
-      }
-
-      if (navigationCleanupRef.current === cleanupNavigation) {
-        navigationCleanupRef.current = null;
-      }
-    };
-
-    navigationCleanupRef.current = cleanupNavigation;
 
     setIsNavigating(true);
     window.history.pushState(null, "", `#${id}`);
 
-    animationFrame = window.requestAnimationFrame(() => {
-      animationFrame = window.requestAnimationFrame((startedAt) => {
-        const startY = window.scrollY;
-        const initialTargetY = target.getTop();
+    navigationFrameRef.current = window.requestAnimationFrame(() => {
+      navigationFrameRef.current = window.requestAnimationFrame(() => {
+        navigationFrameRef.current = null;
+
+        if (navigationRunRef.current !== run) {
+          return;
+        }
+
         const prefersReducedMotion = window.matchMedia(
           "(prefers-reduced-motion: reduce)"
         ).matches;
-        const duration = prefersReducedMotion
-          ? 0
-          : Math.min(
-              NAV_SCROLL_MAX_DURATION_MS,
-              Math.max(
-                NAV_SCROLL_MIN_DURATION_MS,
-                Math.abs(initialTargetY - startY) * NAV_SCROLL_MS_PER_PIXEL
-              )
-            );
 
-        const advanceScroll = (now: number) => {
-          if (navigationRunRef.current !== run) {
-            cleanupNavigation();
-            return;
+        navigationTweenRef.current = gsap.to(window, {
+          scrollTo: {
+            y: target.getTop(),
+            autoKill: false
+          },
+          duration: prefersReducedMotion ? 0 : NAV_SCROLL_DURATION_SECONDS,
+          ease: prefersReducedMotion ? "none" : "power2.inOut",
+          overwrite: true,
+          onComplete: () => {
+            navigationTweenRef.current = null;
+
+            if (navigationRunRef.current === run) {
+              setIsNavigating(false);
+            }
           }
-
-          const targetY = target.getTop();
-          const progress = duration === 0
-            ? 1
-            : Math.min(1, (now - startedAt) / duration);
-          const nextY = progress < 1
-            ? startY + (targetY - startY) * easeOutQuart(progress)
-            : targetY;
-
-          window.scrollTo({ top: nextY, behavior: "instant" });
-
-          if (progress < 1) {
-            animationFrame = window.requestAnimationFrame(advanceScroll);
-            return;
-          }
-
-          const isAtTarget = Math.abs(window.scrollY - targetY) <= 2;
-          stableFrames = isAtTarget ? stableFrames + 1 : 0;
-          settleStartedAt ??= now;
-
-          if (
-            stableFrames >= NAV_SCROLL_STABLE_FRAMES &&
-            now - settleStartedAt >= target.settleMs &&
-            now - lastBlockedInputAt >= NAV_SCROLL_INPUT_QUIET_MS
-          ) {
-            cleanupNavigation();
-            setIsNavigating(false);
-            return;
-          }
-
-          animationFrame = window.requestAnimationFrame(advanceScroll);
-        };
-
-        advanceScroll(startedAt);
+        });
       });
     });
   };
@@ -647,7 +567,12 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   useEffect(
     () => () => {
       navigationRunRef.current += 1;
-      navigationCleanupRef.current?.();
+
+      if (navigationFrameRef.current !== null) {
+        window.cancelAnimationFrame(navigationFrameRef.current);
+      }
+
+      navigationTweenRef.current?.kill();
     },
     []
   );
@@ -680,7 +605,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
     const focusFrame = window.requestAnimationFrame(() => {
       const firstMenuLink = menuPanel?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-      firstMenuLink?.focus();
+      firstMenuLink?.focus({ preventScroll: true });
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -774,7 +699,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     const focusFrame = window.requestAnimationFrame(() => {
       panel
         .querySelector<HTMLElement>("[data-desktop-lyrics-top]")
-        ?.focus();
+        ?.focus({ preventScroll: true });
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -860,7 +785,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
             "[data-desktop-lyrics-top]"
           );
 
-      focusTarget?.focus();
+      focusTarget?.focus({ preventScroll: true });
     });
 
     return () => {
@@ -1430,7 +1355,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
       <div
         aria-hidden="true"
-        className={`fixed inset-0 z-40 bg-black/70 transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed inset-0 z-40 touch-none bg-black/70 transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isNavigating
             ? "visible pointer-events-auto opacity-100 backdrop-blur-xl duration-500"
             : "invisible pointer-events-none opacity-0 backdrop-blur-none duration-250"
