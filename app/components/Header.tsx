@@ -109,12 +109,12 @@ function MobileMenuItem({
 
 function BackIcon() {
   return (
-    <span aria-hidden="true" className="relative block h-8 w-12 shrink-0">
+    <span aria-hidden="true" className="relative block h-6 w-12 shrink-0">
       <ArrowLeft
-        className="absolute left-0 top-0 h-8 w-8"
+        className="absolute left-0 top-0 h-6 w-6"
         strokeWidth={1.5}
       />
-      <span className="absolute left-6 right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current" />
+      <span className="absolute left-[1.125rem] right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current" />
     </span>
   );
 }
@@ -777,7 +777,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         data-site-header
         data-lyrics-pinned={isLyricsHeaderPinned || undefined}
         data-desktop-lyrics-open={isDesktopLyricsMenuOpen || undefined}
-        className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(248,248,245,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
+        className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(255,255,255,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
           isIntroComplete
             ? isHeaderVisible ||
               isMenuOpen ||
@@ -859,9 +859,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                     key={link.id}
                     ref={desktopLyricsButtonRef}
                     type="button"
-                    className={`relative cursor-pointer bg-transparent py-1 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 ${
+                    className={`relative inline-flex cursor-pointer items-center gap-2 bg-transparent py-1 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 ${
                       isDesktopLyricsMenuOpen ? "after:scale-x-100" : ""
                     }`}
+                    data-lyrics-open={isDesktopLyricsMenuOpen}
                     aria-controls={DESKTOP_LYRICS_MENU_ID}
                     aria-expanded={isDesktopLyricsMenuOpen}
                     aria-haspopup="dialog"
@@ -877,7 +878,14 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                       setIsDesktopLyricsMenuOpen(true);
                     }}
                   >
-                    {link.label}
+                    <span>{link.label}</span>
+                    <span
+                      aria-hidden="true"
+                      className="desktop-lyrics-close-icon relative block h-5 w-5 shrink-0"
+                    >
+                      <span className="desktop-lyrics-close-line desktop-lyrics-close-line-a" />
+                      <span className="desktop-lyrics-close-line desktop-lyrics-close-line-b" />
+                    </span>
                   </button>
                 ) : (
                   <a
@@ -958,13 +966,31 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Lyrics navigation"
-          className={`lyrics-shelf-scroll max-h-[calc(100%-1.5rem)] w-[clamp(20rem,30vw,30rem)] transform-gpu overflow-y-auto border-r border-white bg-black text-white transition-transform duration-[425ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className={`lyrics-shelf-scroll grid max-h-[calc(100%-1.5rem)] w-max max-w-[calc(100vw-2rem)] transform-gpu grid-cols-[max-content] overflow-y-auto border-r border-white bg-black text-white transition-transform duration-[425ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isDesktopLyricsMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
+          <div
+            aria-hidden="true"
+            className="invisible col-start-1 row-start-1 h-0 overflow-hidden whitespace-nowrap font-display text-base leading-none md:text-lg"
+          >
+            {LYRIC_NAVIGATION.flatMap((release) =>
+              [release.label, ...release.songs.map((song) => song.label)].map(
+                (label) => (
+                  <span
+                    key={`${release.projectId}-${label}`}
+                    className="block px-6 md:px-8"
+                  >
+                    {label}
+                  </span>
+                )
+              )
+            )}
+          </div>
+
           <nav
             data-desktop-track-panel={desktopLyricProject ?? undefined}
-            className="flex w-full flex-col divide-y divide-white border-y border-white text-left font-display text-base leading-none md:text-lg"
+            className="col-start-1 row-start-2 flex w-full flex-col divide-y divide-white border-y border-white text-left font-display text-base leading-none md:text-lg"
             aria-label={
               activeDesktopLyricProject
                 ? `${activeDesktopLyricProject.label} lyrics navigation`

@@ -66,7 +66,7 @@ function LyricsCopy({ song }: { song: LyricSong }) {
   const stanzas = song.lyrics.split(/\n\s*\n/);
 
   return (
-    <div className="max-w-[46rem] space-y-7 break-words text-lg font-medium leading-[1.55] text-white/88 sm:text-xl md:text-2xl">
+    <div className="max-w-[46rem] space-y-7 break-words text-lg font-medium leading-[1.55] text-white sm:text-xl md:text-2xl">
       {stanzas.map((stanza, index) => (
         <p
           key={`${song.id}-stanza-${index}`}
@@ -114,14 +114,14 @@ function AlbumRelease({ release }: { release: LyricRelease }) {
             id={song.id}
             className="grid gap-8 border-t border-white/15 py-16 sm:py-20 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
           >
-            <div className="flex items-start justify-center gap-5 text-center lg:sticky lg:top-28 lg:self-start lg:justify-start lg:text-left">
-              <span
-                aria-hidden="true"
-                className="pt-1 text-sm font-semibold tabular-nums text-white sm:text-base"
-              >
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3 className="font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
+            <div className="flex items-start justify-center text-center lg:sticky lg:top-28 lg:self-start lg:justify-start lg:text-left">
+              <h3 className="relative font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
+                <span
+                  aria-hidden="true"
+                  className="absolute right-full top-1 mr-4 font-sans text-sm font-semibold leading-none tracking-normal tabular-nums text-white sm:top-2 sm:text-base"
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
                 <AnchorTitle href={song.href} className="max-w-[13ch]">
                   {song.title}
                 </AnchorTitle>

@@ -265,7 +265,7 @@ What’s your move?`
         {
           id: "lyrics-silver-cracks-us",
           href: "#lyrics-silver-cracks-us",
-          title: "Us",
+          title: "us",
           lyrics: `Oh my God what you talkin’ ‘bout?
 Careful young nigga why you talkin’ loud?
 Why you talkin’ loud?

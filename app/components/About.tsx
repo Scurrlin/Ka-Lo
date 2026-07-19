@@ -47,11 +47,22 @@ type LocalPoint = {
   y: number;
 };
 
+type CaptionMotionGeometry = {
+  revealDistance: number;
+  followEndDistance: number;
+  exitEndDistance: number;
+  localCenterX: number;
+  revealCenterX: number;
+  revealCdX: number;
+  followEndCenterX: number;
+  exitCenterX: number;
+};
+
 type RouteGeometry = {
   points: Point[];
   cumulativeLengths: number[];
   videoRevealRanges: ReadonlyArray<{ start: number; end: number }>;
-  captionRevealDistances: number[];
+  captionMotions: CaptionMotionGeometry[];
   captionRevealWindow: number;
   totalLength: number;
   smallScale: number;
@@ -108,9 +119,13 @@ function getElementOpacity(distance: number, start: number, end: number) {
   return smoothstep((distance - start) / (end - start));
 }
 
-function getPointOnRoute(geometry: RouteGeometry, progress: number) {
-  const distance = clamp(progress, 0, 1) * geometry.totalLength;
-  const { points, cumulativeLengths } = geometry;
+function getPointAtRouteDistance(
+  points: Point[],
+  cumulativeLengths: number[],
+  routeDistance: number
+) {
+  const totalLength = cumulativeLengths[cumulativeLengths.length - 1];
+  const distance = clamp(routeDistance, 0, totalLength);
   let segmentIndex = points.length - 2;
 
   for (let index = 0; index < cumulativeLengths.length - 1; index += 1) {
@@ -132,6 +147,14 @@ function getPointOnRoute(geometry: RouteGeometry, progress: number) {
     y: start.y + (end.y - start.y) * segmentProgress,
     trackX: start.trackX + (end.trackX - start.trackX) * segmentProgress
   };
+}
+
+function getPointOnRoute(geometry: RouteGeometry, progress: number) {
+  return getPointAtRouteDistance(
+    geometry.points,
+    geometry.cumulativeLengths,
+    clamp(progress, 0, 1) * geometry.totalLength
+  );
 }
 
 function getDistanceAtTrackPosition(
@@ -312,7 +335,32 @@ export default function About() {
         });
       });
       videoCaptionChars.forEach((characters, captionIndex) => {
-        const revealStart = geometry.captionRevealDistances[captionIndex];
+        const caption = videoCaptions[captionIndex];
+        const motion = geometry.captionMotions[captionIndex];
+        const naturalCenterX = motion.localCenterX + point.trackX;
+        let desiredCenterX = naturalCenterX;
+
+        if (point.distance >= motion.followEndDistance) {
+          const exitProgress = clamp(
+            (point.distance - motion.followEndDistance) /
+              (motion.exitEndDistance - motion.followEndDistance),
+            0,
+            1
+          );
+
+          desiredCenterX = interpolate(
+            motion.followEndCenterX,
+            motion.exitCenterX,
+            exitProgress * exitProgress
+          );
+        } else if (point.distance >= motion.revealDistance) {
+          desiredCenterX =
+            motion.revealCenterX + point.x - motion.revealCdX;
+        }
+
+        gsap.set(caption, { x: desiredCenterX - naturalCenterX });
+
+        const revealStart = motion.revealDistance;
         const revealProgress = clamp(
           (point.distance - revealStart) / geometry.captionRevealWindow,
           0,
@@ -567,12 +615,53 @@ export default function About() {
       );
       const captionRevealWindow = clamp(videoWidth * 0.42, 110, 260);
       const totalRouteLength = cumulativeLengths[cumulativeLengths.length - 1];
+      const captionLocalCenters = [
+        videoWidth / 2,
+        videoTwo.left + runningSlotWidth / 2,
+        videoThree.left + videoWidth / 2
+      ];
+      const captionMotions = captionRevealDistances.map(
+        (revealDistance, index): CaptionMotionGeometry => {
+          const exitEndDistance =
+            captionRevealDistances[index + 1] ?? totalRouteLength;
+          const followEndDistance = interpolate(
+            revealDistance,
+            exitEndDistance,
+            0.5
+          );
+          const revealPoint = getPointAtRouteDistance(
+            points,
+            cumulativeLengths,
+            revealDistance
+          );
+          const followEndPoint = getPointAtRouteDistance(
+            points,
+            cumulativeLengths,
+            followEndDistance
+          );
+          const localCenterX = captionLocalCenters[index];
+          const revealCenterX = localCenterX + revealPoint.trackX;
+          const captionWidth = videoCaptions[index]?.offsetWidth ?? viewportWidth;
+
+          return {
+            revealDistance,
+            followEndDistance,
+            exitEndDistance,
+            localCenterX,
+            revealCenterX,
+            revealCdX: revealPoint.x,
+            followEndCenterX:
+              revealCenterX + followEndPoint.x - revealPoint.x,
+            exitCenterX: -captionWidth / 2 - edgeMargin
+          };
+        }
+      );
 
       routeGeometry = {
         points,
         cumulativeLengths,
         videoRevealRanges,
-        captionRevealDistances,
+        captionMotions,
         captionRevealWindow,
         totalLength: totalRouteLength,
         smallScale: smallCdDiameter / baseCdDiameter
@@ -633,7 +722,7 @@ export default function About() {
         scale: 1
       });
       gsap.set(videoFrames, { autoAlpha: 0 });
-      gsap.set(videoCaptions, { autoAlpha: 1, xPercent: -50 });
+      gsap.set(videoCaptions, { autoAlpha: 1, xPercent: -50, x: 0 });
       gsap.set(videoCaptionChars.flat(), { autoAlpha: 0, y: 20 });
       gsap.set(finalMessage, { autoAlpha: 1, xPercent: -50, yPercent: -100 });
       gsap.set(finalMessageChars, { autoAlpha: 0, y: 20 });
@@ -718,7 +807,7 @@ export default function About() {
           "routeComplete"
         )
         .to(
-          [...videoFrames, ...videoCaptions],
+          videoFrames,
           { autoAlpha: 0, duration: GROW_DURATION * 0.65 },
           `routeComplete+=${GROW_DURATION * 0.35}`
         )
