@@ -859,9 +859,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                     key={link.id}
                     ref={desktopLyricsButtonRef}
                     type="button"
-                    className={`relative inline-flex cursor-pointer items-center gap-2 bg-transparent py-1 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 ${
-                      isDesktopLyricsMenuOpen ? "after:scale-x-100" : ""
-                    }`}
+                    className="group relative inline-flex cursor-pointer items-center gap-2 bg-transparent focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                     data-lyrics-open={isDesktopLyricsMenuOpen}
                     aria-controls={DESKTOP_LYRICS_MENU_ID}
                     aria-expanded={isDesktopLyricsMenuOpen}
@@ -878,7 +876,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                       setIsDesktopLyricsMenuOpen(true);
                     }}
                   >
-                    <span>{link.label}</span>
+                    <span
+                      className={`relative py-1 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 group-hover:after:scale-x-100 group-focus-visible:after:scale-x-100 ${
+                        isDesktopLyricsMenuOpen ? "after:scale-x-100" : ""
+                      }`}
+                    >
+                      {link.label}
+                    </span>
                     <span
                       aria-hidden="true"
                       className="desktop-lyrics-close-icon relative block h-5 w-5 shrink-0"

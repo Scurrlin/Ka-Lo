@@ -587,9 +587,7 @@ More than you know`
           id: "lyrics-silver-cracks-figure-it-out",
           href: "#lyrics-silver-cracks-figure-it-out",
           title: "Figure It Out",
-          lyrics: `…
-
-I would love to figure it out, but let me
+          lyrics: `I would love to figure it out, but let me
 tell you my doubts, cuz lately
 I ain’t that proud or maybe
 I ain’t that wild
@@ -608,7 +606,7 @@ That is why we thug it out
 Let’s thug it out
 Figure it out
 
-…
+(Guitar Solo)
 
 I swear we got a lot of things against us
 Tryna keep us a part
@@ -625,9 +623,7 @@ Had to clear the air consciously
 
 Cuz I don't know, what to do though
 But I guess in the end its best to just go and
-Figure it out
-
-…`
+Figure it out`
         },
         {
           id: "lyrics-silver-cracks-tough-skin",
