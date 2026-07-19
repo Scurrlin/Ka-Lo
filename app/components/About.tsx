@@ -17,7 +17,7 @@ const VIDEO_CAPTIONS = [
   { text: "And all of a sudden...", position: "above" as const },
   { text: "Everyone's a developer lmao", position: "below" as const }
 ] as const;
-const FINAL_MESSAGE = "Lol jk jk 😂 Love you!";
+const FINAL_MESSAGE = "Lol jk jk 😂";
 
 const CD_CLEARANCE = 18;
 const CD_VERTICAL_CLEARANCE = 36;
@@ -918,7 +918,7 @@ export default function About() {
       </section>
 
       <section
-        className="bg-black px-5 pb-24 pt-8 text-white sm:px-8 md:pb-32 md:pt-12"
+        className="bg-black px-5 pb-24 pt-4 text-white sm:px-8 md:pb-32 md:pt-6"
         aria-label="What's next story"
       >
         <div className="mx-auto max-w-3xl text-lg leading-relaxed text-white sm:text-xl sm:leading-relaxed">

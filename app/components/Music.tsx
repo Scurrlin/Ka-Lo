@@ -274,10 +274,10 @@ export default function Music() {
       id="music"
       className="relative bg-black px-5 pb-20 pt-12 text-white sm:px-8 sm:pt-16 md:pt-20"
     >
-        {/* The outer track creates the same 1.1-viewport reveal distance as the old
-            GSAP pin. The inner stage stays put with native sticky positioning, which
-            avoids a pin-boundary jump before the album grid takes over. */}
-        <div ref={introSectionRef} className="relative h-[210svh]">
+        {/* The outer track creates a compact 0.9-viewport reveal distance. The inner
+            stage stays put with native sticky positioning, which avoids a pin-boundary
+            jump before the album grid takes over. */}
+        <div ref={introSectionRef} className="relative h-[190svh]">
           <div className="sticky top-0 h-[100svh] overflow-hidden">
             <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-5 text-center">
               <h2

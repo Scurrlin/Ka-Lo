@@ -85,7 +85,7 @@ function SingleRelease({ release }: { release: LyricRelease }) {
   return (
     <article
       id={release.id}
-      className="grid gap-12 border-t border-white/20 py-20 sm:py-28 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
+      className="grid gap-8 border-t border-white/20 py-20 sm:py-28 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
     >
       <h2 className="text-center font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:sticky lg:top-28 lg:self-start lg:text-left lg:text-8xl">
         <AnchorTitle href={song.href} className="max-w-[8ch]">
@@ -107,12 +107,12 @@ function AlbumRelease({ release }: { release: LyricRelease }) {
         </AnchorTitle>
       </h2>
 
-      <ol className="mt-16 sm:mt-24">
+      <ol className="mt-10 sm:mt-14">
         {release.songs.map((song, index) => (
           <li
             key={song.id}
             id={song.id}
-            className="grid gap-10 border-t border-white/15 py-16 sm:py-20 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
+            className="grid gap-8 border-t border-white/15 py-16 sm:py-20 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
           >
             <div className="flex items-start justify-center gap-5 text-center lg:sticky lg:top-28 lg:self-start lg:justify-start lg:text-left">
               <span
@@ -228,7 +228,7 @@ export default function Lyrics() {
       id="lyrics"
       className="relative bg-black text-white"
     >
-      <div ref={introSectionRef} className="relative h-[210svh]">
+      <div ref={introSectionRef} className="relative h-[190svh]">
         <div className="sticky top-0 h-[100svh] overflow-hidden">
           <header className="pointer-events-none absolute inset-0 flex items-center justify-center px-5 text-center">
             <h1

@@ -25,7 +25,7 @@ const MOBILE_MENU_ITEM_STAGGER = 60;
 const MOBILE_MENU_ITEM_REVEAL_DURATION = 600;
 const MOBILE_MAIN_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
 const DESKTOP_LYRICS_MENU_TEXT_CLASS =
-  "whitespace-nowrap font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
+  "flex w-full items-center px-6 py-[clamp(0.8rem,1.6svh,1.1rem)] text-left font-display text-[clamp(1.5rem,3svh,2.25rem)] leading-[0.95] focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white md:px-8";
 const MOBILE_LYRICS_MENU_TEXT_CLASS =
   "whitespace-nowrap font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
 
@@ -901,14 +901,14 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         ref={desktopLyricsLayerRef}
         aria-hidden={!isDesktopLyricsMenuOpen}
         inert={!isDesktopLyricsMenuOpen}
-        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden items-center justify-center px-8 pb-8 transition-[opacity,visibility,background-color,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] sm:flex md:top-20 ${
+        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden items-start justify-start overflow-hidden pb-6 transition-[opacity,visibility,background-color,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] sm:flex md:top-20 ${
           isDesktopLyricsMenuOpen
             ? "visible pointer-events-auto bg-black/70 opacity-100 backdrop-blur-xl"
             : "invisible pointer-events-none bg-black/0 opacity-0 backdrop-blur-none"
         }`}
         style={{
           transitionDuration: isDesktopLyricsMenuOpen
-            ? "650ms"
+            ? "425ms"
             : `${getMobileMenuTransitionDuration(desktopLyricsItemCount)}ms`
         }}
         onMouseDown={(event) => {
@@ -923,11 +923,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Lyrics navigation"
-          className="flex max-h-full w-full max-w-4xl items-center justify-center overflow-y-auto text-white"
+          className={`max-h-[calc(100%-1.5rem)] w-[clamp(20rem,30vw,30rem)] transform-gpu overflow-y-auto bg-black text-white transition-transform duration-[425ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isDesktopLyricsMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
         >
           <nav
             data-desktop-track-panel={desktopLyricProject ?? undefined}
-            className="flex w-full flex-col items-center gap-[clamp(0.75rem,1.8svh,1.25rem)] py-6 text-center"
+            className="flex w-full flex-col divide-y divide-white border-y border-white text-left"
             aria-label={
               activeDesktopLyricProject
                 ? `${activeDesktopLyricProject.label} lyrics navigation`
@@ -978,7 +980,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 >
                   <button
                     type="button"
-                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-[0.35em]`}
+                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer gap-[0.35em]`}
                     onClick={() => transitionDesktopLyricsView(null)}
                   >
                     <BackLabel />
@@ -1045,7 +1047,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 >
                   <button
                     type="button"
-                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-[0.35em]`}
+                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer gap-[0.35em]`}
                     onClick={() => setIsDesktopLyricsMenuOpen(false)}
                   >
                     <BackLabel />
