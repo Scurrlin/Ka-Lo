@@ -96,7 +96,7 @@ function CharSpans({
 function AlbumCard({ album }: { album: Album }) {
   const projectLabel = (
     <>
-      <span>{album.name}</span>
+      <span className="text-white">{album.name}</span>
       <Image
         src="/assets/arrow.svg"
         alt=""
@@ -115,14 +115,14 @@ function AlbumCard({ album }: { album: Album }) {
             href={album.href}
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center justify-center gap-2 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            className="inline-flex items-center justify-center gap-2 text-white focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             aria-label={`Listen to ${album.name}`}
           >
             {projectLabel}
           </a>
         ) : (
           <span
-            className="inline-flex cursor-not-allowed items-center justify-center gap-2"
+            className="inline-flex cursor-not-allowed items-center justify-center gap-2 text-white"
             aria-label={`${album.name} — link coming soon`}
             aria-disabled="true"
             title={`${album.name} — link coming soon`}

@@ -17,8 +17,24 @@ const DESKTOP_LYRICS_MENU_ID = "desktop-lyrics-navigation";
 const DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
 const HEADER_DIRECTION_THRESHOLD = 6;
 const HEADER_TOP_THRESHOLD = 2;
+const NAV_SCROLL_MIN_DURATION_MS = 500;
+const NAV_SCROLL_MAX_DURATION_MS = 1250;
+const NAV_SCROLL_MS_PER_PIXEL = 0.035;
+const NAV_SCROLL_STABLE_FRAMES = 3;
+const NAV_SCROLL_INPUT_QUIET_MS = 250;
+const NAV_SCROLL_KEYS = new Set([
+  "ArrowDown",
+  "ArrowUp",
+  "End",
+  "Home",
+  "PageDown",
+  "PageUp",
+  " "
+]);
 const FOCUSABLE_SELECTOR =
   "a[href]:not([tabindex='-1']), button:not([disabled]):not([tabindex='-1'])";
+// Shared by every desktop lyric-shelf and mobile navigation page so their
+// entrances, internal page changes, and exits all use one cascade system.
 const MOBILE_MENU_ITEM_DELAY = 200;
 const MOBILE_MENU_ITEM_STAGGER = 60;
 // Must stay in sync with the `duration-[600ms]` Tailwind class on each mobile
@@ -48,23 +64,31 @@ type HeaderProps = {
 };
 
 function getPageSectionScrollTarget(id: string) {
-  const target = document.getElementById(id);
+  const element = document.getElementById(id);
 
-  if (!target) {
+  if (!element) {
     return null;
   }
 
-  const animatedTarget = Number(target.dataset.navScrollY);
-  const top = Number.isFinite(animatedTarget)
-    ? animatedTarget
-    : target.getBoundingClientRect().top + window.scrollY;
-
-  const maxScrollTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-
   return {
-    top: Math.min(Math.max(0, top), maxScrollTop),
-    settleMs: Number(target.dataset.navSettleMs) || 0
+    getTop: () => {
+      const animatedTarget = Number(element.dataset.navScrollY);
+      const top = Number.isFinite(animatedTarget)
+        ? animatedTarget
+        : element.getBoundingClientRect().top + window.scrollY;
+      const maxScrollTop = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+
+      return Math.min(Math.max(0, top), maxScrollTop);
+    },
+    settleMs: Number(element.dataset.navSettleMs) || 0
   };
+}
+
+function easeOutQuart(progress: number) {
+  return 1 - Math.pow(1 - progress, 4);
 }
 
 function getMobileMenuItemStyle(index: number, isVisible: boolean): React.CSSProperties {
@@ -95,7 +119,7 @@ function MobileMenuItem({
 }) {
   return (
     <div
-      className={`transform-gpu transition-[opacity,transform] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      className={`transform-gpu text-white transition-[opacity,transform] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[opacity,transform] ${
         isVisible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none translate-y-3 opacity-0"
@@ -188,6 +212,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const desktopLyricsLayerRef = useRef<HTMLDivElement>(null);
   const desktopLyricsPanelRef = useRef<HTMLDivElement>(null);
   const navigationRunRef = useRef(0);
+  const navigationCleanupRef = useRef<(() => void) | null>(null);
   const lastScrollYRef = useRef(0);
   const scrollAnchorYRef = useRef(0);
   const scrollDirectionRef = useRef<"up" | "down" | null>(null);
@@ -453,37 +478,116 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       return;
     }
 
+    navigationCleanupRef.current?.();
+
     const run = ++navigationRunRef.current;
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+    let animationFrame = 0;
     let stableFrames = 0;
+    let settleStartedAt: number | null = null;
+    let lastBlockedInputAt = Number.NEGATIVE_INFINITY;
+
+    const blockScrollInput = (event: Event) => {
+      lastBlockedInputAt = performance.now();
+      event.preventDefault();
+    };
+    const blockScrollKeys = (event: KeyboardEvent) => {
+      if (NAV_SCROLL_KEYS.has(event.key)) {
+        lastBlockedInputAt = performance.now();
+        event.preventDefault();
+      }
+    };
+
+    root.style.setProperty("scroll-behavior", "auto");
+    window.addEventListener("wheel", blockScrollInput, {
+      capture: true,
+      passive: false
+    });
+    window.addEventListener("touchmove", blockScrollInput, {
+      capture: true,
+      passive: false
+    });
+    window.addEventListener("keydown", blockScrollKeys, true);
+
+    const cleanupNavigation = () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("wheel", blockScrollInput, true);
+      window.removeEventListener("touchmove", blockScrollInput, true);
+      window.removeEventListener("keydown", blockScrollKeys, true);
+
+      if (previousScrollBehavior) {
+        root.style.setProperty("scroll-behavior", previousScrollBehavior);
+      } else {
+        root.style.removeProperty("scroll-behavior");
+      }
+
+      if (navigationCleanupRef.current === cleanupNavigation) {
+        navigationCleanupRef.current = null;
+      }
+    };
+
+    navigationCleanupRef.current = cleanupNavigation;
 
     setIsNavigating(true);
     window.history.pushState(null, "", `#${id}`);
 
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        window.scrollTo({ top: target.top, behavior: "smooth" });
+    animationFrame = window.requestAnimationFrame(() => {
+      animationFrame = window.requestAnimationFrame((startedAt) => {
+        const startY = window.scrollY;
+        const initialTargetY = target.getTop();
+        const prefersReducedMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+        const duration = prefersReducedMotion
+          ? 0
+          : Math.min(
+              NAV_SCROLL_MAX_DURATION_MS,
+              Math.max(
+                NAV_SCROLL_MIN_DURATION_MS,
+                Math.abs(initialTargetY - startY) * NAV_SCROLL_MS_PER_PIXEL
+              )
+            );
 
-        const watchScroll = () => {
+        const advanceScroll = (now: number) => {
           if (navigationRunRef.current !== run) {
+            cleanupNavigation();
             return;
           }
 
-          const isAtTarget = Math.abs(window.scrollY - target.top) <= 2;
+          const targetY = target.getTop();
+          const progress = duration === 0
+            ? 1
+            : Math.min(1, (now - startedAt) / duration);
+          const nextY = progress < 1
+            ? startY + (targetY - startY) * easeOutQuart(progress)
+            : targetY;
+
+          window.scrollTo({ top: nextY, behavior: "instant" });
+
+          if (progress < 1) {
+            animationFrame = window.requestAnimationFrame(advanceScroll);
+            return;
+          }
+
+          const isAtTarget = Math.abs(window.scrollY - targetY) <= 2;
           stableFrames = isAtTarget ? stableFrames + 1 : 0;
+          settleStartedAt ??= now;
 
-          if (stableFrames >= 3) {
-            window.setTimeout(() => {
-              if (navigationRunRef.current === run) {
-                setIsNavigating(false);
-              }
-            }, target.settleMs);
+          if (
+            stableFrames >= NAV_SCROLL_STABLE_FRAMES &&
+            now - settleStartedAt >= target.settleMs &&
+            now - lastBlockedInputAt >= NAV_SCROLL_INPUT_QUIET_MS
+          ) {
+            cleanupNavigation();
+            setIsNavigating(false);
             return;
           }
 
-          window.requestAnimationFrame(watchScroll);
+          animationFrame = window.requestAnimationFrame(advanceScroll);
         };
 
-        window.requestAnimationFrame(watchScroll);
+        advanceScroll(startedAt);
       });
     });
   };
@@ -543,6 +647,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   useEffect(
     () => () => {
       navigationRunRef.current += 1;
+      navigationCleanupRef.current?.();
     },
     []
   );
@@ -973,6 +1078,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           className={`lyrics-shelf-scroll grid max-h-[calc(100%-1.5rem)] w-max max-w-[calc(100vw-2rem)] transform-gpu grid-cols-[max-content] overflow-y-auto border-r border-white bg-black text-white transition-transform duration-[425ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isDesktopLyricsMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
+          style={{
+            transitionDuration: isDesktopLyricsMenuOpen
+              ? "425ms"
+              : `${getMobileMenuTransitionDuration(desktopLyricsItemCount)}ms`
+          }}
         >
           <div
             aria-hidden="true"
@@ -1175,7 +1285,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   isVisible={areMobileMenuItemsVisible}
                 >
                   <a
-                    className="font-display text-2xl uppercase leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className="font-display text-2xl uppercase leading-none text-white focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                     href={link.href}
                     onClick={(event) => {
                       if (link.id === "lyrics") {

@@ -36,6 +36,17 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Keep all visible site copy at true white, including nested and visited links.
+   The footer is the sole inverse-color section. */
+#site-content :where(a, button, h1, h2, h3, h4, h5, h6, p, li, dt, dd, label) {
+  color: var(--white);
+}
+
+#site-content footer,
+#site-content footer :where(a, button, h1, h2, h3, h4, h5, h6, p, li, dt, dd, label) {
+  color: var(--black);
+}
+
 html.intro-scroll-locked,
 html.intro-scroll-locked body {
   overflow-y: hidden;
