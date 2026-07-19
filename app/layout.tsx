@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Instrument_Sans } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -11,9 +11,89 @@ const instrumentSans = Instrument_Sans({
   display: "swap"
 });
 
+const siteName = "Ka-Lo Hané";
+const siteTitle = "Ka-Lo Hané | Official Website";
+const siteDescription = "Not your traditional rapper";
+const configuredSiteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL
+)?.trim();
+const metadataBase = configuredSiteUrl
+  ? new URL(
+      configuredSiteUrl.startsWith("http")
+        ? configuredSiteUrl
+        : `https://${configuredSiteUrl}`
+    )
+  : undefined;
+const socialImage = {
+  url: metadataBase
+    ? new URL("/assets/Silver-Cracks.webp", metadataBase).toString()
+    : "https://raw.githubusercontent.com/Scurrlin/Ka-Lo/main/public/assets/Silver-Cracks.webp",
+  width: 1024,
+  height: 1024,
+  alt: "Silver Cracks album cover by Ka-Lo Hané"
+};
+
 export const metadata: Metadata = {
-  title: "KALO",
-  description: "Ka-Lo official site concept"
+  ...(metadataBase
+    ? {
+        metadataBase,
+        alternates: { canonical: "/" }
+      }
+    : {}),
+  title: siteTitle,
+  description: siteDescription,
+  applicationName: siteName,
+  authors: [{ name: siteName }],
+  creator: siteName,
+  publisher: siteName,
+  category: "music",
+  keywords: [
+    "Ka-Lo Hané",
+    "Ka-Lo",
+    "KALO",
+    "Silver Cracks",
+    "hip-hop",
+    "rapper",
+    "lyricist",
+    "producer"
+  ],
+  referrer: "origin-when-cross-origin",
+  formatDetection: {
+    address: false,
+    email: false,
+    telephone: false
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1
+    }
+  },
+  openGraph: {
+    ...(metadataBase ? { url: "/" } : {}),
+    type: "website",
+    locale: "en_US",
+    siteName,
+    title: siteTitle,
+    description: siteDescription,
+    images: [socialImage]
+  },
+  twitter: {
+    card: "summary",
+    title: siteTitle,
+    description: siteDescription,
+    images: [socialImage]
+  }
+};
+
+export const viewport: Viewport = {
+  colorScheme: "dark",
+  themeColor: "#000000"
 };
 
 export default function RootLayout({

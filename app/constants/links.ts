@@ -72,7 +72,7 @@ export const LYRIC_NAVIGATION = [
       },
       {
         id: "lyrics-silver-cracks-us",
-        label: "Us",
+        label: "us",
         href: "#lyrics-silver-cracks-us"
       },
       {

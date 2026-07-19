@@ -481,7 +481,7 @@ html.intro-skip-complete .hero-wave-bar {
   transform: scaleY(0.28);
   animation-name: hero-wave-pulse;
   animation-duration: 1.45s;
-  animation-timing-function: ease-in-out;
+  animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
   animation-iteration-count: infinite;
   animation-direction: normal;
 }
