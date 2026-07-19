@@ -6,18 +6,18 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const TITLE = "Who is Ka-Lo?";
-const NEXT_TITLE = "What's Next?";
+const NEXT_TITLE = "What Else?";
 const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
   "/videos/running-10s.mp4",
   "/videos/birds-13s.mp4"
 ] as const;
 const VIDEO_CAPTIONS = [
-  { text: "People see one website", position: "below" as const },
-  { text: "And all of a sudden...", position: "above" as const },
-  { text: "Everyone's a developer lmao", position: "below" as const }
+  { text: "A Conscious Rapper", position: "below" as const },
+  { text: "And Producer", position: "above" as const },
+  { text: "Pushing The Limits Of Hip-Hop", position: "below" as const }
 ] as const;
-const FINAL_MESSAGE = "Lol jk jk 😂";
+const FINAL_MESSAGE = "He's Not Your Traditional MC";
 
 const CD_CLEARANCE = 18;
 const CD_VERTICAL_CLEARANCE = 36;

@@ -85,10 +85,10 @@ function SingleRelease({ release }: { release: LyricRelease }) {
   return (
     <article
       id={release.id}
-      className="grid gap-8 border-t border-white/20 py-20 sm:py-28 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
+      className="grid gap-8 border-t border-white/20 pb-20 pt-0 sm:py-28 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
     >
-      <h2 className="text-center font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:sticky lg:top-28 lg:self-start lg:text-left lg:text-8xl">
-        <AnchorTitle href={song.href} className="max-w-[8ch]">
+      <h2 className="sticky top-16 z-30 -mx-5 flex min-h-12 w-[calc(100%+2.5rem)] items-center justify-center border-b border-white/25 bg-black px-5 py-2.5 text-center font-display text-[clamp(1.2rem,6vw,1.6rem)] leading-none tracking-[-0.035em] sm:static sm:mx-0 sm:block sm:min-h-0 sm:w-auto sm:border-b-0 sm:bg-transparent sm:px-0 sm:py-0 sm:text-7xl sm:leading-[0.92] sm:tracking-[-0.045em] lg:sticky lg:top-28 lg:self-start lg:text-left lg:text-8xl">
+        <AnchorTitle href={song.href} className="max-w-none whitespace-nowrap sm:max-w-[8ch] sm:whitespace-normal">
           {release.title}
         </AnchorTitle>
       </h2>
@@ -112,17 +112,17 @@ function AlbumRelease({ release }: { release: LyricRelease }) {
           <li
             key={song.id}
             id={song.id}
-            className="grid gap-8 border-t border-white/15 py-16 sm:py-20 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
+            className="grid gap-8 border-t border-white/15 pb-16 pt-0 sm:py-20 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
           >
-            <div className="flex items-start justify-center gap-5 text-center lg:sticky lg:top-28 lg:self-start lg:justify-start lg:text-left">
+            <div className="sticky top-16 z-30 -mx-5 flex min-h-12 w-[calc(100%+2.5rem)] items-center justify-center gap-3 border-b border-white/25 bg-black px-5 py-2.5 text-center sm:static sm:mx-0 sm:min-h-0 sm:w-auto sm:items-start sm:gap-5 sm:border-b-0 sm:bg-transparent sm:px-0 sm:py-0 lg:sticky lg:top-28 lg:self-start lg:justify-start lg:text-left">
               <span
                 aria-hidden="true"
-                className="pt-1 text-sm font-semibold tabular-nums text-white sm:text-base"
+                className="text-xs font-semibold tabular-nums text-white sm:pt-1 sm:text-base"
               >
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <h3 className="font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
-                <AnchorTitle href={song.href} className="max-w-[13ch]">
+              <h3 className="whitespace-nowrap font-display text-[clamp(1.2rem,6vw,1.6rem)] leading-none tracking-[-0.035em] sm:whitespace-normal sm:text-7xl sm:leading-[0.92] sm:tracking-[-0.045em] lg:text-8xl">
+                <AnchorTitle href={song.href} className="max-w-none sm:max-w-[13ch]">
                   {song.title}
                 </AnchorTitle>
               </h3>
