@@ -13,11 +13,11 @@ const VIDEO_SOURCES = [
   "/videos/birds-13s.mp4"
 ] as const;
 const VIDEO_CAPTIONS = [
-  { text: "A Conscious Rapper", position: "below" as const },
+  { text: "A Conscious Lyricist", position: "below" as const },
   { text: "And Producer", position: "above" as const },
   { text: "Pushing The Limits Of Hip-Hop", position: "below" as const }
 ] as const;
-const FINAL_MESSAGE = "He's Not Your Traditional MC";
+const FINAL_MESSAGE = "He's Not Your Traditional Rapper";
 
 const CD_CLEARANCE = 18;
 const CD_VERTICAL_CLEARANCE = 36;
