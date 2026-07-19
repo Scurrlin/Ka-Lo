@@ -396,43 +396,43 @@ html.intro-skip-complete .hero-wave-bar {
 
 .hero-lockup {
   --hero-logo-size: clamp(4.75rem, 20vw, 6rem);
-  --hero-logo-wave-gap: 2rem;
-  --hero-wave-height: 6.25rem;
+  --hero-logo-wave-gap: 1rem;
+  --hero-wave-height: 3.125rem;
 }
 
 @media (min-width: 450px) {
   .hero-lockup {
     --hero-logo-size: clamp(5.5rem, 16vw, 7rem);
-    --hero-logo-wave-gap: 2.5rem;
-    --hero-wave-height: clamp(6.5rem, 18vw, 9rem);
+    --hero-logo-wave-gap: 1.25rem;
+    --hero-wave-height: clamp(3.25rem, 9vw, 4.5rem);
   }
 }
 
 @media (min-width: 640px) {
   .hero-lockup {
-    --hero-logo-wave-gap: 3rem;
+    --hero-logo-wave-gap: 1.5rem;
   }
 }
 
 @media (min-width: 768px) {
   .hero-lockup {
     --hero-logo-size: 8rem;
-    --hero-logo-wave-gap: 3.5rem;
-    --hero-wave-height: clamp(7rem, 15vw, 11rem);
+    --hero-logo-wave-gap: 1.75rem;
+    --hero-wave-height: clamp(3.5rem, 7.5vw, 5.5rem);
   }
 }
 
 @media (min-width: 1024px) {
   .hero-lockup {
     --hero-logo-size: 11rem;
-    --hero-logo-wave-gap: 4rem;
+    --hero-logo-wave-gap: 2rem;
   }
 }
 
 @media (min-width: 1280px) {
   .hero-lockup {
     --hero-logo-size: 13rem;
-    --hero-logo-wave-gap: 4.5rem;
+    --hero-logo-wave-gap: 2.25rem;
   }
 }
 
