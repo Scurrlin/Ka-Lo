@@ -41,8 +41,7 @@ const FOCUSABLE_SELECTOR =
 // entrances, internal page changes, and exits all use one cascade system.
 const MOBILE_MENU_ITEM_DELAY = 200;
 const MOBILE_MENU_ITEM_STAGGER = 60;
-// Must stay in sync with the `duration-[600ms]` exit class below and the
-// `.menu-cascade-enter` animation in globals.css.
+// Must stay in sync with both cascade animations in globals.css.
 const MOBILE_MENU_ITEM_REVEAL_DURATION = 600;
 const MOBILE_MAIN_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
 const DESKTOP_LYRICS_MENU_TEXT_CLASS =
@@ -99,7 +98,7 @@ function getMobileMenuItemStyle(index: number, isVisible: boolean): React.CSSPro
         animationDelay: `${MOBILE_MENU_ITEM_DELAY + index * MOBILE_MENU_ITEM_STAGGER}ms`
       }
     : {
-        transitionDelay: `${index * MOBILE_MENU_ITEM_STAGGER}ms`
+        animationDelay: `${index * MOBILE_MENU_ITEM_STAGGER}ms`
       };
 }
 
@@ -121,10 +120,10 @@ function MobileMenuItem({
 }) {
   return (
     <div
-      className={`text-white transition-opacity duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-opacity ${
+      className={`text-white will-change-opacity ${
         isVisible
           ? "menu-cascade-enter opacity-100"
-          : "pointer-events-none opacity-0"
+          : "menu-cascade-exit pointer-events-none opacity-0"
       }`}
       style={getMobileMenuItemStyle(index, isVisible)}
     >
@@ -220,10 +219,8 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const scrollDirectionRef = useRef<"up" | "down" | null>(null);
   const scrollFrameRef = useRef<number | null>(null);
   const mobileMenuTransitionTimerRef = useRef<number | null>(null);
-  const mobileMenuRevealFrameRef = useRef<number | null>(null);
   const mobileMenuFocusFrameRef = useRef<number | null>(null);
   const desktopLyricsTransitionTimerRef = useRef<number | null>(null);
-  const desktopLyricsRevealFrameRef = useRef<number | null>(null);
   const desktopTrackFocusFrameRef = useRef<number | null>(null);
   const shouldRestoreMobileMenuFocusRef = useRef(true);
   const shouldRestoreDesktopLyricsFocusRef = useRef(true);
@@ -294,17 +291,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     mobileMenuTransitionTimerRef.current = window.setTimeout(() => {
       mobileMenuTransitionTimerRef.current = null;
       setMobileMenuView(nextView);
+      setIsMobileMenuViewVisible(true);
 
-      mobileMenuRevealFrameRef.current = window.requestAnimationFrame(() => {
-        mobileMenuRevealFrameRef.current = null;
-        setIsMobileMenuViewVisible(true);
-
-        mobileMenuFocusFrameRef.current = window.requestAnimationFrame(() => {
-          mobileMenuFocusFrameRef.current = null;
-          const firstMenuLink =
-            menuPanelRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-          firstMenuLink?.focus({ preventScroll: true });
-        });
+      mobileMenuFocusFrameRef.current = window.requestAnimationFrame(() => {
+        mobileMenuFocusFrameRef.current = null;
+        const firstMenuLink =
+          menuPanelRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+        firstMenuLink?.focus({ preventScroll: true });
       });
     }, getMobileMenuTransitionDuration(mobileMenuItemCount));
   };
@@ -324,11 +317,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     desktopLyricsTransitionTimerRef.current = window.setTimeout(() => {
       desktopLyricsTransitionTimerRef.current = null;
       setDesktopLyricProject(nextProject);
-
-      desktopLyricsRevealFrameRef.current = window.requestAnimationFrame(() => {
-        desktopLyricsRevealFrameRef.current = null;
-        setIsDesktopLyricsViewVisible(true);
-      });
+      setIsDesktopLyricsViewVisible(true);
     }, getMobileMenuTransitionDuration(desktopLyricsItemCount));
   };
 
@@ -372,11 +361,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       mobileMenuTransitionTimerRef.current = null;
     }
 
-    if (mobileMenuRevealFrameRef.current !== null) {
-      window.cancelAnimationFrame(mobileMenuRevealFrameRef.current);
-      mobileMenuRevealFrameRef.current = null;
-    }
-
     if (mobileMenuFocusFrameRef.current !== null) {
       window.cancelAnimationFrame(mobileMenuFocusFrameRef.current);
       mobileMenuFocusFrameRef.current = null;
@@ -388,10 +372,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     () => () => {
       if (mobileMenuTransitionTimerRef.current !== null) {
         window.clearTimeout(mobileMenuTransitionTimerRef.current);
-      }
-
-      if (mobileMenuRevealFrameRef.current !== null) {
-        window.cancelAnimationFrame(mobileMenuRevealFrameRef.current);
       }
 
       if (mobileMenuFocusFrameRef.current !== null) {
@@ -411,10 +391,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       desktopLyricsTransitionTimerRef.current = null;
     }
 
-    if (desktopLyricsRevealFrameRef.current !== null) {
-      window.cancelAnimationFrame(desktopLyricsRevealFrameRef.current);
-      desktopLyricsRevealFrameRef.current = null;
-    }
   }, [isDesktopLyricsMenuOpen]);
 
   useEffect(
@@ -423,9 +399,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         window.clearTimeout(desktopLyricsTransitionTimerRef.current);
       }
 
-      if (desktopLyricsRevealFrameRef.current !== null) {
-        window.cancelAnimationFrame(desktopLyricsRevealFrameRef.current);
-      }
     },
     []
   );
@@ -658,7 +631,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     };
 
     function startNavigation() {
-      setBackdropSource("navigation");
       coverFrame = window.requestAnimationFrame(() => {
         coverFrame = null;
         scrollFrame = window.requestAnimationFrame(() => {
@@ -711,14 +683,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     navigationStartRef.current = startNavigation;
     navigationIsActiveRef.current = true;
 
-    if (
-      !isMenuOpen &&
-      !isMobileMenuPresent &&
-      !isDesktopLyricsMenuOpen &&
-      !isDesktopLyricsMenuPresent
-    ) {
-      setBackdropSource("navigation");
-    }
+    setBackdropSource("navigation");
     setIsHeaderVisible(true);
     setIsHeaderFocused(false);
     setIsNavigating(true);
@@ -963,9 +928,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   useEffect(() => {
     if (
       isMenuOpen ||
-      isMobileMenuPresent ||
       isDesktopLyricsMenuOpen ||
-      isDesktopLyricsMenuPresent ||
       !isNavigating
     ) {
       return;
@@ -981,9 +944,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     startNavigation();
   }, [
     isDesktopLyricsMenuOpen,
-    isDesktopLyricsMenuPresent,
     isMenuOpen,
-    isMobileMenuPresent,
     isNavigating
   ]);
 
@@ -1246,6 +1207,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           </div>
 
           <nav
+            key={desktopLyricProject ?? "releases"}
             data-desktop-track-panel={desktopLyricProject ?? undefined}
             className="col-start-1 row-start-2 flex w-full flex-col divide-y divide-white border-y border-white text-left font-display text-base leading-none md:text-lg"
             aria-label={
@@ -1386,6 +1348,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         }}
       >
         <nav
+          key={mobileMenuView}
           className="flex max-h-full w-full max-w-sm flex-col items-center justify-[safe_center] gap-5 overflow-y-auto py-6"
           aria-label={
             mobileMenuView === "main"

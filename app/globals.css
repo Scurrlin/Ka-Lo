@@ -356,8 +356,25 @@ html.intro-skip-complete .hero-wave-bar {
   }
 }
 
+@keyframes menu-cascade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
 .menu-cascade-enter {
   animation-name: menu-cascade-in;
+  animation-duration: 600ms;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.menu-cascade-exit {
+  animation-name: menu-cascade-out;
   animation-duration: 600ms;
   animation-fill-mode: both;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
