@@ -81,20 +81,29 @@ function LyricsCopy({ song }: { song: LyricSong }) {
 
 function NumberedSongTitle({ song, index }: { song: LyricSong; index: number }) {
   const [firstWord, ...remainingWords] = song.title.split(" ");
+  const number = String(index + 1).padStart(2, "0");
 
   return (
-    <AnchorTitle href={song.href} className="max-w-[13ch]">
-      <span className="relative inline-block whitespace-nowrap">
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute right-full top-2 mr-4 hidden select-none font-sans text-base font-semibold leading-none tracking-normal tabular-nums text-white md:inline-block"
-        >
-          {String(index + 1).padStart(2, "0")}
+    <span className="flex flex-col items-center gap-2 sm:contents">
+      <AnchorTitle href={song.href} className="max-w-[13ch]">
+        <span className="relative inline-block whitespace-nowrap">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute right-full top-2 mr-4 hidden select-none font-sans text-base font-semibold leading-none tracking-normal tabular-nums text-white md:inline-block"
+          >
+            {number}
+          </span>
+          {firstWord}
         </span>
-        {firstWord}
+        {remainingWords.length ? ` ${remainingWords.join(" ")}` : null}
+      </AnchorTitle>
+      <span
+        aria-hidden="true"
+        className="select-none font-sans text-base font-semibold leading-none tracking-normal tabular-nums text-white sm:hidden"
+      >
+        {number}
       </span>
-      {remainingWords.length ? ` ${remainingWords.join(" ")}` : null}
-    </AnchorTitle>
+    </span>
   );
 }
 

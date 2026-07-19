@@ -655,6 +655,7 @@ html.intro-skip-complete .hero-wave-bar {
 #music .music-release-name {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+  text-fill-color: #ffffff !important;
   opacity: 1 !important;
   visibility: visible !important;
 }

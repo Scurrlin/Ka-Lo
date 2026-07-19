@@ -699,48 +699,48 @@ Tough skin tho`
         {
           id: "lyrics-exercises-1",
           href: "#lyrics-exercises-1",
-          title: "Song 1",
-          lyrics: `Placeholder lyrics for Song 1.
+          title: "Finna do?",
+          lyrics: `Placeholder lyrics for Finna do?.
 
 Additional verses and choruses will be added here.`
         },
         {
           id: "lyrics-exercises-2",
           href: "#lyrics-exercises-2",
-          title: "Song 2",
-          lyrics: `Placeholder lyrics for Song 2.
+          title: "Bliss",
+          lyrics: `Placeholder lyrics for Bliss.
 
 Additional verses and choruses will be added here.`
         },
         {
           id: "lyrics-exercises-3",
           href: "#lyrics-exercises-3",
-          title: "Song 3",
-          lyrics: `Placeholder lyrics for Song 3.
+          title: "Help",
+          lyrics: `Placeholder lyrics for Help.
 
 Additional verses and choruses will be added here.`
         },
         {
           id: "lyrics-exercises-4",
           href: "#lyrics-exercises-4",
-          title: "Song 4",
-          lyrics: `Placeholder lyrics for Song 4.
+          title: "Somethin' Special",
+          lyrics: `Placeholder lyrics for Somethin' Special.
 
 Additional verses and choruses will be added here.`
         },
         {
           id: "lyrics-exercises-5",
           href: "#lyrics-exercises-5",
-          title: "Song 5",
-          lyrics: `Placeholder lyrics for Song 5.
+          title: "Looking Glass",
+          lyrics: `Placeholder lyrics for Looking Glass.
 
 Additional verses and choruses will be added here.`
         },
         {
           id: "lyrics-exercises-6",
           href: "#lyrics-exercises-6",
-          title: "Song 6",
-          lyrics: `Placeholder lyrics for Song 6.
+          title: "Birds Calling Out",
+          lyrics: `Placeholder lyrics for Birds Calling Out.
 
 Additional verses and choruses will be added here.`
         }

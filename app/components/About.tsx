@@ -104,14 +104,6 @@ function smoothstep(value: number) {
   return progress * progress * (3 - 2 * progress);
 }
 
-function getElementOpacity(distance: number, start: number, end: number) {
-  if (end <= start) {
-    return distance >= end ? 1 : 0;
-  }
-
-  return smoothstep((distance - start) / (end - start));
-}
-
 function getPointOnRoute(geometry: RouteGeometry, progress: number) {
   const distance = clamp(progress, 0, 1) * geometry.totalLength;
   const { points, cumulativeLengths } = geometry;
@@ -304,17 +296,6 @@ export default function About() {
       gsap.set(cd, { x: point.x, y: point.y, scale: geometry.smallScale });
       gsap.set(videoStage, { x: point.trackX });
 
-      videoFrames.forEach((frame, index) => {
-        const revealRange = geometry.videoRevealRanges[index];
-
-        gsap.set(frame, {
-          autoAlpha: getElementOpacity(
-            point.distance,
-            revealRange.start,
-            revealRange.end
-          )
-        });
-      });
       videoCaptionChars.forEach((characters, captionIndex) => {
         const revealStart = geometry.captionRevealDistances[captionIndex];
         const revealProgress = clamp(
@@ -661,7 +642,10 @@ export default function About() {
         rotation: 0,
         scale: 1
       });
-      gsap.set(videoFrames, { autoAlpha: 0 });
+      // No fade-in: the videos are already fully opaque, and only become
+      // visible as the horizontal track slides them past the sticky
+      // stage's clipped edge.
+      gsap.set(videoFrames, { autoAlpha: 1 });
       gsap.set(videoCaptions, { autoAlpha: 1, xPercent: -50 });
       gsap.set(videoCaptionChars.flat(), { autoAlpha: 0, y: 20 });
       gsap.set(finalMessage, { autoAlpha: 1, xPercent: -50, yPercent: -100 });

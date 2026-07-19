@@ -110,32 +110,32 @@ export const LYRIC_NAVIGATION = [
     songs: [
       {
         id: "lyrics-exercises-1",
-        label: "Song 1",
+        label: "Finna do?",
         href: "#lyrics-exercises-1"
       },
       {
         id: "lyrics-exercises-2",
-        label: "Song 2",
+        label: "Bliss",
         href: "#lyrics-exercises-2"
       },
       {
         id: "lyrics-exercises-3",
-        label: "Song 3",
+        label: "Help",
         href: "#lyrics-exercises-3"
       },
       {
         id: "lyrics-exercises-4",
-        label: "Song 4",
+        label: "Somethin' Special",
         href: "#lyrics-exercises-4"
       },
       {
         id: "lyrics-exercises-5",
-        label: "Song 5",
+        label: "Looking Glass",
         href: "#lyrics-exercises-5"
       },
       {
         id: "lyrics-exercises-6",
-        label: "Song 6",
+        label: "Birds Calling Out",
         href: "#lyrics-exercises-6"
       }
     ]

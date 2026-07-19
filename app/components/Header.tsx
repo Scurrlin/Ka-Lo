@@ -142,6 +142,21 @@ function BackIcon() {
   );
 }
 
+// Icon-only back control used on small screens and narrower, in place of the
+// text+arrow pairing used everywhere else.
+function MobileBackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label="Back"
+      onClick={onClick}
+      className="inline-flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+    >
+      <ArrowLeft aria-hidden="true" className="h-7 w-7 text-black" strokeWidth={2} />
+    </button>
+  );
+}
+
 function SocialDestination({
   social,
   variant,
@@ -264,8 +279,16 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     : LYRIC_NAVIGATION.length + 1;
   const areDesktopLyricsItemsVisible =
     isDesktopLyricsMenuOpen && isDesktopLyricsViewVisible;
+  // isMobileMenuPresent/isDesktopLyricsMenuPresent stay true for the full
+  // cascade-out even after isMenuOpen/isDesktopLyricsMenuOpen flip false, so
+  // folding them in here keeps the backdrop fully blurred until the last
+  // staggered item has actually finished animating away.
   const isSharedBackdropVisible =
-    isNavigating || isMenuOpen || isDesktopLyricsMenuOpen;
+    isNavigating ||
+    isMenuOpen ||
+    isMobileMenuPresent ||
+    isDesktopLyricsMenuOpen ||
+    isDesktopLyricsMenuPresent;
   const sharedBackdropTransitionDuration = isNavigating
     ? 0
     : isSharedBackdropVisible
@@ -274,9 +297,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         : 425
       : backdropSource === "navigation"
         ? 250
-        : backdropSource === "mobile-menu"
-          ? getMobileMenuTransitionDuration(mobileMenuItemCount)
-          : getMobileMenuTransitionDuration(desktopLyricsItemCount);
+        : 300;
 
   const transitionMobileMenuView = (nextView: MobileMenuView) => {
     if (
@@ -1454,14 +1475,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 index={LYRIC_NAVIGATION.length + 1}
                 isVisible={areMobileMenuItemsVisible}
               >
-                <button
-                  type="button"
-                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-2`}
-                  onClick={() => transitionMobileMenuView("main")}
-                >
-                  <BackIcon />
-                  <span className="font-display text-2xl leading-none">Back</span>
-                </button>
+                <MobileBackButton onClick={() => transitionMobileMenuView("main")} />
               </MobileMenuItem>
             </>
           ) : activeLyricProject ? (
@@ -1498,14 +1512,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 index={activeLyricProject.songs.length + 1}
                 isVisible={areMobileMenuItemsVisible}
               >
-                <button
-                  type="button"
-                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-2`}
-                  onClick={() => transitionMobileMenuView("lyrics")}
-                >
-                  <BackIcon />
-                  <span className="font-display text-2xl leading-none">Back</span>
-                </button>
+                <MobileBackButton onClick={() => transitionMobileMenuView("lyrics")} />
               </MobileMenuItem>
             </>
           ) : null}
