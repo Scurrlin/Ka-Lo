@@ -198,6 +198,8 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const desktopLyricsTransitionTimerRef = useRef<number | null>(null);
   const desktopLyricsRevealFrameRef = useRef<number | null>(null);
   const desktopTrackFocusFrameRef = useRef<number | null>(null);
+  const shouldRestoreMobileMenuFocusRef = useRef(true);
+  const shouldRestoreDesktopLyricsFocusRef = useRef(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDesktopLyricsMenuOpen, setIsDesktopLyricsMenuOpen] = useState(false);
   const [desktopLyricProject, setDesktopLyricProject] =
@@ -493,10 +495,14 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     event.preventDefault();
 
     if (isMenuOpen) {
+      shouldRestoreMobileMenuFocusRef.current = false;
+      event.currentTarget.blur();
       setIsMenuOpen(false);
     }
 
     if (isDesktopLyricsMenuOpen) {
+      shouldRestoreDesktopLyricsFocusRef.current = false;
+      event.currentTarget.blur();
       setIsDesktopLyricsMenuOpen(false);
     }
 
@@ -508,6 +514,16 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     id: string
   ) => {
     event.preventDefault();
+
+    if (isMenuOpen) {
+      shouldRestoreMobileMenuFocusRef.current = false;
+    }
+
+    if (isDesktopLyricsMenuOpen) {
+      shouldRestoreDesktopLyricsFocusRef.current = false;
+    }
+
+    event.currentTarget.blur();
     setIsMenuOpen(false);
     setIsDesktopLyricsMenuOpen(false);
     navigateToTarget(id);
@@ -518,6 +534,8 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     id: string
   ) => {
     event.preventDefault();
+    shouldRestoreDesktopLyricsFocusRef.current = false;
+    event.currentTarget.blur();
     setIsDesktopLyricsMenuOpen(false);
     navigateToTarget(id);
   };
@@ -604,7 +622,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         }
       });
 
-      if (previouslyFocused?.isConnected) {
+      const shouldRestoreFocus = shouldRestoreMobileMenuFocusRef.current;
+      shouldRestoreMobileMenuFocusRef.current = true;
+
+      if (shouldRestoreFocus && previouslyFocused?.isConnected) {
         previouslyFocused.focus();
       }
     };
@@ -710,7 +731,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         }
       });
 
-      if (trigger.isConnected) {
+      const shouldRestoreFocus = shouldRestoreDesktopLyricsFocusRef.current;
+      shouldRestoreDesktopLyricsFocusRef.current = true;
+
+      if (shouldRestoreFocus && trigger.isConnected) {
         trigger.focus({ preventScroll: true });
       }
     };
@@ -764,7 +788,12 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               : "pointer-events-none -translate-y-[115%]"
             : "site-header-intro pointer-events-none"
         }`}
-        onFocusCapture={() => setIsHeaderFocused(true)}
+        onFocusCapture={(event) => {
+          const target = event.target;
+          setIsHeaderFocused(
+            target instanceof HTMLElement && target.matches(":focus-visible")
+          );
+        }}
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
             setIsHeaderFocused(false);
@@ -797,6 +826,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
                 setMobileMenuView("main");
                 setIsMobileMenuViewVisible(true);
+                shouldRestoreMobileMenuFocusRef.current = true;
                 setIsMenuOpen(true);
               }}
             >
@@ -843,6 +873,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
                       setDesktopLyricProject(null);
                       setIsDesktopLyricsViewVisible(true);
+                      shouldRestoreDesktopLyricsFocusRef.current = true;
                       setIsDesktopLyricsMenuOpen(true);
                     }}
                   >
