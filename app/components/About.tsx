@@ -35,6 +35,10 @@ const EXIT_DURATION = 0.9;
 const NEXT_TITLE_HOLD_DURATION = 1.25;
 const NEXT_TITLE_EXTRA_SCROLL_SCREENS = 0.75;
 const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
+const DESKTOP_MIN_WIDTH = 640;
+const VIDEO_CENTER_PROGRESS = 0.5;
+const DESKTOP_LATE_CAPTION_START_PROGRESS = 0.4;
+const MOBILE_LATE_CAPTION_START_PROGRESS = 0.3;
 
 type Point = {
   x: number;
@@ -562,10 +566,35 @@ export default function About() {
         centerX - (videoTwo.left + runningSlotWidth / 2),
         centerX - (videoThree.left + videoWidth / 2)
       ];
-      const captionRevealDistances = videoCenterTrackPositions.map((trackX) =>
-        getDistanceAtTrackPosition(points, cumulativeLengths, trackX)
-      );
       const captionRevealWindow = clamp(videoWidth * 0.42, 110, 260);
+      const lateCaptionStartProgress =
+        viewportWidth >= DESKTOP_MIN_WIDTH
+          ? DESKTOP_LATE_CAPTION_START_PROGRESS
+          : MOBILE_LATE_CAPTION_START_PROGRESS;
+      const lateCaptionApproachProgress =
+        lateCaptionStartProgress / VIDEO_CENTER_PROGRESS;
+      const captionRevealDistances = videoCenterTrackPositions.map(
+        (trackX, captionIndex) => {
+          const centeredDistance = getDistanceAtTrackPosition(
+            points,
+            cumulativeLengths,
+            trackX
+          );
+
+          if (captionIndex === 0) {
+            return centeredDistance;
+          }
+
+          // Treat each video's reveal start as 0% and its centered position as
+          // 50%. The later captions therefore begin at 40% on desktop and 30%
+          // on mobile without changing the character-cascade duration.
+          return interpolate(
+            videoRevealRanges[captionIndex].start,
+            centeredDistance,
+            lateCaptionApproachProgress
+          );
+        }
+      );
       const totalRouteLength = cumulativeLengths[cumulativeLengths.length - 1];
 
       routeGeometry = {

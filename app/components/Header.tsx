@@ -32,6 +32,7 @@ const SCROLL_KEYS = new Set([
   "PageDown",
   "Home",
   "End",
+  "Tab",
   " "
 ]);
 const FOCUSABLE_SELECTOR =
@@ -51,6 +52,7 @@ const MOBILE_LYRICS_MENU_TEXT_CLASS =
 
 type MobileMenuView = "main" | "lyrics" | "silver-cracks" | "exercises";
 type DesktopLyricProject = "silver-cracks" | "exercises";
+type BackdropSource = "mobile-menu" | "desktop-lyrics" | "navigation";
 
 type SocialLinkProps = {
   social: SocialLink;
@@ -131,17 +133,11 @@ function MobileMenuItem({
 
 function BackIcon() {
   return (
-    <span
+    <ArrowLeft
       aria-hidden="true"
-      className="pure-white-back-icon relative block h-[1em] w-12 shrink-0 text-white"
-    >
-      <ArrowLeft
-        className="absolute left-0 top-0 h-[1em] w-[1em]"
-        stroke="#ffffff"
-        strokeWidth={1.5}
-      />
-      <span className="pure-white-back-icon-line absolute left-[0.75em] right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-white" />
-    </span>
+      className="h-[1em] w-[1em] shrink-0"
+      strokeWidth={1.5}
+    />
   );
 }
 
@@ -216,6 +212,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const navigationRunRef = useRef(0);
   const navigationCleanupRef = useRef<(() => void) | null>(null);
   const navigationStartRef = useRef<(() => void) | null>(null);
+  const navigationIsActiveRef = useRef(false);
   const lastScrollYRef = useRef(0);
   const scrollAnchorYRef = useRef(0);
   const scrollDirectionRef = useRef<"up" | "down" | null>(null);
@@ -235,9 +232,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const [isDesktopLyricsViewVisible, setIsDesktopLyricsViewVisible] =
     useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [backdropSource, setBackdropSource] =
+    useState<BackdropSource>("mobile-menu");
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isHeaderFocused, setIsHeaderFocused] = useState(false);
-  const [isLyricsHeaderPinned, setIsLyricsHeaderPinned] = useState(false);
   const [mobileMenuView, setMobileMenuView] = useState<MobileMenuView>("main");
   const [isMobileMenuViewVisible, setIsMobileMenuViewVisible] = useState(true);
   const activeLyricProject =
@@ -264,6 +262,19 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     : LYRIC_NAVIGATION.length + 2;
   const areDesktopLyricsItemsVisible =
     isDesktopLyricsMenuOpen && isDesktopLyricsViewVisible;
+  const isSharedBackdropVisible =
+    isNavigating || isMenuOpen || isDesktopLyricsMenuOpen;
+  const sharedBackdropTransitionDuration = isNavigating
+    ? 0
+    : isSharedBackdropVisible
+      ? isMenuOpen
+        ? 650
+        : 425
+      : backdropSource === "navigation"
+        ? 250
+        : backdropSource === "mobile-menu"
+          ? getMobileMenuTransitionDuration(mobileMenuItemCount)
+          : getMobileMenuTransitionDuration(desktopLyricsItemCount);
 
   const transitionMobileMenuView = (nextView: MobileMenuView) => {
     if (
@@ -393,22 +404,8 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
       const currentScrollY = Math.max(0, window.scrollY);
       const previousScrollY = lastScrollYRef.current;
-      const lyricsSection = document.getElementById("lyrics");
-      const lyricsBounds = lyricsSection?.getBoundingClientRect();
-      const lyricsTop = lyricsBounds ? lyricsBounds.top + currentScrollY : Infinity;
-      const lyricsBottom = lyricsBounds ? lyricsTop + lyricsBounds.height : -Infinity;
-      const lyricsRevealScrollY = Number(lyricsSection?.dataset.navScrollY);
-      const lyricsPinnedStart = Number.isFinite(lyricsRevealScrollY)
-        ? lyricsRevealScrollY
-        : lyricsTop;
-      const isInsideLyrics =
-        currentScrollY >= lyricsPinnedStart - HEADER_TOP_THRESHOLD &&
-        currentScrollY < lyricsBottom - HEADER_TOP_THRESHOLD;
 
-      setIsLyricsHeaderPinned(isInsideLyrics);
-
-      if (isInsideLyrics) {
-        setIsHeaderVisible(true);
+      if (navigationIsActiveRef.current) {
         scrollDirectionRef.current = null;
         scrollAnchorYRef.current = currentScrollY;
         lastScrollYRef.current = currentScrollY;
@@ -492,6 +489,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     }
 
     const navigationTarget = target;
+    const isLyricsDestination = id === "lyrics" || id.startsWith("lyrics-");
 
     const run = ++navigationRunRef.current;
 
@@ -511,6 +509,18 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         lastBlockedInputAt = performance.now();
         event.preventDefault();
       }
+    };
+
+    const resetHeaderScrollTracking = () => {
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+        scrollFrameRef.current = null;
+      }
+
+      const finalScrollY = Math.max(0, window.scrollY);
+      lastScrollYRef.current = finalScrollY;
+      scrollAnchorYRef.current = finalScrollY;
+      scrollDirectionRef.current = null;
     };
 
     const cleanupNavigation = () => {
@@ -540,12 +550,18 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       window.removeEventListener("touchmove", blockScrollInput, true);
       window.removeEventListener("keydown", blockScrollKeys, true);
 
+      // A tween interruption can occur between a scroll event and the header's
+      // queued visibility frame. Reset before re-enabling direction tracking so
+      // GSAP movement can never be mistaken for the user's next gesture.
+      resetHeaderScrollTracking();
+
       if (navigationStartRef.current === startNavigation) {
         navigationStartRef.current = null;
       }
 
       if (navigationCleanupRef.current === cleanupNavigation) {
         navigationCleanupRef.current = null;
+        navigationIsActiveRef.current = false;
       }
 
       if (navigationRunRef.current === run) {
@@ -574,6 +590,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       }
 
       window.scrollTo({ top: navigationTarget.getTop(), behavior: "instant" });
+
+      if (isLyricsDestination) {
+        setIsHeaderVisible(true);
+      }
+
       cleanupNavigation();
     };
 
@@ -628,7 +649,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
     navigationCleanupRef.current = cleanupNavigation;
     navigationStartRef.current = startNavigation;
+    navigationIsActiveRef.current = true;
 
+    setBackdropSource("navigation");
+    setIsHeaderVisible(true);
+    setIsHeaderFocused(false);
     setIsNavigating(true);
     window.history.pushState(null, "", `#${id}`);
   };
@@ -638,16 +663,15 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     id: SectionId | "top"
   ) => {
     event.preventDefault();
+    event.currentTarget.blur();
 
     if (isMenuOpen) {
       shouldRestoreMobileMenuFocusRef.current = false;
-      event.currentTarget.blur();
       setIsMenuOpen(false);
     }
 
     if (isDesktopLyricsMenuOpen) {
       shouldRestoreDesktopLyricsFocusRef.current = false;
-      event.currentTarget.blur();
       setIsDesktopLyricsMenuOpen(false);
     }
 
@@ -936,15 +960,14 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       <header
         ref={headerRef}
         data-site-header
-        data-lyrics-pinned={isLyricsHeaderPinned || undefined}
+        inert={isNavigating}
         data-desktop-lyrics-open={isDesktopLyricsMenuOpen || undefined}
         className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(255,255,255,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
           isIntroComplete
             ? isHeaderVisible ||
               isMenuOpen ||
               isDesktopLyricsMenuOpen ||
-              isHeaderFocused ||
-              isLyricsHeaderPinned
+              isHeaderFocused
               ? "translate-y-0"
               : "pointer-events-none -translate-y-[115%]"
             : "site-header-intro pointer-events-none"
@@ -988,6 +1011,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 setMobileMenuView("main");
                 setIsMobileMenuViewVisible(true);
                 shouldRestoreMobileMenuFocusRef.current = true;
+                setBackdropSource("mobile-menu");
                 setIsMenuOpen(true);
               }}
             >
@@ -1034,6 +1058,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                       setDesktopLyricProject(null);
                       setIsDesktopLyricsViewVisible(true);
                       shouldRestoreDesktopLyricsFocusRef.current = true;
+                      setBackdropSource("desktop-lyrics");
                       setIsDesktopLyricsMenuOpen(true);
                     }}
                   >
@@ -1109,10 +1134,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         ref={desktopLyricsLayerRef}
         aria-hidden={!isDesktopLyricsMenuOpen}
         inert={!isDesktopLyricsMenuOpen}
-        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden items-start justify-start overflow-hidden pb-6 transition-[opacity,visibility,background-color,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] sm:flex md:top-20 ${
+        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden items-start justify-start overflow-hidden pb-6 transition-[visibility] ease-[cubic-bezier(0.16,1,0.3,1)] sm:flex md:top-20 ${
           isDesktopLyricsMenuOpen
-            ? "visible pointer-events-auto bg-black/70 opacity-100 backdrop-blur-xl"
-            : "invisible pointer-events-none bg-black/0 opacity-0 backdrop-blur-none"
+            ? "visible pointer-events-auto"
+            : "invisible pointer-events-none"
         }`}
         style={{
           transitionDuration: isNavigating
@@ -1218,11 +1243,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 >
                   <button
                     type="button"
-                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer`}
-                    aria-label="Back"
+                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer gap-2`}
                     onClick={() => transitionDesktopLyricsView(null)}
                   >
                     <BackIcon />
+                    <span>Back</span>
                   </button>
                 </MobileMenuItem>
               </>
@@ -1286,11 +1311,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 >
                   <button
                     type="button"
-                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer`}
-                    aria-label="Back"
+                    className={`${DESKTOP_LYRICS_MENU_TEXT_CLASS} cursor-pointer gap-2`}
                     onClick={() => setIsDesktopLyricsMenuOpen(false)}
                   >
                     <BackIcon />
+                    <span>Back</span>
                   </button>
                 </MobileMenuItem>
               </>
@@ -1306,10 +1331,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         aria-modal="true"
         aria-label="Site navigation"
         aria-hidden={!isMenuOpen}
-        className={`fixed inset-0 z-40 flex items-center justify-center px-6 pb-8 pt-20 transition-[opacity,visibility,background-color,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] sm:hidden ${
+        className={`fixed inset-0 z-40 flex items-center justify-center px-6 pb-8 pt-20 transition-[visibility] ease-[cubic-bezier(0.16,1,0.3,1)] sm:hidden ${
           isMenuOpen
-            ? "visible pointer-events-auto bg-black/70 opacity-100 backdrop-blur-xl"
-            : "invisible pointer-events-none bg-black/0 opacity-0 backdrop-blur-none"
+            ? "visible pointer-events-auto"
+            : "invisible pointer-events-none"
         }`}
         // Opening keeps its own fixed duration; closing is computed above so
         // the un-blur finishes in sync with the last staggered link.
@@ -1434,11 +1459,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center`}
-                  aria-label="Back"
+                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-2`}
                   onClick={() => transitionMobileMenuView("main")}
                 >
                   <BackIcon />
+                  <span>Back</span>
                 </button>
               </MobileMenuItem>
             </>
@@ -1478,11 +1503,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center`}
-                  aria-label="Back"
+                  className={`${MOBILE_LYRICS_MENU_TEXT_CLASS} inline-flex cursor-pointer items-center gap-2`}
                   onClick={() => transitionMobileMenuView("lyrics")}
                 >
                   <BackIcon />
+                  <span>Back</span>
                 </button>
               </MobileMenuItem>
             </>
@@ -1492,11 +1517,16 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
       <div
         aria-hidden="true"
-        className={`fixed inset-0 z-[60] touch-none bg-black/70 transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isNavigating
-            ? "visible pointer-events-auto opacity-100 backdrop-blur-xl duration-0"
-            : "invisible pointer-events-none opacity-0 backdrop-blur-none duration-250"
+        className={`fixed inset-0 touch-none bg-black/70 transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          backdropSource === "navigation" ? "z-[60]" : "z-[35]"
+        } ${
+          isSharedBackdropVisible
+            ? "visible pointer-events-auto opacity-100 backdrop-blur-xl"
+            : "invisible pointer-events-none opacity-0 backdrop-blur-none"
         }`}
+        style={{
+          transitionDuration: `${sharedBackdropTransitionDuration}ms`
+        }}
       />
     </>
   );
