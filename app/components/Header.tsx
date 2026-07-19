@@ -287,8 +287,12 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       const lyricsBounds = lyricsSection?.getBoundingClientRect();
       const lyricsTop = lyricsBounds ? lyricsBounds.top + currentScrollY : Infinity;
       const lyricsBottom = lyricsBounds ? lyricsTop + lyricsBounds.height : -Infinity;
+      const lyricsRevealScrollY = Number(lyricsSection?.dataset.navScrollY);
+      const lyricsPinnedStart = Number.isFinite(lyricsRevealScrollY)
+        ? lyricsRevealScrollY
+        : lyricsTop;
       const isInsideLyrics =
-        currentScrollY >= lyricsTop - HEADER_TOP_THRESHOLD &&
+        currentScrollY >= lyricsPinnedStart - HEADER_TOP_THRESHOLD &&
         currentScrollY < lyricsBottom - HEADER_TOP_THRESHOLD;
 
       setIsLyricsHeaderPinned(isInsideLyrics);
@@ -580,7 +584,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
       const panelFocusables = Array.from(
         panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
-      );
+      ).filter((element) => !element.closest("[inert]"));
       const focusables = [trigger, ...panelFocusables];
       const currentIndex = focusables.indexOf(
         document.activeElement as HTMLElement
@@ -633,17 +637,21 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   }, [isDesktopLyricsMenuOpen]);
 
   useEffect(() => {
-    if (!isDesktopLyricsMenuOpen || !desktopLyricProject) {
+    if (!isDesktopLyricsMenuOpen) {
       return;
     }
 
     desktopTrackFocusFrameRef.current = window.requestAnimationFrame(() => {
       desktopTrackFocusFrameRef.current = null;
-      desktopLyricsPanelRef.current
-        ?.querySelector<HTMLElement>(
-          `[data-desktop-track-panel="${desktopLyricProject}"] a[href]`
-        )
-        ?.focus();
+      const focusTarget = desktopLyricProject
+        ? desktopLyricsPanelRef.current?.querySelector<HTMLElement>(
+            `[data-desktop-track-panel="${desktopLyricProject}"] a[href]`
+          )
+        : desktopLyricsPanelRef.current?.querySelector<HTMLElement>(
+            "[data-desktop-lyrics-top]"
+          );
+
+      focusTarget?.focus();
     });
 
     return () => {
@@ -829,21 +837,27 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Lyrics navigation"
-          className={`max-h-[calc(100svh-4rem)] w-full transform-gpu overflow-y-auto border-b border-white bg-black text-white shadow-[0_24px_64px_rgba(0,0,0,0.45)] transition-[opacity,transform] duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] md:max-h-[calc(100svh-5rem)] ${
+          className={`h-16 w-full transform-gpu overflow-hidden border-b border-white bg-black text-white shadow-[0_20px_48px_rgba(0,0,0,0.4)] transition-[opacity,transform] duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] md:h-20 ${
             isDesktopLyricsMenuOpen
               ? "translate-y-0 opacity-100"
               : "-translate-y-3 opacity-0"
           }`}
         >
-          <div className="mx-auto grid min-h-[22rem] w-full max-w-7xl grid-cols-[minmax(13rem,0.8fr)_minmax(0,1.2fr)] gap-8 px-8 py-10 md:min-h-[25rem] md:gap-12 md:py-12 lg:gap-20">
+          <div className="mx-auto grid h-full w-full max-w-7xl px-8">
             <nav
-              className="flex flex-col items-start justify-center gap-4 md:gap-5"
+              aria-hidden={desktopLyricProject !== null}
+              inert={desktopLyricProject !== null}
+              className={`col-start-1 row-start-1 flex min-w-0 transform-gpu items-center gap-6 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] transition-[opacity,transform] duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] [&::-webkit-scrollbar]:hidden md:gap-8 ${
+                desktopLyricProject === null
+                  ? "pointer-events-auto translate-y-0 opacity-100"
+                  : "pointer-events-none -translate-y-2 opacity-0"
+              }`}
               aria-label="Lyrics releases"
             >
               <a
                 data-desktop-lyrics-top
                 href="#lyrics"
-                className="relative font-display text-2xl leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-3xl"
+                className="relative shrink-0 font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl"
                 onClick={(event) =>
                   handleDesktopLyricNavClick(event, "lyrics")
                 }
@@ -860,7 +874,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                   desktopLyricProject === release.projectId;
 
                 const itemClassName =
-                  "group relative inline-flex items-center gap-3 bg-transparent font-display text-2xl leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-3xl";
+                  "group relative inline-flex shrink-0 items-center gap-2 bg-transparent font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl";
 
                 if (!opensTrackColumn) {
                   return (
@@ -902,48 +916,60 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               })}
             </nav>
 
-            <div
-              className={`grid border-l pl-8 transition-colors duration-[250ms] md:pl-12 lg:pl-20 ${
-                desktopLyricProject
-                  ? "border-white/25"
-                  : "border-transparent"
-              }`}
-            >
-              {desktopLyricProjects.map((release) => {
-                const isSelected =
-                  desktopLyricProject === release.projectId;
+            {desktopLyricProjects.map((release) => {
+              const isSelected =
+                desktopLyricProject === release.projectId;
 
-                return (
-                  <nav
-                    key={release.projectId}
-                    id={`desktop-lyrics-tracks-${release.projectId}`}
-                    data-desktop-track-panel={release.projectId}
-                    aria-label={`${release.label} tracks`}
-                    aria-hidden={!isSelected}
-                    inert={!isSelected}
-                    className={`col-start-1 row-start-1 flex transform-gpu flex-col items-start justify-center gap-4 transition-[opacity,transform] duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] md:gap-5 ${
-                      isSelected
-                        ? "pointer-events-auto translate-x-0 opacity-100"
-                        : "pointer-events-none translate-x-3 opacity-0"
-                    }`}
+              return (
+                <nav
+                  key={release.projectId}
+                  id={`desktop-lyrics-tracks-${release.projectId}`}
+                  data-desktop-track-panel={release.projectId}
+                  aria-label={`${release.label} tracks`}
+                  aria-hidden={!isSelected}
+                  inert={!isSelected}
+                  className={`col-start-1 row-start-1 flex min-w-0 transform-gpu items-center gap-6 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] transition-[opacity,transform] duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] [&::-webkit-scrollbar]:hidden md:gap-8 ${
+                    isSelected
+                      ? "pointer-events-auto translate-y-0 opacity-100"
+                      : "pointer-events-none translate-y-2 opacity-0"
+                  }`}
+                >
+                  <a
+                    href="#lyrics"
+                    tabIndex={isSelected ? undefined : -1}
+                    className="relative shrink-0 font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl"
+                    onClick={(event) =>
+                      handleDesktopLyricNavClick(event, "lyrics")
+                    }
                   >
-                    {release.songs.map((song) => (
-                      <a
-                        key={song.id}
-                        href={song.href}
-                        tabIndex={isSelected ? undefined : -1}
-                        className="relative font-display text-2xl leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-3xl"
-                        onClick={(event) =>
-                          handleDesktopLyricNavClick(event, song.id)
-                        }
-                      >
-                        {song.label}
-                      </a>
-                    ))}
-                  </nav>
-                );
-              })}
-            </div>
+                    Top
+                  </a>
+
+                  {release.songs.map((song) => (
+                    <a
+                      key={song.id}
+                      href={song.href}
+                      tabIndex={isSelected ? undefined : -1}
+                      className="relative shrink-0 font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl"
+                      onClick={(event) =>
+                        handleDesktopLyricNavClick(event, song.id)
+                      }
+                    >
+                      {song.label}
+                    </a>
+                  ))}
+
+                  <button
+                    type="button"
+                    tabIndex={isSelected ? undefined : -1}
+                    className="relative shrink-0 cursor-pointer bg-transparent font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl"
+                    onClick={() => setDesktopLyricProject(null)}
+                  >
+                    &lt; Back
+                  </button>
+                </nav>
+              );
+            })}
           </div>
         </div>
       </div>

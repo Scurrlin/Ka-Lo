@@ -239,7 +239,7 @@ export default function About() {
     const routeState = { progress: 0 };
     let routeGeometry: RouteGeometry | null = null;
     let timeline: gsap.core.Timeline | null = null;
-    let videoTrackExitX = 0;
+    let videoTrackGrowX = 0;
     let cdExitX = 0;
     let finalMessageExitX = 0;
     let videosArePlaying = false;
@@ -586,7 +586,11 @@ export default function About() {
 
       section.style.height = `${viewportHeight + storyScrollDistance}px`;
       stickyStage.style.height = `${viewportHeight}px`;
-      videoTrackExitX = -rowWidth - edgeMargin;
+      // Keep the third video's right edge attached to the CD as the disc grows.
+      // Both tweens use the same easing below, so this full-size endpoint preserves
+      // CD_CLEARANCE throughout the entire responsive growth animation.
+      videoTrackGrowX =
+        centerX - (videoThree.right + baseCdDiameter / 2 + CD_CLEARANCE);
       cdExitX = viewportWidth + baseCdDiameter / 2 + edgeMargin - origin.x;
       finalMessageExitX = -viewportWidth / 2 - finalMessage.offsetWidth / 2 - edgeMargin;
 
@@ -710,7 +714,11 @@ export default function About() {
         )
         .to(
           videoStage,
-          { x: () => videoTrackExitX, duration: GROW_DURATION, ease: "none" },
+          {
+            x: () => videoTrackGrowX,
+            duration: GROW_DURATION,
+            ease: "power2.inOut"
+          },
           "routeComplete"
         )
         .to(

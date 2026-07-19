@@ -133,10 +133,10 @@ export default function Intro() {
       <Header isIntroComplete={isIntroComplete} />
       <Hero onIntroComplete={completeNaturally} />
 
-      {isSkipAvailable && (phase === "running" || phase === "covering") ? (
+      {phase === "running" || phase === "covering" ? (
         <div
           className={`intro-skip-control ${
-            phase === "running"
+            phase === "running" && isSkipAvailable
               ? isSkipExiting
                 ? "intro-skip-control-exiting"
                 : "intro-skip-control-visible"
@@ -147,7 +147,9 @@ export default function Intro() {
             type="button"
             className="intro-skip-button"
             onClick={handleSkip}
-            disabled={phase !== "running" || isSkipExiting}
+            disabled={
+              phase !== "running" || !isSkipAvailable || isSkipExiting
+            }
             aria-label="Skip intro animation"
           >
             Skip

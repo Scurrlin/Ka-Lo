@@ -41,7 +41,7 @@ export type SocialLink = Readonly<{
 export const SECTION_LINKS = [
   { id: "music", label: "Music", href: "#music" },
   { id: "about", label: "About", href: "#about" },
-  { id: "lyrics", label: "Lyrics", href: "#lyrics" }
+  { id: "lyrics", label: "LYRICS", href: "#lyrics" }
 ] as const satisfies readonly SectionLink[];
 
 export const LYRIC_NAVIGATION = [
