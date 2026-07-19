@@ -20,6 +20,19 @@ const DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
 const HEADER_DIRECTION_THRESHOLD = 6;
 const HEADER_TOP_THRESHOLD = 2;
 const NAV_SCROLL_DURATION_SECONDS = 1.2;
+// Keys that would otherwise move the scroll position; blocked while an
+// animated nav scroll is in flight so it can't be interrupted.
+const SCROLL_KEYS = new Set([
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "PageUp",
+  "PageDown",
+  "Home",
+  "End",
+  " "
+]);
 const FOCUSABLE_SELECTOR =
   "a[href]:not([tabindex='-1']), button:not([disabled]):not([tabindex='-1'])";
 // Shared by every desktop lyric-shelf and mobile navigation page so their
@@ -31,9 +44,9 @@ const MOBILE_MENU_ITEM_STAGGER = 60;
 const MOBILE_MENU_ITEM_REVEAL_DURATION = 600;
 const MOBILE_MAIN_ITEM_COUNT = SECTION_LINKS.length + SOCIAL_LINKS.length;
 const DESKTOP_LYRICS_MENU_TEXT_CLASS =
-  "flex w-full items-center px-6 py-[clamp(0.8rem,1.6svh,1.1rem)] text-left focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white md:px-8";
+  "flex w-full items-center px-6 py-[clamp(0.8rem,1.6svh,1.1rem)] text-left text-white focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white md:px-8";
 const MOBILE_LYRICS_MENU_TEXT_CLASS =
-  "whitespace-nowrap font-display text-2xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
+  "whitespace-nowrap font-display text-2xl leading-none text-white focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
 
 type MobileMenuView = "main" | "lyrics" | "silver-cracks" | "exercises";
 type DesktopLyricProject = "silver-cracks" | "exercises";
@@ -79,6 +92,10 @@ function getMobileMenuItemStyle(index: number, isVisible: boolean): React.CSSPro
   // Same top-down order both ways: the topmost item leads on the way in
   // (after the initial delay) and leads on the way out too.
   return {
+    // The negative edge leaves room for focus outlines once fully revealed.
+    clipPath: isVisible
+      ? "inset(-0.5rem -0.5rem -0.5rem -0.5rem)"
+      : "inset(-0.5rem calc(100% + 0.5rem) -0.5rem -0.5rem)",
     transitionDelay: isVisible
       ? `${MOBILE_MENU_ITEM_DELAY + index * MOBILE_MENU_ITEM_STAGGER}ms`
       : `${index * MOBILE_MENU_ITEM_STAGGER}ms`
@@ -103,10 +120,8 @@ function MobileMenuItem({
 }) {
   return (
     <div
-      className={`text-white transition-opacity duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-opacity ${
-        isVisible
-          ? "opacity-100"
-          : "pointer-events-none opacity-0"
+      className={`text-white opacity-100 transition-[clip-path] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[clip-path] ${
+        isVisible ? "" : "pointer-events-none"
       }`}
       style={getMobileMenuItemStyle(index, isVisible)}
     >
@@ -117,12 +132,16 @@ function MobileMenuItem({
 
 function BackIcon() {
   return (
-    <span aria-hidden="true" className="relative block h-[1.3em] w-12 shrink-0">
+    <span
+      aria-hidden="true"
+      className="relative block h-[1em] w-12 shrink-0 text-white"
+    >
       <ArrowLeft
-        className="absolute left-0 top-1/2 h-[1.3em] w-[1.3em] -translate-y-1/2"
+        className="absolute left-0 top-0 h-[1em] w-[1em]"
+        stroke="#ffffff"
         strokeWidth={1.5}
       />
-      <span className="absolute left-[1em] right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current" />
+      <span className="absolute left-[0.75em] right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-white" />
     </span>
   );
 }
@@ -444,6 +463,29 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   useEffect(() => {
     gsap.registerPlugin(ScrollToPlugin);
   }, []);
+
+  useEffect(() => {
+    if (!isNavigating) {
+      return;
+    }
+
+    const blockScrollInput = (event: Event) => event.preventDefault();
+    const blockScrollKeys = (event: KeyboardEvent) => {
+      if (SCROLL_KEYS.has(event.key)) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener("wheel", blockScrollInput, { passive: false });
+    window.addEventListener("touchmove", blockScrollInput, { passive: false });
+    window.addEventListener("keydown", blockScrollKeys);
+
+    return () => {
+      window.removeEventListener("wheel", blockScrollInput);
+      window.removeEventListener("touchmove", blockScrollInput);
+      window.removeEventListener("keydown", blockScrollKeys);
+    };
+  }, [isNavigating]);
 
   useEffect(() => {
     const desktopMedia = window.matchMedia(DESKTOP_MEDIA_QUERY);
@@ -978,10 +1020,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         ref={desktopLyricsLayerRef}
         aria-hidden={!isDesktopLyricsMenuOpen}
         inert={!isDesktopLyricsMenuOpen}
-        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden items-start justify-start overflow-hidden pb-6 transition-[opacity,visibility,background-color,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] sm:flex md:top-20 ${
+        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden items-start justify-start overflow-hidden pb-6 transition-[visibility,background-color,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] sm:flex md:top-20 ${
           isDesktopLyricsMenuOpen
-            ? "visible pointer-events-auto bg-black/70 opacity-100 backdrop-blur-xl"
-            : "invisible pointer-events-none bg-black/0 opacity-0 backdrop-blur-none"
+            ? "visible pointer-events-auto bg-black/70 backdrop-blur-xl"
+            : "invisible pointer-events-none bg-black/0 backdrop-blur-none"
         }`}
         style={{
           transitionDuration: isDesktopLyricsMenuOpen
@@ -1171,10 +1213,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         aria-modal="true"
         aria-label="Site navigation"
         aria-hidden={!isMenuOpen}
-        className={`fixed inset-0 z-40 flex items-center justify-center px-6 pb-8 pt-20 transition-[opacity,visibility,background-color,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] sm:hidden ${
+        className={`fixed inset-0 z-40 flex items-center justify-center px-6 pb-8 pt-20 transition-[visibility,background-color,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] sm:hidden ${
           isMenuOpen
-            ? "visible pointer-events-auto bg-black/70 opacity-100 backdrop-blur-xl"
-            : "invisible pointer-events-none bg-black/0 opacity-0 backdrop-blur-none"
+            ? "visible pointer-events-auto bg-black/70 backdrop-blur-xl"
+            : "invisible pointer-events-none bg-black/0 backdrop-blur-none"
         }`}
         // Opening keeps its own fixed duration; closing is computed above so
         // the un-blur finishes in sync with the last staggered link.
