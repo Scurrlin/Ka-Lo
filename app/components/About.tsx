@@ -17,7 +17,7 @@ const VIDEO_CAPTIONS = [
   { text: "And Producer", position: "above" as const },
   { text: "Pushing The Limits Of Hip-Hop", position: "below" as const }
 ] as const;
-const FINAL_MESSAGE = "He's Not Your Traditional...";
+const FINAL_MESSAGE = "Not Your Traditional...";
 
 const CD_CLEARANCE = 18;
 const CD_VERTICAL_CLEARANCE = 36;

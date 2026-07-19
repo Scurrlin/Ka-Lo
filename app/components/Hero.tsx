@@ -254,66 +254,68 @@ export default function Hero({ onIntroComplete }: HeroProps) {
         ))}
       </div>
 
-      <div className="hero-lockup pointer-events-none relative z-30 flex w-full max-w-5xl flex-col items-center gap-[var(--hero-logo-wave-gap)]">
-        <h1
-          className="font-display select-none text-center text-[length:var(--hero-logo-size)] leading-none text-white"
-          aria-label="KALO"
-        >
-          KΛLO
-        </h1>
+      <div className="hero-lockup pointer-events-none relative z-30 flex w-full max-w-5xl flex-col items-center">
+        <div className="flex w-fit max-w-full flex-col items-stretch gap-[var(--hero-logo-wave-gap)]">
+          <h1
+            className="w-max select-none whitespace-nowrap text-center font-display text-[length:var(--hero-logo-size)] leading-none text-white"
+            aria-label="KALO"
+          >
+            KΛLO
+          </h1>
 
-        <div
-          ref={waveRef}
-          className="hero-sound-wave flex h-[var(--hero-wave-height)] w-[var(--hero-wave-width)] items-center justify-center"
-          aria-hidden="true"
-          onAnimationEnd={(event) => {
-            if (
-              event.currentTarget === event.target &&
-              event.animationName === "hero-wave-rise"
-            ) {
-              onIntroComplete();
-            }
-          }}
-        >
-          <div className="flex h-full w-full items-center justify-between gap-[clamp(0.1rem,0.4vw,0.4rem)]">
-            {WAVE_BARS.map((height, index) => (
-              <span
-                key={index}
-                ref={(node) => {
-                  if (node) {
-                    waveBarRefs.current[index] = node;
-                  }
-                }}
-                className="hero-wave-reactor flex h-full flex-1 items-center"
-              >
+          <div
+            ref={waveRef}
+            className="hero-sound-wave flex h-[var(--hero-wave-height)] w-full items-center justify-center"
+            aria-hidden="true"
+            onAnimationEnd={(event) => {
+              if (
+                event.currentTarget === event.target &&
+                event.animationName === "hero-wave-rise"
+              ) {
+                onIntroComplete();
+              }
+            }}
+          >
+            <div className="flex h-full w-full items-center justify-between gap-[clamp(0.1rem,0.4vw,0.4rem)]">
+              {WAVE_BARS.map((height, index) => (
                 <span
-                  data-wave-bar
-                  className="hero-wave-bar relative block w-full rounded-full"
-                  style={{
-                    animationDelay: `calc(var(--hero-reveal-duration) + ${getWaveBarDelay(index).toFixed(3)}s)`,
-                    animationDuration: `${getWaveBarDuration(index).toFixed(3)}s`,
-                    height: `${height}%`
+                  key={index}
+                  ref={(node) => {
+                    if (node) {
+                      waveBarRefs.current[index] = node;
+                    }
                   }}
+                  className="hero-wave-reactor flex h-full flex-1 items-center"
                 >
                   <span
-                    ref={(node) => {
-                      if (node) {
-                        gradientBarRefs.current[index] = node;
-                      }
+                    data-wave-bar
+                    className="hero-wave-bar relative block w-full rounded-full"
+                    style={{
+                      animationDelay: `calc(var(--hero-reveal-duration) + ${getWaveBarDelay(index).toFixed(3)}s)`,
+                      animationDuration: `${getWaveBarDuration(index).toFixed(3)}s`,
+                      height: `${height}%`
                     }}
-                    className="hero-wave-gradient-bar absolute inset-0 rounded-full"
-                  />
-                  <span
-                    ref={(node) => {
-                      if (node) {
-                        whiteBarRefs.current[index] = node;
-                      }
-                    }}
-                    className="hero-wave-white-bar absolute inset-0 rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.4)]"
-                  />
+                  >
+                    <span
+                      ref={(node) => {
+                        if (node) {
+                          gradientBarRefs.current[index] = node;
+                        }
+                      }}
+                      className="hero-wave-gradient-bar absolute inset-0 rounded-full"
+                    />
+                    <span
+                      ref={(node) => {
+                        if (node) {
+                          whiteBarRefs.current[index] = node;
+                        }
+                      }}
+                      className="hero-wave-white-bar absolute inset-0 rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.4)]"
+                    />
+                  </span>
                 </span>
-              </span>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
