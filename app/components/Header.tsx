@@ -178,11 +178,15 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const mobileMenuTransitionTimerRef = useRef<number | null>(null);
   const mobileMenuRevealFrameRef = useRef<number | null>(null);
   const mobileMenuFocusFrameRef = useRef<number | null>(null);
+  const desktopLyricsTransitionTimerRef = useRef<number | null>(null);
+  const desktopLyricsRevealFrameRef = useRef<number | null>(null);
   const desktopTrackFocusFrameRef = useRef<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDesktopLyricsMenuOpen, setIsDesktopLyricsMenuOpen] = useState(false);
   const [desktopLyricProject, setDesktopLyricProject] =
     useState<DesktopLyricProject | null>(null);
+  const [isDesktopLyricsViewVisible, setIsDesktopLyricsViewVisible] =
+    useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isHeaderFocused, setIsHeaderFocused] = useState(false);
@@ -203,9 +207,16 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         : (activeLyricProject?.songs.length ?? 0) + 2;
   const areMobileMenuItemsVisible =
     isMenuOpen && isMobileMenuViewVisible;
-  const desktopLyricProjects = LYRIC_NAVIGATION.filter(
-    (release) => release.songs.length > 0
-  );
+  const activeDesktopLyricProject = desktopLyricProject
+    ? LYRIC_NAVIGATION.find(
+        (release) => release.projectId === desktopLyricProject
+      ) ?? null
+    : null;
+  const desktopLyricsItemCount = activeDesktopLyricProject
+    ? activeDesktopLyricProject.songs.length + 2
+    : LYRIC_NAVIGATION.length + 2;
+  const areDesktopLyricsItemsVisible =
+    isDesktopLyricsMenuOpen && isDesktopLyricsViewVisible;
 
   const transitionMobileMenuView = (nextView: MobileMenuView) => {
     if (
@@ -233,6 +244,29 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         });
       });
     }, getMobileMenuTransitionDuration(mobileMenuItemCount));
+  };
+
+  const transitionDesktopLyricsView = (
+    nextProject: DesktopLyricProject | null
+  ) => {
+    if (
+      !isDesktopLyricsMenuOpen ||
+      !isDesktopLyricsViewVisible ||
+      nextProject === desktopLyricProject
+    ) {
+      return;
+    }
+
+    setIsDesktopLyricsViewVisible(false);
+    desktopLyricsTransitionTimerRef.current = window.setTimeout(() => {
+      desktopLyricsTransitionTimerRef.current = null;
+      setDesktopLyricProject(nextProject);
+
+      desktopLyricsRevealFrameRef.current = window.requestAnimationFrame(() => {
+        desktopLyricsRevealFrameRef.current = null;
+        setIsDesktopLyricsViewVisible(true);
+      });
+    }, getMobileMenuTransitionDuration(desktopLyricsItemCount));
   };
 
   useEffect(() => {
@@ -269,6 +303,35 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
       if (mobileMenuFocusFrameRef.current !== null) {
         window.cancelAnimationFrame(mobileMenuFocusFrameRef.current);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (isDesktopLyricsMenuOpen) {
+      return;
+    }
+
+    if (desktopLyricsTransitionTimerRef.current !== null) {
+      window.clearTimeout(desktopLyricsTransitionTimerRef.current);
+      desktopLyricsTransitionTimerRef.current = null;
+    }
+
+    if (desktopLyricsRevealFrameRef.current !== null) {
+      window.cancelAnimationFrame(desktopLyricsRevealFrameRef.current);
+      desktopLyricsRevealFrameRef.current = null;
+    }
+  }, [isDesktopLyricsMenuOpen]);
+
+  useEffect(
+    () => () => {
+      if (desktopLyricsTransitionTimerRef.current !== null) {
+        window.clearTimeout(desktopLyricsTransitionTimerRef.current);
+      }
+
+      if (desktopLyricsRevealFrameRef.current !== null) {
+        window.cancelAnimationFrame(desktopLyricsRevealFrameRef.current);
       }
     },
     []
@@ -637,7 +700,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   }, [isDesktopLyricsMenuOpen]);
 
   useEffect(() => {
-    if (!isDesktopLyricsMenuOpen) {
+    if (!isDesktopLyricsMenuOpen || !isDesktopLyricsViewVisible) {
       return;
     }
 
@@ -645,7 +708,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       desktopTrackFocusFrameRef.current = null;
       const focusTarget = desktopLyricProject
         ? desktopLyricsPanelRef.current?.querySelector<HTMLElement>(
-            `[data-desktop-track-panel="${desktopLyricProject}"] a[href]`
+            "[data-desktop-first-track]"
           )
         : desktopLyricsPanelRef.current?.querySelector<HTMLElement>(
             "[data-desktop-lyrics-top]"
@@ -660,7 +723,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         desktopTrackFocusFrameRef.current = null;
       }
     };
-  }, [desktopLyricProject, isDesktopLyricsMenuOpen]);
+  }, [
+    desktopLyricProject,
+    isDesktopLyricsMenuOpen,
+    isDesktopLyricsViewVisible
+  ]);
 
   return (
     <>
@@ -758,6 +825,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                       }
 
                       setDesktopLyricProject(null);
+                      setIsDesktopLyricsViewVisible(true);
                       setIsDesktopLyricsMenuOpen(true);
                     }}
                   >
@@ -820,11 +888,16 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         ref={desktopLyricsLayerRef}
         aria-hidden={!isDesktopLyricsMenuOpen}
         inert={!isDesktopLyricsMenuOpen}
-        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden transition-[opacity,visibility,background-color,backdrop-filter] duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] sm:block md:top-20 ${
+        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden items-center justify-center px-8 pb-8 transition-[opacity,visibility,background-color,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] sm:flex md:top-20 ${
           isDesktopLyricsMenuOpen
             ? "visible pointer-events-auto bg-black/70 opacity-100 backdrop-blur-xl"
             : "invisible pointer-events-none bg-black/0 opacity-0 backdrop-blur-none"
         }`}
+        style={{
+          transitionDuration: isDesktopLyricsMenuOpen
+            ? "650ms"
+            : `${getMobileMenuTransitionDuration(desktopLyricsItemCount)}ms`
+        }}
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) {
             setIsDesktopLyricsMenuOpen(false);
@@ -837,140 +910,137 @@ export default function Header({ isIntroComplete }: HeaderProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Lyrics navigation"
-          className={`h-16 w-full transform-gpu overflow-hidden border-b border-white bg-black text-white shadow-[0_20px_48px_rgba(0,0,0,0.4)] transition-[opacity,transform] duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] md:h-20 ${
-            isDesktopLyricsMenuOpen
-              ? "translate-y-0 opacity-100"
-              : "-translate-y-3 opacity-0"
-          }`}
+          className="flex max-h-full w-full max-w-4xl items-center justify-center overflow-y-auto text-white"
         >
-          <div className="mx-auto grid h-full w-full max-w-7xl px-8">
-            <nav
-              aria-hidden={desktopLyricProject !== null}
-              inert={desktopLyricProject !== null}
-              className={`col-start-1 row-start-1 flex min-w-0 transform-gpu items-center gap-6 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] transition-[opacity,transform] duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] [&::-webkit-scrollbar]:hidden md:gap-8 ${
-                desktopLyricProject === null
-                  ? "pointer-events-auto translate-y-0 opacity-100"
-                  : "pointer-events-none -translate-y-2 opacity-0"
-              }`}
-              aria-label="Lyrics releases"
-            >
-              <a
-                data-desktop-lyrics-top
-                href="#lyrics"
-                className="relative shrink-0 font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl"
-                onClick={(event) =>
-                  handleDesktopLyricNavClick(event, "lyrics")
-                }
-              >
-                Top
-              </a>
-
-              {LYRIC_NAVIGATION.map((release) => {
-                const opensTrackColumn =
-                  release.projectId === "silver-cracks" ||
-                  release.projectId === "exercises";
-                const isSelected =
-                  opensTrackColumn &&
-                  desktopLyricProject === release.projectId;
-
-                const itemClassName =
-                  "group relative inline-flex shrink-0 items-center gap-2 bg-transparent font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl";
-
-                if (!opensTrackColumn) {
-                  return (
-                    <a
-                      key={release.projectId}
-                      href={release.href}
-                      className={itemClassName}
-                      onClick={(event) =>
-                        handleDesktopLyricNavClick(event, release.id)
-                      }
-                    >
-                      {release.label}
-                    </a>
-                  );
-                }
-
-                return (
-                  <button
-                    key={release.projectId}
-                    type="button"
-                    className={`${itemClassName} cursor-pointer`}
-                    aria-controls={`desktop-lyrics-tracks-${release.projectId}`}
-                    aria-expanded={isSelected}
-                    onClick={() => setDesktopLyricProject(release.projectId)}
-                  >
-                    {release.label}
-                    <span
-                      aria-hidden="true"
-                      className={`text-[0.7em] transition-opacity duration-200 ${
-                        isSelected
-                          ? "opacity-100"
-                          : "opacity-0 group-hover:opacity-45 group-focus-visible:opacity-45"
-                      }`}
-                    >
-                      →
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-
-            {desktopLyricProjects.map((release) => {
-              const isSelected =
-                desktopLyricProject === release.projectId;
-
-              return (
-                <nav
-                  key={release.projectId}
-                  id={`desktop-lyrics-tracks-${release.projectId}`}
-                  data-desktop-track-panel={release.projectId}
-                  aria-label={`${release.label} tracks`}
-                  aria-hidden={!isSelected}
-                  inert={!isSelected}
-                  className={`col-start-1 row-start-1 flex min-w-0 transform-gpu items-center gap-6 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] transition-[opacity,transform] duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] [&::-webkit-scrollbar]:hidden md:gap-8 ${
-                    isSelected
-                      ? "pointer-events-auto translate-y-0 opacity-100"
-                      : "pointer-events-none translate-y-2 opacity-0"
-                  }`}
+          <nav
+            data-desktop-track-panel={desktopLyricProject ?? undefined}
+            className="flex w-full flex-col items-center gap-[clamp(0.75rem,1.8svh,1.25rem)] py-6 text-center"
+            aria-label={
+              activeDesktopLyricProject
+                ? `${activeDesktopLyricProject.label} lyrics navigation`
+                : "Lyrics releases"
+            }
+            aria-busy={!isDesktopLyricsViewVisible}
+            inert={!areDesktopLyricsItemsVisible}
+          >
+            {activeDesktopLyricProject ? (
+              <>
+                <MobileMenuItem
+                  index={0}
+                  isVisible={areDesktopLyricsItemsVisible}
                 >
                   <a
                     href="#lyrics"
-                    tabIndex={isSelected ? undefined : -1}
-                    className="relative shrink-0 font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl"
+                    className="font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                     onClick={(event) =>
                       handleDesktopLyricNavClick(event, "lyrics")
                     }
                   >
                     Top
                   </a>
+                </MobileMenuItem>
 
-                  {release.songs.map((song) => (
+                {activeDesktopLyricProject.songs.map((song, index) => (
+                  <MobileMenuItem
+                    key={song.id}
+                    index={index + 1}
+                    isVisible={areDesktopLyricsItemsVisible}
+                  >
                     <a
-                      key={song.id}
                       href={song.href}
-                      tabIndex={isSelected ? undefined : -1}
-                      className="relative shrink-0 font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl"
+                      data-desktop-first-track={index === 0 || undefined}
+                      className="font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                       onClick={(event) =>
                         handleDesktopLyricNavClick(event, song.id)
                       }
                     >
                       {song.label}
                     </a>
-                  ))}
+                  </MobileMenuItem>
+                ))}
 
+                <MobileMenuItem
+                  index={activeDesktopLyricProject.songs.length + 1}
+                  isVisible={areDesktopLyricsItemsVisible}
+                >
                   <button
                     type="button"
-                    tabIndex={isSelected ? undefined : -1}
-                    className="relative shrink-0 cursor-pointer bg-transparent font-display text-lg leading-none after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white focus-visible:after:scale-x-100 md:text-xl"
-                    onClick={() => setDesktopLyricProject(null)}
+                    className="cursor-pointer font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    onClick={() => transitionDesktopLyricsView(null)}
                   >
                     &lt; Back
                   </button>
-                </nav>
-              );
-            })}
-          </div>
+                </MobileMenuItem>
+              </>
+            ) : (
+              <>
+                <MobileMenuItem
+                  index={0}
+                  isVisible={areDesktopLyricsItemsVisible}
+                >
+                  <a
+                    data-desktop-lyrics-top
+                    href="#lyrics"
+                    className="font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    onClick={(event) =>
+                      handleDesktopLyricNavClick(event, "lyrics")
+                    }
+                  >
+                    Top
+                  </a>
+                </MobileMenuItem>
+
+                {LYRIC_NAVIGATION.map((release, index) => {
+                  const opensTrackList =
+                    release.projectId === "silver-cracks" ||
+                    release.projectId === "exercises";
+
+                  return (
+                    <MobileMenuItem
+                      key={release.projectId}
+                      index={index + 1}
+                      isVisible={areDesktopLyricsItemsVisible}
+                    >
+                      {opensTrackList ? (
+                        <button
+                          type="button"
+                          className="cursor-pointer font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                          onClick={() =>
+                            transitionDesktopLyricsView(release.projectId)
+                          }
+                        >
+                          {release.label}
+                        </button>
+                      ) : (
+                        <a
+                          href={release.href}
+                          className="font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                          onClick={(event) =>
+                            handleDesktopLyricNavClick(event, release.id)
+                          }
+                        >
+                          {release.label}
+                        </a>
+                      )}
+                    </MobileMenuItem>
+                  );
+                })}
+
+                <MobileMenuItem
+                  index={LYRIC_NAVIGATION.length + 1}
+                  isVisible={areDesktopLyricsItemsVisible}
+                >
+                  <button
+                    type="button"
+                    className="cursor-pointer font-display text-[clamp(1.75rem,4svh,2.75rem)] leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    onClick={() => setIsDesktopLyricsMenuOpen(false)}
+                  >
+                    &lt; Back
+                  </button>
+                </MobileMenuItem>
+              </>
+            )}
+          </nav>
         </div>
       </div>
 

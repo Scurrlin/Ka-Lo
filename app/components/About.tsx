@@ -239,7 +239,7 @@ export default function About() {
     const routeState = { progress: 0 };
     let routeGeometry: RouteGeometry | null = null;
     let timeline: gsap.core.Timeline | null = null;
-    let videoTrackGrowX = 0;
+    let videoTrackExitX = 0;
     let cdExitX = 0;
     let finalMessageExitX = 0;
     let videosArePlaying = false;
@@ -586,11 +586,7 @@ export default function About() {
 
       section.style.height = `${viewportHeight + storyScrollDistance}px`;
       stickyStage.style.height = `${viewportHeight}px`;
-      // Keep the third video's right edge attached to the CD as the disc grows.
-      // Both tweens use the same easing below, so this full-size endpoint preserves
-      // CD_CLEARANCE throughout the entire responsive growth animation.
-      videoTrackGrowX =
-        centerX - (videoThree.right + baseCdDiameter / 2 + CD_CLEARANCE);
+      videoTrackExitX = -rowWidth - edgeMargin;
       cdExitX = viewportWidth + baseCdDiameter / 2 + edgeMargin - origin.x;
       finalMessageExitX = -viewportWidth / 2 - finalMessage.offsetWidth / 2 - edgeMargin;
 
@@ -715,9 +711,9 @@ export default function About() {
         .to(
           videoStage,
           {
-            x: () => videoTrackGrowX,
+            x: () => videoTrackExitX,
             duration: GROW_DURATION,
-            ease: "power2.inOut"
+            ease: "none"
           },
           "routeComplete"
         )
@@ -925,17 +921,28 @@ export default function About() {
         className="bg-black px-5 py-24 text-white sm:px-8 md:py-32"
         aria-label="What's next story"
       >
-        <div className="mx-auto max-w-3xl space-y-8 text-lg leading-relaxed text-white sm:text-xl sm:leading-relaxed">
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante
-            venenatis dapibus posuere velit aliquet. Donec ullamcorper nulla non metus auctor
-            fringilla, sed posuere consectetur est at lobortis.
-          </p>
-          <p>
-            Curabitur blandit tempus porttitor. Maecenas faucibus mollis interdum. Praesent commodo
-            cursus magna, vel scelerisque nisl consectetur et. Aenean lacinia bibendum nulla sed
-            consectetur.
-          </p>
+        <div className="relative mx-auto max-w-3xl text-lg leading-relaxed text-white sm:text-xl sm:leading-relaxed">
+          <Image
+            src="/assets/Kalo_IG.jpg"
+            alt="Ka-Lo portrait"
+            width={150}
+            height={150}
+            sizes="(min-width: 640px) 144px, 128px"
+            className="absolute left-1/2 top-0 h-32 w-32 -translate-x-1/2 -translate-y-[calc(100%+1.5rem)] rounded-full object-cover sm:h-36 sm:w-36"
+          />
+
+          <div className="space-y-8">
+            <p>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante
+              venenatis dapibus posuere velit aliquet. Donec ullamcorper nulla non metus auctor
+              fringilla, sed posuere consectetur est at lobortis.
+            </p>
+            <p>
+              Curabitur blandit tempus porttitor. Maecenas faucibus mollis interdum. Praesent
+              commodo cursus magna, vel scelerisque nisl consectetur et. Aenean lacinia bibendum
+              nulla sed consectetur.
+            </p>
+          </div>
         </div>
       </section>
     </>

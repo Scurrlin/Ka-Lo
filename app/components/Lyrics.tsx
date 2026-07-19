@@ -107,7 +107,7 @@ function SingleRelease({ release }: { release: LyricRelease }) {
 function AlbumRelease({ release }: { release: LyricRelease }) {
   return (
     <article id={release.id} className="border-t border-white/20 py-20 sm:py-28">
-      <h2 className="mx-auto max-w-[11ch] text-center font-display text-6xl leading-[0.86] tracking-[-0.055em] sm:text-8xl lg:mx-0 lg:text-left lg:text-9xl">
+      <h2 className="mx-auto max-w-[11ch] text-center font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
         <AnchorTitle href={release.href} className="max-w-full">
           {release.title}
         </AnchorTitle>
@@ -123,11 +123,11 @@ function AlbumRelease({ release }: { release: LyricRelease }) {
             <div className="flex items-start justify-center gap-5 text-center lg:sticky lg:top-28 lg:self-start lg:justify-start lg:text-left">
               <span
                 aria-hidden="true"
-                className="pt-1 text-sm font-semibold tabular-nums text-white/45 sm:text-base"
+                className="pt-1 text-sm font-semibold tabular-nums text-white sm:text-base"
               >
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <h3 className="font-display text-3xl leading-none tracking-[-0.035em] sm:text-5xl">
+              <h3 className="font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
                 <AnchorTitle href={song.href} className="max-w-[13ch]">
                   {song.title}
                 </AnchorTitle>
