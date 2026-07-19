@@ -87,7 +87,7 @@ function NumberedSongTitle({ song, index }: { song: LyricSong; index: number }) 
       <span className="relative inline-block whitespace-nowrap">
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute right-full top-1 mr-3 select-none font-sans text-sm font-semibold leading-none tracking-normal tabular-nums text-white sm:top-2 sm:text-base md:mr-4"
+          className="pointer-events-none absolute right-full top-2 mr-4 hidden select-none font-sans text-base font-semibold leading-none tracking-normal tabular-nums text-white md:inline-block"
         >
           {String(index + 1).padStart(2, "0")}
         </span>
@@ -134,7 +134,7 @@ function AlbumRelease({ release }: { release: LyricRelease }) {
             className="grid gap-8 border-t border-white/15 py-16 sm:py-20 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
           >
             <div className="flex items-start justify-center text-center lg:sticky lg:top-28 lg:self-start lg:justify-start lg:text-left">
-              <h3 className="font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-[4.25rem] lg:text-8xl">
+              <h3 className="font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
                 <NumberedSongTitle song={song} index={index} />
               </h3>
             </div>
