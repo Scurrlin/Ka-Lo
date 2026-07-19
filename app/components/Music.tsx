@@ -94,40 +94,40 @@ function CharSpans({
 }
 
 function AlbumCard({ album }: { album: Album }) {
-  const projectLabel = (
+  const releaseName = (
     <>
-      <span className="pure-white-title text-white">{album.name}</span>
-      <Image
-        src="/assets/arrow.svg"
-        alt=""
-        width={13}
-        height={14}
-        className="pure-white-icon h-4 w-4 shrink-0"
-      />
+      <span className="music-release-name">{album.name}</span>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 13 14"
+        className="music-release-arrow h-4 w-auto shrink-0"
+      >
+        <path d="M0.292893 11.7929C-0.0976311 12.1834 -0.0976311 12.8166 0.292893 13.2071C0.683418 13.5976 1.31658 13.5976 1.70711 13.2071L0.292893 11.7929ZM13 1.5C13 0.947715 12.5523 0.5 12 0.5L3 0.500001C2.44771 0.5 2 0.947716 2 1.5C2 2.05228 2.44772 2.5 3 2.5L11 2.5L11 10.5C11 11.0523 11.4477 11.5 12 11.5C12.5523 11.5 13 11.0523 13 10.5L13 1.5ZM1.70711 13.2071L12.7071 2.20711L11.2929 0.792894L0.292893 11.7929L1.70711 13.2071Z" />
+      </svg>
     </>
   );
 
   return (
-    <div className="album-card w-full text-center">
-      <h3 className="mb-3 font-display text-[26px] uppercase leading-none tracking-wide text-white sm:text-[28px] md:text-[30px]">
+    <div className="music-release-card w-full text-center">
+      <h3 className="music-release-heading mb-3 font-display text-[26px] uppercase leading-none tracking-wide sm:text-[28px] md:text-[30px]">
         {album.href ? (
           <a
             href={album.href}
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center justify-center gap-2 text-white focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            className="music-release-link inline-flex items-center justify-center gap-2 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             aria-label={`Listen to ${album.name}`}
           >
-            {projectLabel}
+            {releaseName}
           </a>
         ) : (
           <span
-            className="inline-flex cursor-not-allowed items-center justify-center gap-2 text-white"
+            className="music-release-link inline-flex cursor-not-allowed items-center justify-center gap-2"
             aria-label={`${album.name} — link coming soon`}
             aria-disabled="true"
             title={`${album.name} — link coming soon`}
           >
-            {projectLabel}
+            {releaseName}
           </span>
         )}
       </h3>

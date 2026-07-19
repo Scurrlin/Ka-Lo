@@ -750,9 +750,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
     const menuPanel = menuPanelRef.current;
     const header = headerRef.current;
-    const body = document.body;
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    const previousBodyOverflow = body.style.overflow;
     const siblingStates = Array.from(header?.parentElement?.children ?? [])
       .filter((element): element is HTMLElement =>
         element instanceof HTMLElement && element !== header && element !== menuPanel
@@ -763,7 +761,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         ariaHidden: element.getAttribute("aria-hidden")
       }));
 
-    body.style.setProperty("overflow", "hidden");
     siblingStates.forEach(({ element }) => {
       element.inert = true;
       element.setAttribute("aria-hidden", "true");
@@ -803,11 +800,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     return () => {
       window.cancelAnimationFrame(focusFrame);
       document.removeEventListener("keydown", handleKeyDown);
-      if (previousBodyOverflow) {
-        body.style.setProperty("overflow", previousBodyOverflow);
-      } else {
-        body.style.removeProperty("overflow");
-      }
       siblingStates.forEach(({ element, inert, ariaHidden }) => {
         element.inert = inert;
 
@@ -836,13 +828,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     const panel = desktopLyricsPanelRef.current;
     const header = headerRef.current;
     const trigger = desktopLyricsButtonRef.current;
-    const body = document.body;
 
     if (!layer || !panel || !trigger) {
       return;
     }
 
-    const previousBodyOverflow = body.style.overflow;
     const siblingStates = Array.from(header?.parentElement?.children ?? [])
       .filter(
         (element): element is HTMLElement =>
@@ -856,7 +846,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         ariaHidden: element.getAttribute("aria-hidden")
       }));
 
-    body.style.setProperty("overflow", "hidden");
     siblingStates.forEach(({ element }) => {
       element.inert = true;
       element.setAttribute("aria-hidden", "true");
@@ -910,12 +899,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     return () => {
       window.cancelAnimationFrame(focusFrame);
       document.removeEventListener("keydown", handleKeyDown);
-
-      if (previousBodyOverflow) {
-        body.style.setProperty("overflow", previousBodyOverflow);
-      } else {
-        body.style.removeProperty("overflow");
-      }
 
       siblingStates.forEach(({ element, inert, ariaHidden }) => {
         element.inert = inert;
@@ -990,7 +973,8 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         data-desktop-lyrics-open={isDesktopLyricsMenuOpen || undefined}
         className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(255,255,255,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
           isIntroComplete
-            ? isHeaderVisible ||
+            ? isNavigating ||
+              isHeaderVisible ||
               isMenuOpen ||
               isDesktopLyricsMenuOpen ||
               isHeaderFocused
@@ -1530,8 +1514,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
       <div
         aria-hidden="true"
-        className={`fixed inset-0 touch-none bg-black/70 transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          backdropSource === "navigation" ? "z-[60]" : "z-[35]"
+        className={`fixed inset-0 touch-none transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          backdropSource === "navigation"
+            ? "z-[60] bg-black/40"
+            : "z-[35] bg-black/70"
         } ${
           isSharedBackdropVisible
             ? "visible pointer-events-auto opacity-100 backdrop-blur-xl"

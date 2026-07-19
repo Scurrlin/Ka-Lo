@@ -621,10 +621,9 @@ html.intro-skip-complete .hero-wave-bar {
   box-shadow: 0 36px 90px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-/* These five releases are static content, not reveal targets. Force the card
-   ancestor to remain fully painted so descendant white cannot be dimmed by
-   parent compositing or a stale/broad animation selector. */
-#music .album-card {
+/* The five named releases are a fresh, isolated static layer. The unique class
+   keeps them outside any historical `.album-card` reveal selector. */
+#music .music-release-card {
   opacity: 1 !important;
   visibility: visible !important;
   transform: none !important;
@@ -632,23 +631,23 @@ html.intro-skip-complete .hero-wave-bar {
   transition: none !important;
 }
 
-/* Keep the entire album-title chain white, including visited anchors and
-   WebKit's separate text paint. */
-#music .album-card h3,
-#music .album-card h3 > a,
-#music .album-card h3 > a:link,
-#music .album-card h3 > a:visited,
-#music .album-card h3 > span,
-#music .album-card .pure-white-title,
-#music .album-card .pure-white-title * {
+/* Paint the rebuilt name/link chain directly, including visited-link and
+   WebKit text-fill states. */
+#music .music-release-heading,
+#music .music-release-link,
+#music .music-release-link:link,
+#music .music-release-link:visited,
+#music .music-release-name {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
 
-/* The arrow is a static SVG rendered via next/image, so a text-color utility
-   cannot affect it; retain the proven white filter. */
-.pure-white-icon {
-  filter: brightness(0) invert(1) !important;
+#music .music-release-arrow,
+#music .music-release-arrow path {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
