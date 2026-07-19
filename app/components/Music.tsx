@@ -96,13 +96,13 @@ function CharSpans({
 function AlbumCard({ album }: { album: Album }) {
   const projectLabel = (
     <>
-      <span className="text-white">{album.name}</span>
+      <span className="pure-white-title text-white">{album.name}</span>
       <Image
         src="/assets/arrow.svg"
         alt=""
         width={13}
         height={14}
-        className="h-4 w-4 shrink-0"
+        className="pure-white-icon h-4 w-4 shrink-0"
       />
     </>
   );

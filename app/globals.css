@@ -603,3 +603,29 @@ html.intro-skip-complete .hero-wave-bar {
 .album-cover {
   box-shadow: 0 36px 90px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
+
+/* Force-pure-white overrides for the Music section's album titles and their
+   arrow icon. The icon is a static SVG rendered via next/image, so no
+   text-color utility can touch it - brightness/invert is the only reliable
+   way to guarantee it renders as solid white regardless of source pixels. */
+.pure-white-title,
+.pure-white-title * {
+  color: #ffffff !important;
+}
+
+.pure-white-icon {
+  filter: brightness(0) invert(1) !important;
+}
+
+/* Force-pure-white override for the lyrics-menu "Back" arrow (inline SVG,
+   so color has to be forced via stroke/fill, not a filter). */
+.pure-white-back-icon,
+.pure-white-back-icon svg,
+.pure-white-back-icon svg * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.pure-white-back-icon-line {
+  background-color: #ffffff !important;
+}
