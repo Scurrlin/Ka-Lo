@@ -121,10 +121,10 @@ function MobileMenuItem({
 }) {
   return (
     <div
-      className={`text-white duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-opacity ${
+      className={`text-white transition-opacity duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-opacity ${
         isVisible
           ? "menu-cascade-enter opacity-100"
-          : "pointer-events-none opacity-0 transition-opacity"
+          : "pointer-events-none opacity-0"
       }`}
       style={getMobileMenuItemStyle(index, isVisible)}
     >
@@ -228,7 +228,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const shouldRestoreMobileMenuFocusRef = useRef(true);
   const shouldRestoreDesktopLyricsFocusRef = useRef(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileMenuPresent, setIsMobileMenuPresent] = useState(false);
   const [isDesktopLyricsMenuOpen, setIsDesktopLyricsMenuOpen] = useState(false);
+  const [isDesktopLyricsMenuPresent, setIsDesktopLyricsMenuPresent] =
+    useState(false);
   const [desktopLyricProject, setDesktopLyricProject] =
     useState<DesktopLyricProject | null>(null);
   const [isDesktopLyricsViewVisible, setIsDesktopLyricsViewVisible] =
@@ -328,6 +331,36 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       });
     }, getMobileMenuTransitionDuration(desktopLyricsItemCount));
   };
+
+  // Closing updates accessibility and interaction state immediately, while the
+  // layer stays painted until the final staggered item has faded away.
+  useEffect(() => {
+    if (isMenuOpen || !isMobileMenuPresent) {
+      return;
+    }
+
+    const hideTimer = window.setTimeout(() => {
+      setIsMobileMenuPresent(false);
+    }, getMobileMenuTransitionDuration(mobileMenuItemCount));
+
+    return () => window.clearTimeout(hideTimer);
+  }, [isMenuOpen, isMobileMenuPresent, mobileMenuItemCount]);
+
+  useEffect(() => {
+    if (isDesktopLyricsMenuOpen || !isDesktopLyricsMenuPresent) {
+      return;
+    }
+
+    const hideTimer = window.setTimeout(() => {
+      setIsDesktopLyricsMenuPresent(false);
+    }, getMobileMenuTransitionDuration(desktopLyricsItemCount));
+
+    return () => window.clearTimeout(hideTimer);
+  }, [
+    desktopLyricsItemCount,
+    isDesktopLyricsMenuOpen,
+    isDesktopLyricsMenuPresent
+  ]);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -625,6 +658,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     };
 
     function startNavigation() {
+      setBackdropSource("navigation");
       coverFrame = window.requestAnimationFrame(() => {
         coverFrame = null;
         scrollFrame = window.requestAnimationFrame(() => {
@@ -677,7 +711,14 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     navigationStartRef.current = startNavigation;
     navigationIsActiveRef.current = true;
 
-    setBackdropSource("navigation");
+    if (
+      !isMenuOpen &&
+      !isMobileMenuPresent &&
+      !isDesktopLyricsMenuOpen &&
+      !isDesktopLyricsMenuPresent
+    ) {
+      setBackdropSource("navigation");
+    }
     setIsHeaderVisible(true);
     setIsHeaderFocused(false);
     setIsNavigating(true);
@@ -920,7 +961,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   }, [isDesktopLyricsMenuOpen]);
 
   useEffect(() => {
-    if (isMenuOpen || isDesktopLyricsMenuOpen || !isNavigating) {
+    if (
+      isMenuOpen ||
+      isMobileMenuPresent ||
+      isDesktopLyricsMenuOpen ||
+      isDesktopLyricsMenuPresent ||
+      !isNavigating
+    ) {
       return;
     }
 
@@ -932,7 +979,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
     navigationStartRef.current = null;
     startNavigation();
-  }, [isDesktopLyricsMenuOpen, isMenuOpen, isNavigating]);
+  }, [
+    isDesktopLyricsMenuOpen,
+    isDesktopLyricsMenuPresent,
+    isMenuOpen,
+    isMobileMenuPresent,
+    isNavigating
+  ]);
 
   useEffect(() => {
     if (!isDesktopLyricsMenuOpen || !isDesktopLyricsViewVisible) {
@@ -1020,6 +1073,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
                 setMobileMenuView("main");
                 setIsMobileMenuViewVisible(true);
+                setIsMobileMenuPresent(true);
                 shouldRestoreMobileMenuFocusRef.current = true;
                 setBackdropSource("mobile-menu");
                 setIsMenuOpen(true);
@@ -1067,6 +1121,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
                       setDesktopLyricProject(null);
                       setIsDesktopLyricsViewVisible(true);
+                      setIsDesktopLyricsMenuPresent(true);
                       shouldRestoreDesktopLyricsFocusRef.current = true;
                       setBackdropSource("desktop-lyrics");
                       setIsDesktopLyricsMenuOpen(true);
@@ -1144,18 +1199,13 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         ref={desktopLyricsLayerRef}
         aria-hidden={!isDesktopLyricsMenuOpen}
         inert={!isDesktopLyricsMenuOpen}
-        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden items-start justify-start overflow-hidden pb-6 transition-[visibility] ease-[cubic-bezier(0.16,1,0.3,1)] sm:flex md:top-20 ${
+        className={`fixed inset-x-0 bottom-0 top-16 z-40 hidden items-start justify-start overflow-hidden pb-6 sm:flex md:top-20 ${
+          isDesktopLyricsMenuPresent ? "visible" : "invisible"
+        } ${
           isDesktopLyricsMenuOpen
-            ? "visible pointer-events-auto"
-            : "invisible pointer-events-none"
+            ? "pointer-events-auto"
+            : "pointer-events-none"
         }`}
-        style={{
-          transitionDuration: isNavigating
-            ? "0ms"
-            : isDesktopLyricsMenuOpen
-              ? "425ms"
-              : `${getMobileMenuTransitionDuration(desktopLyricsItemCount)}ms`
-        }}
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) {
             setIsDesktopLyricsMenuOpen(false);
@@ -1172,11 +1222,9 @@ export default function Header({ isIntroComplete }: HeaderProps) {
             isDesktopLyricsMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
           style={{
-            transitionDuration: isNavigating
-              ? "0ms"
-              : isDesktopLyricsMenuOpen
-                ? "425ms"
-                : `${getMobileMenuTransitionDuration(desktopLyricsItemCount)}ms`
+            transitionDuration: isDesktopLyricsMenuOpen
+              ? "425ms"
+              : `${getMobileMenuTransitionDuration(desktopLyricsItemCount)}ms`
           }}
         >
           <div
@@ -1328,20 +1376,9 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         aria-modal="true"
         aria-label="Site navigation"
         aria-hidden={!isMenuOpen}
-        className={`fixed inset-0 z-40 flex items-center justify-center px-6 pb-8 pt-20 transition-[visibility] ease-[cubic-bezier(0.16,1,0.3,1)] sm:hidden ${
-          isMenuOpen
-            ? "visible pointer-events-auto"
-            : "invisible pointer-events-none"
-        }`}
-        // Opening keeps its own fixed duration; closing is computed above so
-        // the un-blur finishes in sync with the last staggered link.
-        style={{
-          transitionDuration: isNavigating
-            ? "0ms"
-            : isMenuOpen
-              ? "650ms"
-              : `${getMobileMenuTransitionDuration(mobileMenuItemCount)}ms`
-        }}
+        className={`fixed inset-0 z-40 flex items-center justify-center px-6 pb-8 pt-20 sm:hidden ${
+          isMobileMenuPresent ? "visible" : "invisible"
+        } ${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
         onClick={(event) => {
           if (event.target === event.currentTarget) {
             setIsMenuOpen(false);

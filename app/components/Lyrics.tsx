@@ -87,7 +87,7 @@ function NumberedSongTitle({ song, index }: { song: LyricSong; index: number }) 
       <span className="relative inline-block whitespace-nowrap">
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute right-full top-1 mr-4 select-none font-sans text-sm font-semibold leading-none tracking-normal tabular-nums text-white sm:top-2 sm:text-base"
+          className="pointer-events-none absolute right-full top-1 mr-3 select-none font-sans text-sm font-semibold leading-none tracking-normal tabular-nums text-white sm:top-2 sm:text-base md:mr-4"
         >
           {String(index + 1).padStart(2, "0")}
         </span>
