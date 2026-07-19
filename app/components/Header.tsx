@@ -117,12 +117,12 @@ function MobileMenuItem({
 
 function BackIcon() {
   return (
-    <span aria-hidden="true" className="relative block h-[1em] w-12 shrink-0">
+    <span aria-hidden="true" className="relative block h-[1.3em] w-12 shrink-0">
       <ArrowLeft
-        className="absolute left-0 top-0 h-[1em] w-[1em]"
+        className="absolute left-0 top-1/2 h-[1.3em] w-[1.3em] -translate-y-1/2"
         strokeWidth={1.5}
       />
-      <span className="absolute left-[0.75em] right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current" />
+      <span className="absolute left-[1em] right-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current" />
     </span>
   );
 }
@@ -1355,9 +1355,9 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
       <div
         aria-hidden="true"
-        className={`fixed inset-0 z-40 touch-none bg-black/70 transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed inset-0 z-[60] touch-none bg-black/70 transition-[opacity,visibility,backdrop-filter] ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isNavigating
-            ? "visible pointer-events-auto opacity-100 backdrop-blur-xl duration-500"
+            ? "visible pointer-events-auto opacity-100 backdrop-blur-xl duration-0"
             : "invisible pointer-events-none opacity-0 backdrop-blur-none duration-250"
         }`}
       />

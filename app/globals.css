@@ -350,6 +350,7 @@ html.intro-skip-complete .hero-wave-bar {
 .desktop-lyrics-close-line {
   position: absolute;
   left: 50%;
+  top: 50%;
   width: 1.25rem;
   height: 2px;
   border-radius: 999px;
@@ -358,25 +359,15 @@ html.intro-skip-complete .hero-wave-bar {
   translate: -50% -50% 0;
   scale: 0 1;
   rotate: 0deg;
-  will-change: top, scale, rotate;
+  will-change: scale, rotate;
   transition:
     scale 300ms cubic-bezier(0.16, 1, 0.3, 1) 350ms,
-    top 350ms cubic-bezier(0.16, 1, 0.3, 1),
     rotate 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.desktop-lyrics-close-line-a {
-  top: calc(50% - 0.2rem);
-}
-
-.desktop-lyrics-close-line-b {
-  top: calc(50% + 0.2rem);
-}
-
 [data-lyrics-open="true"] .desktop-lyrics-close-line {
-  top: 50%;
   scale: 1 1;
-  transition-delay: 0ms, 300ms, 300ms;
+  transition-delay: 0ms, 300ms;
 }
 
 [data-lyrics-open="true"] .desktop-lyrics-close-line-a {

@@ -109,7 +109,7 @@ function AlbumCard({ album }: { album: Album }) {
 
   return (
     <div className="album-card w-full text-center">
-      <h3 className="mb-3 font-display text-[26px] uppercase leading-none tracking-wide text-white sm:text-[28px] md:text-[30px]">
+      <h3 className="mb-3 font-display text-[26px] font-bold uppercase leading-none tracking-wide text-white sm:text-[28px] md:text-[30px]">
         {album.href ? (
           <a
             href={album.href}
