@@ -87,6 +87,10 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     images: [socialImage]
+  },
+  icons: {
+    icon: "/assets/favicon.png",
+    apple: "/assets/favicon.png"
   }
 };
 
