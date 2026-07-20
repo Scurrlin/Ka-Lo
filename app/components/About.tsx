@@ -783,7 +783,6 @@ export default function About() {
           (currentTimeline.labels[label] / duration) * (scrollTrigger.end - scrollTrigger.start);
 
         section.dataset.navScrollY = Math.round(scrollAtLabel("aboutTitleRevealed")).toString();
-        section.dataset.navSettleMs = "1100";
       };
 
       ScrollTrigger.addEventListener("refresh", updateNavTargets);
@@ -798,7 +797,6 @@ export default function About() {
       ScrollTrigger.removeEventListener("refresh", updateNavTargets);
       pauseVideos();
       delete section.dataset.navScrollY;
-      delete section.dataset.navSettleMs;
       section.style.removeProperty("height");
       stickyStage.style.removeProperty("height");
       ctx.revert();

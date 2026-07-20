@@ -223,7 +223,6 @@ export default function Lyrics() {
             (scrollTrigger.end - scrollTrigger.start);
 
         section.dataset.navScrollY = Math.round(targetScroll).toString();
-        section.dataset.navSettleMs = "150";
       };
 
       ScrollTrigger.addEventListener("refresh", updateNavTarget);
@@ -237,7 +236,6 @@ export default function Lyrics() {
       window.removeEventListener("load", handleLoad);
       ScrollTrigger.removeEventListener("refresh", updateNavTarget);
       delete section.dataset.navScrollY;
-      delete section.dataset.navSettleMs;
       context.revert();
     };
   }, []);

@@ -4,25 +4,10 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
 const HERO_LOGO_TEXT = "KΛLO";
-const LOGO_CHAR_REVEAL_DURATION = 0.6;
-const LOGO_CHAR_STAGGER = 0.15;
+const LOGO_CHAR_REVEAL_DURATION = 1.2;
+const LOGO_CHAR_STAGGER = 0.3;
 
 const WAVE_BAR_COUNT = 48;
-const SMALL_CURSOR_INFLUENCE_RADIUS = 50;
-const MEDIUM_CURSOR_INFLUENCE_RADIUS = 100;
-const TAILWIND_SMALL_QUERY = "(min-width: 640px)";
-const TAILWIND_MEDIUM_QUERY = "(min-width: 768px)";
-const GRADIENT_CYCLE_DURATION = 24;
-const GRADIENT_COLORS = [
-  { hue: 342.8, saturation: 100, lightness: 56.9 },
-  { hue: 390.1, saturation: 100, lightness: 50 },
-  { hue: 414.1, saturation: 100, lightness: 50 },
-  { hue: 480, saturation: 100, lightness: 61.8 },
-  { hue: 557.8, saturation: 78.7, lightness: 53.9 },
-  { hue: 607.4, saturation: 100, lightness: 56.9 },
-  { hue: 660, saturation: 100, lightness: 50 },
-  { hue: 702.8, saturation: 100, lightness: 56.9 }
-] as const;
 
 type HeroProps = {
   onIntroComplete: () => void;
@@ -75,30 +60,7 @@ function getWaveBarDelay(index: number) {
   return 0.56 + index * 0.018 + jitter;
 }
 
-function getWaveColor(hue: number) {
-  let endIndex = 1;
-
-  while (endIndex < GRADIENT_COLORS.length - 1 && hue > GRADIENT_COLORS[endIndex].hue) {
-    endIndex += 1;
-  }
-
-  const startColor = GRADIENT_COLORS[endIndex - 1];
-  const endColor = GRADIENT_COLORS[endIndex];
-  const progress = (hue - startColor.hue) / (endColor.hue - startColor.hue);
-
-  return {
-    hue,
-    saturation: startColor.saturation + (endColor.saturation - startColor.saturation) * progress,
-    lightness: startColor.lightness + (endColor.lightness - startColor.lightness) * progress
-  };
-}
-
 export default function Hero({ onIntroComplete }: HeroProps) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const waveRef = useRef<HTMLDivElement>(null);
-  const waveBarRefs = useRef<HTMLSpanElement[]>([]);
-  const gradientBarRefs = useRef<HTMLSpanElement[]>([]);
-  const whiteBarRefs = useRef<HTMLSpanElement[]>([]);
   const logoCharRefs = useRef<HTMLSpanElement[]>([]);
 
   useEffect(() => {
@@ -121,156 +83,8 @@ export default function Hero({ onIntroComplete }: HeroProps) {
     };
   }, []);
 
-  useEffect(() => {
-    const section = sectionRef.current;
-    const wave = waveRef.current;
-
-    if (!section || !wave) {
-      return;
-    }
-
-    const waveBars = waveBarRefs.current.filter(Boolean);
-    const gradientBars = gradientBarRefs.current.filter(Boolean);
-    const whiteBars = whiteBarRefs.current.filter(Boolean);
-    const interactiveMedia = window.matchMedia(TAILWIND_SMALL_QUERY);
-    const revealGradientTo = gradientBars.map((bar) =>
-      gsap.quickTo(bar, "opacity", {
-        duration: 0.22,
-        ease: "power3.out"
-      })
-    );
-    const revealWhiteTo = whiteBars.map((bar) =>
-      gsap.quickTo(bar, "opacity", {
-        duration: 0.22,
-        ease: "power3.out"
-      })
-    );
-
-      const gradientPhase = { hue: GRADIENT_COLORS[0].hue };
-
-      gsap.set(gradientBars, { opacity: 0 });
-      gsap.set(whiteBars, { opacity: 1 });
-
-      const applyGradientPhase = () => {
-        const color = getWaveColor(gradientPhase.hue);
-
-        wave.style.setProperty("--wave-hue", color.hue.toString());
-        wave.style.setProperty("--wave-saturation", `${color.saturation}%`);
-        wave.style.setProperty("--wave-lightness", `${color.lightness}%`);
-      };
-
-      applyGradientPhase();
-
-      const gradientTween = gsap.to(gradientPhase, {
-        hue: GRADIENT_COLORS[GRADIENT_COLORS.length - 1].hue,
-        duration: GRADIENT_CYCLE_DURATION,
-        ease: "none",
-        repeat: -1,
-        onUpdate: applyGradientPhase
-      });
-
-      const resetWave = () => {
-        revealGradientTo.forEach((reveal) => reveal(0));
-        revealWhiteTo.forEach((reveal) => reveal(1));
-      };
-
-      const updateWaveFromPointer = (event: PointerEvent) => {
-        if (!interactiveMedia.matches) {
-          return;
-        }
-
-        const waveBounds = wave.getBoundingClientRect();
-        const influenceRadius = window.matchMedia(TAILWIND_MEDIUM_QUERY).matches
-          ? MEDIUM_CURSOR_INFLUENCE_RADIUS
-          : SMALL_CURSOR_INFLUENCE_RADIUS;
-        const verticalDistance =
-          event.clientY < waveBounds.top
-            ? waveBounds.top - event.clientY
-            : event.clientY > waveBounds.bottom
-              ? event.clientY - waveBounds.bottom
-              : 0;
-
-        waveBars.forEach((bar, index) => {
-          const barBounds = bar.getBoundingClientRect();
-          const horizontalDistance = Math.abs(event.clientX - (barBounds.left + barBounds.width / 2));
-          const distance = Math.hypot(horizontalDistance, verticalDistance);
-          const proximity = Math.max(0, 1 - distance / influenceRadius);
-          const revealStrength = 1 - Math.pow(1 - proximity, 3);
-
-          revealGradientTo[index](revealStrength);
-          revealWhiteTo[index](1 - revealStrength);
-        });
-      };
-
-      const handleSectionPointerMove = (event: PointerEvent) => {
-        if (event.pointerType === "mouse") {
-          updateWaveFromPointer(event);
-        }
-      };
-
-      const handleWavePointerDown = (event: PointerEvent) => {
-        if (!interactiveMedia.matches || event.pointerType === "mouse") {
-          return;
-        }
-
-        wave.setPointerCapture(event.pointerId);
-        updateWaveFromPointer(event);
-      };
-
-      const handleWavePointerMove = (event: PointerEvent) => {
-        if (
-          interactiveMedia.matches &&
-          event.pointerType !== "mouse" &&
-          wave.hasPointerCapture(event.pointerId)
-        ) {
-          updateWaveFromPointer(event);
-        }
-      };
-
-      const handleWavePointerEnd = (event: PointerEvent) => {
-        if (event.pointerType === "mouse") {
-          return;
-        }
-
-        if (wave.hasPointerCapture(event.pointerId)) {
-          wave.releasePointerCapture(event.pointerId);
-        }
-
-        resetWave();
-      };
-
-      section.addEventListener("pointerdown", handleSectionPointerMove);
-      section.addEventListener("pointermove", handleSectionPointerMove);
-      section.addEventListener("pointerleave", resetWave);
-      wave.addEventListener("pointerdown", handleWavePointerDown);
-      wave.addEventListener("pointermove", handleWavePointerMove);
-      wave.addEventListener("pointerup", handleWavePointerEnd);
-      wave.addEventListener("pointercancel", handleWavePointerEnd);
-      interactiveMedia.addEventListener("change", resetWave);
-      window.addEventListener("blur", resetWave);
-
-    return () => {
-      section.removeEventListener("pointerdown", handleSectionPointerMove);
-      section.removeEventListener("pointermove", handleSectionPointerMove);
-      section.removeEventListener("pointerleave", resetWave);
-      wave.removeEventListener("pointerdown", handleWavePointerDown);
-      wave.removeEventListener("pointermove", handleWavePointerMove);
-      wave.removeEventListener("pointerup", handleWavePointerEnd);
-      wave.removeEventListener("pointercancel", handleWavePointerEnd);
-      interactiveMedia.removeEventListener("change", resetWave);
-      window.removeEventListener("blur", resetWave);
-      gradientTween.kill();
-      gsap.killTweensOf([...gradientBars, ...whiteBars]);
-      gsap.set([...gradientBars, ...whiteBars], { clearProps: "opacity" });
-      wave.style.removeProperty("--wave-hue");
-      wave.style.removeProperty("--wave-saturation");
-      wave.style.removeProperty("--wave-lightness");
-    };
-  }, []);
-
   return (
     <section
-      ref={sectionRef}
       id="top"
       tabIndex={-1}
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen"
@@ -294,7 +108,6 @@ export default function Hero({ onIntroComplete }: HeroProps) {
           </h1>
 
           <div
-            ref={waveRef}
             className="hero-sound-wave flex h-[var(--hero-wave-height)] w-full items-center justify-center"
             aria-hidden="true"
             onAnimationEnd={(event) => {
@@ -308,41 +121,15 @@ export default function Hero({ onIntroComplete }: HeroProps) {
           >
             <div className="flex h-full w-full items-center justify-between gap-[clamp(0.1rem,0.4vw,0.4rem)]">
               {WAVE_BARS.map((height, index) => (
-                <span
-                  key={index}
-                  ref={(node) => {
-                    if (node) {
-                      waveBarRefs.current[index] = node;
-                    }
-                  }}
-                  className="hero-wave-reactor flex h-full flex-1 items-center"
-                >
+                <span key={index} className="hero-wave-reactor flex h-full flex-1 items-center">
                   <span
-                    data-wave-bar
-                    className="hero-wave-bar relative block w-full rounded-full"
+                    className="hero-wave-bar relative block w-full rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.4)]"
                     style={{
                       animationDelay: `calc(var(--hero-reveal-duration) + ${getWaveBarDelay(index).toFixed(3)}s)`,
                       animationDuration: `${getWaveBarDuration(index).toFixed(3)}s`,
                       height: `${height}%`
                     }}
-                  >
-                    <span
-                      ref={(node) => {
-                        if (node) {
-                          gradientBarRefs.current[index] = node;
-                        }
-                      }}
-                      className="hero-wave-gradient-bar absolute inset-0 rounded-full"
-                    />
-                    <span
-                      ref={(node) => {
-                        if (node) {
-                          whiteBarRefs.current[index] = node;
-                        }
-                      }}
-                      className="hero-wave-white-bar absolute inset-0 rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.4)]"
-                    />
-                  </span>
+                  />
                 </span>
               ))}
             </div>

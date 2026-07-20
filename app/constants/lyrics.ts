@@ -764,7 +764,3 @@ Additional verses and choruses will be added here.`
   }
 ] as const satisfies readonly LyricRelease[];
 
-export const LYRIC_SONG_LINKS = LYRIC_RELEASES.flatMap(({ songs }) =>
-  songs.map(({ id, href, title }) => ({ id, href, title }))
-);
-
