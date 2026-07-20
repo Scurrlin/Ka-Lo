@@ -142,7 +142,7 @@ function AlbumCard({ album }: { album: Album }) {
           alt={`${album.name} album cover`}
           fill
           sizes="(max-width: 640px) 45vw, 320px"
-          className="object-cover"
+          className="rounded-xl object-cover"
         />
       </div>
     </div>
