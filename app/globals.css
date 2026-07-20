@@ -348,7 +348,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   transform: translate3d(0, 5.75rem, 0);
   user-select: none;
   animation: hero-wave-rise 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: calc(var(--hero-reveal-duration, 4s) + 0.2s);
+  animation-delay: calc(var(--hero-reveal-duration, 4s) + 0.5s);
 }
 
 .hero-sound-wave * {
