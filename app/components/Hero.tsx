@@ -108,10 +108,9 @@ export default function Hero({ onIntroComplete }: HeroProps) {
       return;
     }
 
-    gsap.set(logoChars, { autoAlpha: 0, y: 26 });
+    gsap.set(logoChars, { autoAlpha: 0 });
     const reveal = gsap.to(logoChars, {
       autoAlpha: 1,
-      y: 0,
       duration: LOGO_CHAR_REVEAL_DURATION,
       ease: "none",
       stagger: { each: LOGO_CHAR_STAGGER }
