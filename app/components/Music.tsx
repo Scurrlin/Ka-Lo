@@ -5,6 +5,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MUSIC_PROJECT_LINKS, type MusicProjectId } from "../constants/links";
+import { SCRUB_LAG } from "../constants/motion";
 
 const INTRO_TITLE = "The Music";
 
@@ -189,7 +190,7 @@ export default function Music() {
           trigger: introSection,
           start: "top top",
           end: "bottom bottom",
-          scrub: true,
+          scrub: SCRUB_LAG,
           invalidateOnRefresh: true
         }
       });

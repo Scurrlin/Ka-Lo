@@ -8,6 +8,7 @@ import {
   type LyricRelease,
   type LyricSong
 } from "../constants/lyrics";
+import { SCRUB_LAG } from "../constants/motion";
 
 const LYRICS_TITLE = "Lyrics";
 
@@ -186,7 +187,7 @@ export default function Lyrics() {
           trigger: introSection,
           start: "top top",
           end: "bottom bottom",
-          scrub: true,
+          scrub: SCRUB_LAG,
           invalidateOnRefresh: true
         }
       });

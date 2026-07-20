@@ -4,6 +4,7 @@ import { Fragment, useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SCRUB_LAG } from "../constants/motion";
 
 const TITLE = "Who is Ka-Lo?";
 const NEXT_TITLE = "Rapper";
@@ -40,7 +41,6 @@ const VIDEO_CENTER_PROGRESS = 0.5;
 const DESKTOP_LATE_CAPTION_START_PROGRESS = 0.4;
 const MOBILE_LATE_CAPTION_START_PROGRESS = 0.3;
 const WIDE_VIEWPORT_SCROLL_STRETCH = 1.2;
-const ABOUT_SCRUB_LAG = 1.5;
 
 type Point = {
   x: number;
@@ -664,7 +664,7 @@ export default function About() {
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: ABOUT_SCRUB_LAG,
+          scrub: SCRUB_LAG,
           invalidateOnRefresh: true,
           onRefreshInit: updateLayout,
           onUpdate: syncVideoPlayback,
