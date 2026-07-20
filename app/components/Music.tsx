@@ -103,7 +103,7 @@ function AlbumCard({ album }: { album: Album }) {
         width={13}
         height={14}
         aria-hidden="true"
-        className="music-release-arrow h-4 w-auto shrink-0"
+        className="music-release-arrow h-3 w-3 shrink-0 md:h-4 md:w-4"
       />
     </>
   );
@@ -132,7 +132,11 @@ function AlbumCard({ album }: { album: Album }) {
           </span>
         )}
       </h3>
-      <div className="album-cover relative aspect-square w-full overflow-hidden rounded-xl">
+      <div
+        className={`album-cover relative aspect-square w-full overflow-hidden rounded-xl${
+          album.id === "kings-road" ? " border border-white" : ""
+        }`}
+      >
         <Image
           src={album.image}
           alt={`${album.name} album cover`}

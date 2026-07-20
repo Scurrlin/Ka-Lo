@@ -471,10 +471,6 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   top: calc(100% + clamp(1.25rem, 4vh, 2.5rem));
 }
 
-.album-cover {
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-
 /* The five named releases are a fresh, isolated static layer. The unique class
    keeps them outside any historical `.album-card` reveal selector. */
 #music .music-release-card {
