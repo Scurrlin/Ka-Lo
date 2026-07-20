@@ -1147,11 +1147,11 @@ export default function Header({ isIntroComplete }: HeaderProps) {
             onClick={(event) => handleNavClick(event, "top")}
           >
             <Image
-              src="/assets/Silver-Cracks.webp"
+              src="/assets/compact-disc.svg"
               alt=""
-              width={1024}
-              height={1024}
-              className="h-10 w-10 object-contain md:h-12 md:w-12"
+              width={512}
+              height={512}
+              className="h-12 w-12 object-contain md:h-14 md:w-14"
               priority
             />
           </a>
