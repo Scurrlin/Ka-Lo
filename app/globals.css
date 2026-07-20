@@ -485,11 +485,15 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   transition: none !important;
 }
 
-/* Lock fill + soft shadow so thinner regular-weight glyphs still read white on black. */
+/* Lock fill + soft shadow for every link state so visited/unvisited titles match. */
 #music .music-release-heading,
 #music .music-release-link,
+#music .music-release-link:link,
+#music .music-release-link:visited,
+#music .music-release-link:hover,
+#music .music-release-link:active,
 #music .music-release-name {
-  color: #ffffff;
-  -webkit-text-fill-color: #ffffff;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   text-shadow: 0 0 0.8px #ffffff, 0 0 0.8px #ffffff;
 }
