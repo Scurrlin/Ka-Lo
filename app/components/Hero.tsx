@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-const COLUMN_COUNT = 12;
-const COLUMN_DROP_DURATION = 1.2;
-const COLUMN_STAGGER = 0.56;
+const HERO_LOGO_TEXT = "KΛLO";
+const LOGO_CHAR_REVEAL_DURATION = 0.6;
+const LOGO_CHAR_STAGGER = 0.15;
 
 const WAVE_BAR_COUNT = 48;
 const SMALL_CURSOR_INFLUENCE_RADIUS = 50;
@@ -36,8 +36,25 @@ const WAVE_BARS = Array.from({ length: WAVE_BAR_COUNT }, (_, index) => {
   return Math.max(10, Math.min(100, Math.round(heightPct)));
 });
 
-function getColumnDelay(index: number) {
-  return Math.min(index, COLUMN_COUNT - 1 - index) * COLUMN_STAGGER;
+// Splits the logo text into individually-ref'd spans so it can be revealed
+// letter by letter, matching the same technique used for section titles in
+// Lyrics.tsx and Music.tsx.
+function LogoCharacters({
+  text,
+  onCharRef
+}: {
+  text: string;
+  onCharRef: (node: HTMLSpanElement | null, index: number) => void;
+}) {
+  return Array.from(text).map((character, index) => (
+    <span
+      key={index}
+      ref={(node) => onCharRef(node, index)}
+      className="invisible inline-block opacity-0"
+    >
+      {character}
+    </span>
+  ));
 }
 
 // Deterministic pseudo-random unit value (0-1) so the wave's pulse pattern
@@ -82,6 +99,28 @@ export default function Hero({ onIntroComplete }: HeroProps) {
   const waveBarRefs = useRef<HTMLSpanElement[]>([]);
   const gradientBarRefs = useRef<HTMLSpanElement[]>([]);
   const whiteBarRefs = useRef<HTMLSpanElement[]>([]);
+  const logoCharRefs = useRef<HTMLSpanElement[]>([]);
+
+  useEffect(() => {
+    const logoChars = logoCharRefs.current.filter(Boolean);
+
+    if (!logoChars.length) {
+      return;
+    }
+
+    gsap.set(logoChars, { autoAlpha: 0, y: 26 });
+    const reveal = gsap.to(logoChars, {
+      autoAlpha: 1,
+      y: 0,
+      duration: LOGO_CHAR_REVEAL_DURATION,
+      ease: "none",
+      stagger: { each: LOGO_CHAR_STAGGER }
+    });
+
+    return () => {
+      reveal.kill();
+    };
+  }, []);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -237,30 +276,22 @@ export default function Hero({ onIntroComplete }: HeroProps) {
       tabIndex={-1}
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen"
     >
-      <div className="pointer-events-none absolute inset-0 z-10 bg-white" aria-hidden="true" />
-
-      <div className="pointer-events-none absolute inset-0 z-20 flex overflow-hidden" aria-hidden="true">
-        {Array.from({ length: COLUMN_COUNT }).map((_, index) => (
-          <div
-            key={index}
-            className="hero-reveal-bar h-full bg-black"
-            style={{
-              animationDelay: `${getColumnDelay(index)}s`,
-              animationDuration: `${COLUMN_DROP_DURATION}s`,
-              width: `calc(${100 / COLUMN_COUNT}% + 2px)`,
-              marginLeft: "-1px"
-            }}
-          />
-        ))}
-      </div>
-
       <div className="hero-lockup pointer-events-none relative z-30 flex w-full max-w-5xl flex-col items-center">
         <div className="flex w-fit max-w-full flex-col items-stretch gap-[var(--hero-logo-wave-gap)]">
           <h1
             className="w-max select-none whitespace-nowrap text-center font-display text-[length:var(--hero-logo-size)] leading-none text-white"
             aria-label="KALO"
           >
-            KΛLO
+            <span aria-hidden="true">
+              <LogoCharacters
+                text={HERO_LOGO_TEXT}
+                onCharRef={(node, index) => {
+                  if (node) {
+                    logoCharRefs.current[index] = node;
+                  }
+                }}
+              />
+            </span>
           </h1>
 
           <div
