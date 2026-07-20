@@ -1140,13 +1140,20 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
           <a
             href="#top"
-            className="font-display text-3xl leading-none focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:text-4xl"
+            className="flex items-center justify-center focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             aria-label="KH home"
             aria-hidden={isMenuOpen || undefined}
             tabIndex={isMenuOpen ? -1 : undefined}
             onClick={(event) => handleNavClick(event, "top")}
           >
-            KH
+            <Image
+              src="/assets/Silver-Cracks.webp"
+              alt=""
+              width={1024}
+              height={1024}
+              className="h-10 w-10 object-contain md:h-12 md:w-12"
+              priority
+            />
           </a>
 
           <div className="flex min-w-0 items-center justify-end">
