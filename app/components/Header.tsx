@@ -441,31 +441,20 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         return;
       }
 
-      const lyricsSection = document.getElementById("lyrics");
-      const lyricsBounds = lyricsSection?.getBoundingClientRect();
-      const lyricsTop = lyricsBounds
-        ? lyricsBounds.top + currentScrollY
+      const aboutSection = document.getElementById("about");
+      const aboutBounds = aboutSection?.getBoundingClientRect();
+      const aboutTop = aboutBounds
+        ? aboutBounds.top + currentScrollY
         : Number.POSITIVE_INFINITY;
-      const lyricsBottom = lyricsBounds
-        ? lyricsTop + lyricsBounds.height
+      const aboutBottom = aboutBounds
+        ? aboutTop + aboutBounds.height
         : Number.NEGATIVE_INFINITY;
-      const lyricsNavigationScrollY = Number(lyricsSection?.dataset.navScrollY);
-      const lyricsPinnedStart = Number.isFinite(lyricsNavigationScrollY)
-        ? lyricsNavigationScrollY
-        : lyricsTop;
-      const isInsideLyrics =
-        currentScrollY >= lyricsPinnedStart - HEADER_TOP_THRESHOLD &&
-        currentScrollY < lyricsBottom - HEADER_TOP_THRESHOLD;
+      const isInsideAbout =
+        currentScrollY >= aboutTop - HEADER_TOP_THRESHOLD &&
+        currentScrollY < aboutBottom - HEADER_TOP_THRESHOLD;
 
-      if (isInsideLyrics) {
-        setIsHeaderVisible(true);
-        scrollDirectionRef.current = null;
-        scrollAnchorYRef.current = currentScrollY;
-        lastScrollYRef.current = currentScrollY;
-        return;
-      }
-
-      if (currentScrollY <= HEADER_TOP_THRESHOLD) {
+      // Hide-on-scroll only inside About; stay pinned everywhere else.
+      if (!isInsideAbout) {
         setIsHeaderVisible(true);
         scrollDirectionRef.current = null;
         scrollAnchorYRef.current = currentScrollY;
@@ -1151,7 +1140,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
               alt=""
               width={512}
               height={512}
-              className="h-12 w-12 object-contain md:h-14 md:w-14"
+              className="h-12 w-12 object-contain md:h-[60px] md:w-[60px]"
               priority
             />
           </a>
