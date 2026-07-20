@@ -40,6 +40,7 @@ const VIDEO_CENTER_PROGRESS = 0.5;
 const DESKTOP_LATE_CAPTION_START_PROGRESS = 0.4;
 const MOBILE_LATE_CAPTION_START_PROGRESS = 0.3;
 const WIDE_VIEWPORT_SCROLL_STRETCH = 1.2;
+const ABOUT_SCRUB_LAG = 1.5;
 
 type Point = {
   x: number;
@@ -663,7 +664,7 @@ export default function About() {
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: true,
+          scrub: ABOUT_SCRUB_LAG,
           invalidateOnRefresh: true,
           onRefreshInit: updateLayout,
           onUpdate: syncVideoPlayback,
