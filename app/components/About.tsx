@@ -39,7 +39,6 @@ const DESKTOP_MIN_WIDTH = 640;
 const VIDEO_CENTER_PROGRESS = 0.5;
 const DESKTOP_LATE_CAPTION_START_PROGRESS = 0.4;
 const MOBILE_LATE_CAPTION_START_PROGRESS = 0.3;
-const WIDE_VIEWPORT_MIN_WIDTH = 1024;
 const WIDE_VIEWPORT_SCROLL_STRETCH = 1.2;
 
 type Point = {
@@ -590,7 +589,7 @@ export default function About() {
         smallScale: smallCdDiameter / baseCdDiameter
       };
       const scrollStretch =
-        viewportWidth >= WIDE_VIEWPORT_MIN_WIDTH ? WIDE_VIEWPORT_SCROLL_STRETCH : 1;
+        viewportWidth >= DESKTOP_MIN_WIDTH ? WIDE_VIEWPORT_SCROLL_STRETCH : 1;
       const storyScrollDistance =
         (Math.max(
           viewportHeight * 7,
