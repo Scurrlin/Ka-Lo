@@ -167,7 +167,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   opacity: 0;
   transform: translate3d(0, -115%, 0);
   animation: site-header-drop 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: calc(var(--hero-reveal-duration, 4s) + 0.12s);
+  animation-delay: calc(var(--hero-reveal-duration, 4s) + 0.5s);
 }
 
 .mobile-menu-line {

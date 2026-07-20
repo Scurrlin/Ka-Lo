@@ -89,8 +89,8 @@ export const metadata: Metadata = {
     images: [socialImage]
   },
   icons: {
-    icon: "/assets/favicon.png",
-    apple: "/assets/favicon.png"
+    icon: "/assets/Silver-Cracks.webp",
+    apple: "/assets/Silver-Cracks.webp"
   }
 };
 
