@@ -485,9 +485,11 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   transition: none !important;
 }
 
-/* Hairline stroke solidifies AA glyph edges so titles read as true white on black. */
+/* Lock fill + soft shadow so thinner regular-weight glyphs still read white on black. */
 #music .music-release-heading,
+#music .music-release-link,
 #music .music-release-name {
-  -webkit-text-stroke: 0.45px #ffffff;
-  paint-order: stroke fill;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  text-shadow: 0 0 0.8px #ffffff, 0 0 0.8px #ffffff;
 }
