@@ -134,7 +134,7 @@ function AlbumCard({ album }: { album: Album }) {
       </h3>
       <div
         className={`album-cover relative aspect-square w-full overflow-hidden rounded-xl${
-          album.id === "kings-road" ? " border border-white" : ""
+          album.id === "kings-road" ? " border border-white/15" : ""
         }`}
       >
         <Image
