@@ -26,15 +26,10 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background: var(--black);
   color: var(--white);
   font-family: var(--font-sans);
-}
-
-/* Clip horizontal overflow here instead of on body — Safari loses
-   momentum scrolling when overflow-x is hidden on the scrolling root. */
-#site-content {
-  overflow-x: hidden;
 }
 
 /* Keep all visible site copy at true white, including nested and visited links.
@@ -342,6 +337,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
 .hero-sound-wave,
 .hero-wave-bar {
   transform-origin: 50% 50%;
+  will-change: transform, opacity;
 }
 
 .hero-sound-wave {
@@ -371,26 +367,9 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   animation-direction: normal;
 }
 
-/* Soft glow only while the hero is on-screen — full-page soft shadows on
-   48 animated bars are expensive on Safari's compositor. */
-.hero-wave-bar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: 0 0 26px rgba(255, 255, 255, 0.4);
-  opacity: 1;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.hero-waves-paused .hero-wave-bar {
-  animation: none;
-  transform: scaleY(0.28);
-}
-
-.hero-waves-paused .hero-wave-bar::after {
-  opacity: 0;
+/* Hero.tsx toggles .hero-waves-active via IntersectionObserver. */
+#top:not(.hero-waves-active) .hero-wave-bar {
+  animation-play-state: paused;
 }
 
 @keyframes site-header-drop {
@@ -430,19 +409,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
 
 .silver-disc {
   clip-path: circle(45% at 50% 50%);
-}
-
-/* Reserve About scroll height before JS measures the route so the document
-   does not jump from 100vh to ~8–10 viewports after hydrate (Safari scroll
-   feel hitch on first pass). Exact height is still set in About.tsx. */
-#about {
-  min-height: 875svh;
-}
-
-@media (min-width: 640px) {
-  #about {
-    min-height: 1030svh;
-  }
+  will-change: transform, opacity;
 }
 
 .about-video-stage {
@@ -473,6 +440,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   box-shadow:
     0 22px 60px rgba(0, 0, 0, 0.72),
     0 0 0 1px rgba(255, 255, 255, 0.14);
+  will-change: opacity, visibility;
 }
 
 .about-video-frame-running {
@@ -498,6 +466,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   z-index: 30;
   width: min(92vw, 38rem);
   text-align: center;
+  will-change: transform, opacity, visibility;
 }
 
 .about-video-caption-above {

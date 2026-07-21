@@ -87,28 +87,33 @@ export default function Hero({ onIntroComplete }: HeroProps) {
     };
   }, []);
 
-  // Safari keeps infinite CSS animations compositing even when scrolled
-  // off-screen; pause the wave once the hero leaves the viewport so the
-  // rest of the page can scroll without that background GPU load.
+  // Pause the infinite wave pulse while the hero is offscreen so Safari isn't
+  // compositing 48 looping animations during the rest of the page scroll.
   useEffect(() => {
     const section = sectionRef.current;
 
-    if (!section || typeof IntersectionObserver === "undefined") {
+    if (!section) {
       return;
     }
 
+    const syncWavePlayback = (isVisible: boolean) => {
+      section.classList.toggle("hero-waves-active", isVisible);
+    };
+
+    syncWavePlayback(true);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        section.classList.toggle("hero-waves-paused", !entry.isIntersecting);
+        syncWavePlayback(entry.isIntersecting);
       },
-      { rootMargin: "10% 0px" }
+      { threshold: 0 }
     );
 
     observer.observe(section);
 
     return () => {
       observer.disconnect();
-      section.classList.remove("hero-waves-paused");
+      section.classList.remove("hero-waves-active");
     };
   }, []);
 
@@ -117,7 +122,7 @@ export default function Hero({ onIntroComplete }: HeroProps) {
       ref={sectionRef}
       id="top"
       tabIndex={-1}
-      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen"
+      className="hero-waves-active relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen"
     >
       <div className="hero-lockup pointer-events-none relative z-30 flex w-full max-w-5xl flex-col items-center">
         <div className="flex w-fit max-w-full flex-col items-stretch gap-[var(--hero-logo-wave-gap)]">
@@ -153,7 +158,7 @@ export default function Hero({ onIntroComplete }: HeroProps) {
               {WAVE_BARS.map((height, index) => (
                 <span key={index} className="hero-wave-reactor flex h-full flex-1 items-center">
                   <span
-                    className="hero-wave-bar relative block w-full rounded-full bg-white"
+                    className="hero-wave-bar relative block w-full rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.4)]"
                     style={{
                       animationDelay: `calc(var(--hero-reveal-duration) + ${getWaveBarDelay(index).toFixed(3)}s)`,
                       animationDuration: `${getWaveBarDuration(index).toFixed(3)}s`,
