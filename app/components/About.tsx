@@ -913,7 +913,7 @@ export default function About() {
         ref={titleRef}
         className="pointer-events-none absolute left-1/2 top-[16%] z-50 w-full max-w-4xl -translate-x-1/2 px-5 text-center"
       >
-        <p className="mb-4 flex items-center justify-center gap-3 font-display text-lg leading-none text-white/80 sm:mb-5 sm:gap-4 sm:text-xl md:text-2xl">
+        <p className="absolute bottom-full left-0 right-0 mb-4 flex items-center justify-center gap-3 font-display text-lg leading-none text-white/80 sm:mb-5 sm:gap-4 sm:text-xl md:text-2xl">
           <span
             ref={(node) => {
               if (node) {
