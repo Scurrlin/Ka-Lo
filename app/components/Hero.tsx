@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import gsap from "gsap";
 
 const HERO_LOGO_TEXT = "KΛLO";
 const LOGO_CHAR_REVEAL_DURATION = 1.2;
 const LOGO_CHAR_STAGGER = 0.3;
 // Total until the last letter finishes. Must match --hero-reveal-duration in globals.css.
-const LOGO_REVEAL_TOTAL_SECONDS =
-  LOGO_CHAR_REVEAL_DURATION + LOGO_CHAR_STAGGER * (HERO_LOGO_TEXT.length - 1);
+// 1.2 + 0.3 × 3 = 2.1
 
 const WAVE_BAR_COUNT = 48;
 
@@ -24,21 +22,17 @@ const WAVE_BARS = Array.from({ length: WAVE_BAR_COUNT }, (_, index) => {
   return Math.max(10, Math.min(100, Math.round(heightPct)));
 });
 
-// Splits the logo text into individually-ref'd spans so it can be revealed
-// letter by letter, matching the same technique used for section titles in
-// Lyrics.tsx and Music.tsx.
-function LogoCharacters({
-  text,
-  onCharRef
-}: {
-  text: string;
-  onCharRef: (node: HTMLSpanElement | null, index: number) => void;
-}) {
+// CSS letter reveal keeps GSAP off the intro critical path and stays in sync
+// with --hero-reveal-duration (wave + header drop).
+function LogoCharacters({ text }: { text: string }) {
   return Array.from(text).map((character, index) => (
     <span
       key={index}
-      ref={(node) => onCharRef(node, index)}
-      className="invisible inline-block opacity-0"
+      className="hero-logo-char inline-block"
+      style={{
+        animationDelay: `${(index * LOGO_CHAR_STAGGER).toFixed(3)}s`,
+        animationDuration: `${LOGO_CHAR_REVEAL_DURATION}s`
+      }}
     >
       {character}
     </span>
@@ -65,27 +59,6 @@ function getWaveBarDelay(index: number) {
 
 export default function Hero({ onIntroComplete }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
-  const logoCharRefs = useRef<HTMLSpanElement[]>([]);
-
-  useEffect(() => {
-    const logoChars = logoCharRefs.current.filter(Boolean);
-
-    if (!logoChars.length) {
-      return;
-    }
-
-    gsap.set(logoChars, { autoAlpha: 0 });
-    const reveal = gsap.to(logoChars, {
-      autoAlpha: 1,
-      duration: LOGO_CHAR_REVEAL_DURATION,
-      ease: "none",
-      stagger: { each: LOGO_CHAR_STAGGER }
-    });
-
-    return () => {
-      reveal.kill();
-    };
-  }, []);
 
   // Pause the infinite wave pulse while the hero is offscreen so Safari isn't
   // compositing 48 looping animations during the rest of the page scroll.
@@ -131,14 +104,7 @@ export default function Hero({ onIntroComplete }: HeroProps) {
             aria-label="KALO"
           >
             <span aria-hidden="true">
-              <LogoCharacters
-                text={HERO_LOGO_TEXT}
-                onCharRef={(node, index) => {
-                  if (node) {
-                    logoCharRefs.current[index] = node;
-                  }
-                }}
-              />
+              <LogoCharacters text={HERO_LOGO_TEXT} />
             </span>
           </h1>
 

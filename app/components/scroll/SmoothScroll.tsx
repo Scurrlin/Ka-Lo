@@ -26,11 +26,6 @@ export function useLenisRef() {
   return useContext(LenisContext);
 }
 
-/** Latest Lenis instance, if mounted. Prefer reading this at event time. */
-export function useLenis() {
-  return useContext(LenisContext).current;
-}
-
 type SmoothScrollProps = {
   children: ReactNode;
 };

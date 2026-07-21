@@ -2,8 +2,6 @@
 
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
-import gsap from "gsap";
-import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { useEffect, useRef, useState } from "react";
 import {
   INSTAGRAM_LINK,
@@ -22,6 +20,27 @@ const HEADER_DIRECTION_THRESHOLD = 6;
 const HEADER_TOP_THRESHOLD = 2;
 const NAV_SCROLL_DURATION_SECONDS = 1.2;
 const NAV_SCROLL_INPUT_QUIET_MS = 250;
+
+type GsapInstance = typeof import("gsap").default;
+
+let gsapNavPromise: Promise<GsapInstance> | null = null;
+
+/** Load GSAP + ScrollToPlugin on first nav only — keeps them off the intro path. */
+function loadGsapForNav() {
+  if (!gsapNavPromise) {
+    gsapNavPromise = Promise.all([
+      import("gsap"),
+      import("gsap/ScrollToPlugin")
+    ]).then(([gsapModule, scrollToModule]) => {
+      const gsap = gsapModule.default;
+      gsap.registerPlugin(scrollToModule.ScrollToPlugin);
+      return gsap;
+    });
+  }
+
+  return gsapNavPromise;
+}
+
 // Keys that would otherwise move the scroll position; blocked while an
 // animated nav scroll is in flight so it can't be interrupted.
 const SCROLL_KEYS = new Set([
@@ -501,10 +520,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   }, []);
 
   useEffect(() => {
-    gsap.registerPlugin(ScrollToPlugin);
-  }, []);
-
-  useEffect(() => {
     const desktopMedia = window.matchMedia(DESKTOP_MEDIA_QUERY);
     const closeIncompatibleMenu = (event: MediaQueryListEvent) => {
       if (event.matches) {
@@ -537,13 +552,15 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     // Read at nav time so we pick up Lenis even if Header has not re-rendered
     // since the smoother mounted.
     const activeLenis = lenisRef.current;
+    // Prefetch while menus close / backdrop paints so scroll can start promptly.
+    const gsapReady = loadGsapForNav();
 
     const run = ++navigationRunRef.current;
 
     let coverFrame: number | null = null;
     let scrollFrame: number | null = null;
     let settleTimer: number | null = null;
-    let tween: gsap.core.Tween | null = null;
+    let tween: { kill: () => void } | null = null;
     let isLenisNavActive = false;
     let isCleanedUp = false;
     let lastBlockedInputAt = Number.NEGATIVE_INFINITY;
@@ -675,50 +692,57 @@ export default function Header({ isIntroComplete }: HeaderProps) {
             return;
           }
 
-          const targetY = navigationTarget.getTop();
-          const ease = gsap.parseEase("power2.inOut");
+          void gsapReady.then((gsap) => {
+            if (navigationRunRef.current !== run || isCleanedUp) {
+              cleanupNavigation();
+              return;
+            }
 
-          if (activeLenis) {
-            isLenisNavActive = true;
-            activeLenis.scrollTo(targetY, {
+            const targetY = navigationTarget.getTop();
+            const ease = gsap.parseEase("power2.inOut");
+
+            if (activeLenis) {
+              isLenisNavActive = true;
+              activeLenis.scrollTo(targetY, {
+                duration: NAV_SCROLL_DURATION_SECONDS,
+                easing: ease,
+                lock: true,
+                force: true,
+                onComplete: () => {
+                  if (navigationRunRef.current !== run || isCleanedUp) {
+                    cleanupNavigation();
+                    return;
+                  }
+
+                  isLenisNavActive = false;
+                  scrollToYImmediate(navigationTarget.getTop());
+                  finishWhenInputIsQuiet();
+                }
+              });
+              return;
+            }
+
+            tween = gsap.to(window, {
+              scrollTo: {
+                y: targetY,
+                autoKill: false
+              },
               duration: NAV_SCROLL_DURATION_SECONDS,
-              easing: ease,
-              lock: true,
-              force: true,
+              ease: "power2.inOut",
+              overwrite: true,
               onComplete: () => {
+                tween = null;
+
                 if (navigationRunRef.current !== run || isCleanedUp) {
                   cleanupNavigation();
                   return;
                 }
 
-                isLenisNavActive = false;
                 scrollToYImmediate(navigationTarget.getTop());
                 finishWhenInputIsQuiet();
-              }
+              },
+              onInterrupt: cleanupNavigation
             });
-            return;
-          }
-
-          tween = gsap.to(window, {
-            scrollTo: {
-              y: targetY,
-              autoKill: false
-            },
-            duration: NAV_SCROLL_DURATION_SECONDS,
-            ease: "power2.inOut",
-            overwrite: true,
-            onComplete: () => {
-              tween = null;
-
-              if (navigationRunRef.current !== run || isCleanedUp) {
-                cleanupNavigation();
-                return;
-              }
-
-              scrollToYImmediate(navigationTarget.getTop());
-              finishWhenInputIsQuiet();
-            },
-            onInterrupt: cleanupNavigation
           });
         });
       });

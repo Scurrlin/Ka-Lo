@@ -9,7 +9,7 @@
   --white: var(--color-white);
   --black: #000000;
   --silver: #d7d7d0;
-  /* Must match LOGO_REVEAL_TOTAL_SECONDS in Hero.tsx (1.2 + 0.3 × 3 = 2.1). */
+  /* Must match Hero.tsx logo reveal: 1.2s + 0.3s × 3 chars = 2.1s. */
   --hero-reveal-duration: 2.1s;
   --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-display: var(--font-instrument-sans), "Arial Black", Impact, ui-sans-serif, system-ui, sans-serif;
@@ -296,6 +296,19 @@ html.viewport-blackout-active.viewport-blackout-meme-active
 
 [data-lyrics-open="true"] .desktop-lyrics-close-line-b {
   rotate: -45deg;
+}
+
+.hero-logo-char {
+  opacity: 0;
+  animation-name: hero-logo-char-reveal;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes hero-logo-char-reveal {
+  to {
+    opacity: 1;
+  }
 }
 
 .hero-lockup {
