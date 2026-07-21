@@ -6,6 +6,9 @@ import gsap from "gsap";
 const HERO_LOGO_TEXT = "KΛLO";
 const LOGO_CHAR_REVEAL_DURATION = 1.2;
 const LOGO_CHAR_STAGGER = 0.3;
+// Total until the last letter finishes. Must match --hero-reveal-duration in globals.css.
+const LOGO_REVEAL_TOTAL_SECONDS =
+  LOGO_CHAR_REVEAL_DURATION + LOGO_CHAR_STAGGER * (HERO_LOGO_TEXT.length - 1);
 
 const WAVE_BAR_COUNT = 48;
 

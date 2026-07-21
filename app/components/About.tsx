@@ -205,9 +205,8 @@ export default function About() {
   const finalMessageCharRefs = useRef<HTMLSpanElement[]>([]);
   const charRefs = useRef<HTMLSpanElement[]>([]);
   const continueHintCharRefs = useRef<HTMLSpanElement[]>([]);
-  const nextTitleRef = useRef<HTMLDivElement>(null);
+  const nextTitleRef = useRef<HTMLHeadingElement>(null);
   const nextCharRefs = useRef<HTMLSpanElement[]>([]);
-  const nextArrowRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -640,8 +639,6 @@ export default function About() {
       const chars = charRefs.current.filter(Boolean);
       const continueHintChars = continueHintCharRefs.current.filter(Boolean);
       const nextChars = nextCharRefs.current.filter(Boolean);
-      const nextArrow = nextArrowRef.current;
-      const nextRevealItems = [...nextChars, ...(nextArrow ? [nextArrow] : [])];
 
       updateLayout();
       gsap.set(chars, { autoAlpha: 0, y: 26 });
@@ -664,7 +661,7 @@ export default function About() {
       gsap.set(videoCaptionChars.flat(), { autoAlpha: 0, y: 20 });
       gsap.set(finalMessage, { autoAlpha: 1, xPercent: -50, yPercent: -100 });
       gsap.set(finalMessageChars, { autoAlpha: 0, y: 20 });
-      gsap.set(nextRevealItems, { autoAlpha: 0, y: 26 });
+      gsap.set(nextChars, { autoAlpha: 0, y: 26 });
       gsap.set(nextTitle, { y: 0 });
 
       timeline = gsap.timeline({
@@ -776,7 +773,7 @@ export default function About() {
           "exitStart"
         )
         .addLabel("cdGone", `exitStart+=${EXIT_DURATION}`)
-        .to(nextRevealItems, { autoAlpha: 1, y: 0, duration: 0.4, stagger: { each: 0.018 } }, "cdGone")
+        .to(nextChars, { autoAlpha: 1, y: 0, duration: 0.4, stagger: { each: 0.018 } }, "cdGone")
         .addLabel("nextTitleRevealed")
         .to({}, { duration: NEXT_TITLE_HOLD_DURATION });
 
@@ -963,31 +960,19 @@ export default function About() {
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center px-2 sm:px-5">
-        <div
+        <h2
           ref={nextTitleRef}
-          className="flex flex-col items-center text-center"
+          className="font-display text-center text-6xl leading-none text-white sm:text-8xl md:text-9xl lg:text-8xl"
         >
-          <h2
-            aria-label={NEXT_TITLE}
-            className="font-display text-6xl leading-none text-white sm:text-8xl md:text-9xl lg:text-8xl"
-          >
-            <AnimatedWords
-              text={NEXT_TITLE}
-              registerCharacter={(node, index) => {
-                if (node) {
-                  nextCharRefs.current[index] = node;
-                }
-              }}
-            />
-          </h2>
-          <span
-            ref={nextArrowRef}
-            className="mt-5 inline-block font-display text-2xl leading-none text-white/80 sm:mt-6 sm:text-3xl md:text-4xl"
-            aria-hidden="true"
-          >
-            ↓
-          </span>
-        </div>
+          <AnimatedWords
+            text={NEXT_TITLE}
+            registerCharacter={(node, index) => {
+              if (node) {
+                nextCharRefs.current[index] = node;
+              }
+            }}
+          />
+        </h2>
       </div>
         </div>
       </section>
