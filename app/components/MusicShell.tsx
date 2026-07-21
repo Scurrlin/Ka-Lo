@@ -19,7 +19,7 @@ export default function MusicShell() {
         </div>
       </header>
 
-      <div className="border-t border-white/20 px-5 pb-20 pt-20 sm:px-8 sm:pt-28">
+      <div className="px-5 pb-20 pt-20 sm:px-8 sm:pt-28">
         <div className="mx-auto flex max-w-xs flex-col items-center gap-y-12 sm:max-w-2xl sm:gap-y-14 md:max-w-3xl md:gap-y-16">
           <div className="grid w-full grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-14 md:gap-x-16 md:gap-y-16">
             {Array.from({ length: 4 }, (_, index) => (
