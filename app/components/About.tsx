@@ -7,6 +7,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SCRUB_LAG } from "../constants/motion";
 
 const TITLE = "Who is Ka-Lo?";
+const CONTINUE_HINT = "Scroll To Continue";
+const CONTINUE_HINT_LETTER_COUNT = CONTINUE_HINT.replace(/ /g, "").length;
 const NEXT_TITLE = "Rapper";
 const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
@@ -201,6 +203,7 @@ export default function About() {
   const finalMessageRef = useRef<HTMLHeadingElement>(null);
   const finalMessageCharRefs = useRef<HTMLSpanElement[]>([]);
   const charRefs = useRef<HTMLSpanElement[]>([]);
+  const continueHintCharRefs = useRef<HTMLSpanElement[]>([]);
   const nextTitleRef = useRef<HTMLHeadingElement>(null);
   const nextCharRefs = useRef<HTMLSpanElement[]>([]);
 
@@ -633,10 +636,12 @@ export default function About() {
 
     const ctx = gsap.context(() => {
       const chars = charRefs.current.filter(Boolean);
+      const continueHintChars = continueHintCharRefs.current.filter(Boolean);
       const nextChars = nextCharRefs.current.filter(Boolean);
 
       updateLayout();
       gsap.set(chars, { autoAlpha: 0, y: 26 });
+      gsap.set(continueHintChars, { autoAlpha: 0, y: 26 });
       gsap.set(title, { autoAlpha: 1, y: 0 });
       gsap.set(cd, {
         autoAlpha: 1,
@@ -675,6 +680,10 @@ export default function About() {
 
       timeline
         .to(chars, { autoAlpha: 1, y: 0, duration: 0.6, stagger: { each: 0.03 } }, 0)
+        .to(
+          continueHintChars,
+          { autoAlpha: 1, y: 0, duration: 0.45, stagger: { each: 0.025 } }
+        )
         .addLabel("aboutTitleRevealed")
         .to({}, { duration: 0.05 })
         .to(cd, { y: 0, duration: 0.7, ease: "power2.out" })
@@ -913,6 +922,40 @@ export default function About() {
             }}
           />
         </h2>
+        <p className="mt-5 flex items-center justify-center gap-3 font-display text-lg leading-none text-white/80 sm:mt-6 sm:gap-4 sm:text-xl md:text-2xl">
+          <span
+            ref={(node) => {
+              if (node) {
+                continueHintCharRefs.current[0] = node;
+              }
+            }}
+            className="inline-block"
+            aria-hidden="true"
+          >
+            ↓
+          </span>
+          <span className="inline-block">
+            <AnimatedWords
+              text={CONTINUE_HINT}
+              registerCharacter={(node, index) => {
+                if (node) {
+                  continueHintCharRefs.current[index + 1] = node;
+                }
+              }}
+            />
+          </span>
+          <span
+            ref={(node) => {
+              if (node) {
+                continueHintCharRefs.current[CONTINUE_HINT_LETTER_COUNT + 1] = node;
+              }
+            }}
+            className="inline-block"
+            aria-hidden="true"
+          >
+            ↓
+          </span>
+        </p>
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center px-2 sm:px-5">
