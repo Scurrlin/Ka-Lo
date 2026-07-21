@@ -455,7 +455,10 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       aboutSection && typeof ResizeObserver !== "undefined"
         ? new ResizeObserver(refreshAboutBounds)
         : null;
-    aboutResizeObserver?.observe(aboutSection);
+
+    if (aboutSection && aboutResizeObserver) {
+      aboutResizeObserver.observe(aboutSection);
+    }
 
     const updateHeaderVisibility = () => {
       scrollFrameRef.current = null;
