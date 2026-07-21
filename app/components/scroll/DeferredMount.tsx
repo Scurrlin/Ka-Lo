@@ -16,6 +16,8 @@ type DeferredMountProps = {
   rootMargin?: string;
   /** Idle fallback so below-fold sections warm before a slow scroll. */
   idleTimeoutMs?: number;
+  /** Force children to mount immediately (e.g. after hero intro finishes). */
+  forceMount?: boolean;
   className?: string;
   style?: CSSProperties;
   minHeight?: string;
@@ -24,27 +26,37 @@ type DeferredMountProps = {
 /**
  * Delays mounting heavy section trees until near the viewport (or idle),
  * so their JS chunks and DOM work stay off the critical first paint path.
+ *
+ * Always keeps a minHeight shell so swapping in children does not jump
+ * document height mid-scroll (which kills momentum on Safari and Lenis).
  */
 export default function DeferredMount({
   children,
   id,
   rootMargin = "120% 0px",
   idleTimeoutMs = 2500,
+  forceMount = false,
   className,
   style,
   minHeight
 }: DeferredMountProps) {
-  const placeholderRef = useRef<HTMLDivElement>(null);
-  const [shouldMount, setShouldMount] = useState(false);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const [shouldMount, setShouldMount] = useState(forceMount);
+
+  useEffect(() => {
+    if (forceMount) {
+      setShouldMount(true);
+    }
+  }, [forceMount]);
 
   useEffect(() => {
     if (shouldMount) {
       return;
     }
 
-    const placeholder = placeholderRef.current;
+    const shell = shellRef.current;
 
-    if (!placeholder) {
+    if (!shell) {
       return;
     }
 
@@ -70,7 +82,7 @@ export default function DeferredMount({
       { rootMargin }
     );
 
-    observer.observe(placeholder);
+    observer.observe(shell);
 
     const requestIdle =
       typeof window.requestIdleCallback === "function"
@@ -100,17 +112,17 @@ export default function DeferredMount({
     };
   }, [idleTimeoutMs, rootMargin, shouldMount]);
 
-  if (shouldMount) {
-    return <>{children}</>;
-  }
-
   return (
     <div
-      ref={placeholderRef}
-      id={id}
+      ref={shellRef}
+      // Live section owns the id once mounted; shell keeps it for anchors before then.
+      id={shouldMount ? undefined : id}
       className={className}
-      style={{ minHeight, ...style }}
-      aria-hidden="true"
-    />
+      // Drop the floor after mount so content defines height (mount is warmed at rest).
+      style={{ minHeight: shouldMount ? undefined : minHeight, ...style }}
+      {...(!shouldMount ? { "aria-hidden": true } : {})}
+    >
+      {shouldMount ? children : null}
+    </div>
   );
 }

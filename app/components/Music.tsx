@@ -142,6 +142,7 @@ function AlbumCard({ album }: { album: Album }) {
           alt={`${album.name} album cover`}
           fill
           sizes="(max-width: 640px) 45vw, 320px"
+          loading="lazy"
           className="rounded-xl object-cover"
         />
       </div>
@@ -317,6 +318,7 @@ export default function Music() {
               alt="My Solus album cover"
               width={1024}
               height={1024}
+              loading="lazy"
               className="aspect-square w-full max-w-[520px] rounded-md object-cover"
             />
           </div>

@@ -102,8 +102,26 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
         gsap.ticker.lagSmoothing(500);
       };
 
-      instance.scrollTo(0, { immediate: true, force: true });
-      ScrollTrigger.refresh();
+      // Do not scrollTo(0) — that fights an in-flight fling if boot lands mid-scroll.
+      // Refresh after the current frame; skip layout thrash while the user is moving.
+      const refreshTriggers = () => {
+        if (cancelled) {
+          return;
+        }
+
+        if (window.scrollY === 0) {
+          ScrollTrigger.refresh();
+          return;
+        }
+
+        requestAnimationFrame(() => {
+          if (!cancelled) {
+            ScrollTrigger.refresh();
+          }
+        });
+      };
+
+      refreshTriggers();
     };
 
     const scheduleBoot = () => {
