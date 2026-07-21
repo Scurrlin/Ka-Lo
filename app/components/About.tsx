@@ -6,6 +6,8 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const TITLE = "Who is Ka-Lo?";
+const CONTINUE_HINT = "Scroll To Continue";
+const CONTINUE_HINT_LETTER_COUNT = CONTINUE_HINT.replace(/ /g, "").length;
 const NEXT_TITLE = "Rapper";
 /** Seconds of ScrollTrigger catch-up lag for the About scrubbed timeline. */
 const SCRUB_LAG = 1.7;
@@ -202,7 +204,7 @@ export default function About() {
   const finalMessageRef = useRef<HTMLHeadingElement>(null);
   const finalMessageCharRefs = useRef<HTMLSpanElement[]>([]);
   const charRefs = useRef<HTMLSpanElement[]>([]);
-  const titleArrowRefs = useRef<HTMLSpanElement[]>([]);
+  const continueHintCharRefs = useRef<HTMLSpanElement[]>([]);
   const nextTitleRef = useRef<HTMLHeadingElement>(null);
   const nextCharRefs = useRef<HTMLSpanElement[]>([]);
 
@@ -635,12 +637,12 @@ export default function About() {
 
     const ctx = gsap.context(() => {
       const chars = charRefs.current.filter(Boolean);
-      const titleArrows = titleArrowRefs.current.filter(Boolean);
+      const continueHintChars = continueHintCharRefs.current.filter(Boolean);
       const nextChars = nextCharRefs.current.filter(Boolean);
 
       updateLayout();
       gsap.set(chars, { autoAlpha: 0, y: 26 });
-      gsap.set(titleArrows, { autoAlpha: 0, y: 26 });
+      gsap.set(continueHintChars, { autoAlpha: 0, y: 26 });
       gsap.set(title, { autoAlpha: 1, y: 0 });
       gsap.set(cd, {
         autoAlpha: 1,
@@ -680,7 +682,7 @@ export default function About() {
       timeline
         .to(chars, { autoAlpha: 1, y: 0, duration: 0.6, stagger: { each: 0.03 } }, 0)
         .to(
-          titleArrows,
+          continueHintChars,
           { autoAlpha: 1, y: 0, duration: 0.45, stagger: { each: 0.025 } }
         )
         .addLabel("aboutTitleRevealed")
@@ -911,14 +913,11 @@ export default function About() {
         ref={titleRef}
         className="pointer-events-none absolute left-1/2 top-[16%] z-50 w-full max-w-4xl -translate-x-1/2 px-5 text-center"
       >
-        <h2
-          aria-label={TITLE}
-          className="flex items-center justify-center gap-3 font-display text-5xl leading-none text-white sm:gap-4 sm:text-6xl md:text-7xl lg:text-6xl"
-        >
+        <p className="mb-4 flex items-center justify-center gap-3 font-display text-lg leading-none text-white/80 sm:mb-5 sm:gap-4 sm:text-xl md:text-2xl">
           <span
             ref={(node) => {
               if (node) {
-                titleArrowRefs.current[0] = node;
+                continueHintCharRefs.current[0] = node;
               }
             }}
             className="inline-block"
@@ -926,12 +925,12 @@ export default function About() {
           >
             ↓
           </span>
-          <span aria-hidden="true">
+          <span className="inline-block">
             <AnimatedWords
-              text={TITLE}
+              text={CONTINUE_HINT}
               registerCharacter={(node, index) => {
                 if (node) {
-                  charRefs.current[index] = node;
+                  continueHintCharRefs.current[index + 1] = node;
                 }
               }}
             />
@@ -939,7 +938,7 @@ export default function About() {
           <span
             ref={(node) => {
               if (node) {
-                titleArrowRefs.current[1] = node;
+                continueHintCharRefs.current[CONTINUE_HINT_LETTER_COUNT + 1] = node;
               }
             }}
             className="inline-block"
@@ -947,6 +946,16 @@ export default function About() {
           >
             ↓
           </span>
+        </p>
+        <h2 className="font-display text-5xl leading-none text-white sm:text-6xl md:text-7xl lg:text-6xl">
+          <AnimatedWords
+            text={TITLE}
+            registerCharacter={(node, index) => {
+              if (node) {
+                charRefs.current[index] = node;
+              }
+            }}
+          />
         </h2>
       </div>
 
