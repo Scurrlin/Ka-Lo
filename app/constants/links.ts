@@ -6,25 +6,25 @@ export type MusicProjectId =
   | "deep-end"
   | "kings-road";
 
-export type LyricNavigationTarget = Readonly<{
+type LyricNavigationTarget = Readonly<{
   id: `lyrics-${string}`;
   label: string;
   href: `#lyrics-${string}`;
 }>;
 
-export type LyricNavigationRelease = LyricNavigationTarget &
+type LyricNavigationRelease = LyricNavigationTarget &
   Readonly<{
     projectId: MusicProjectId;
     songs: readonly LyricNavigationTarget[];
   }>;
 
-export type SectionLink = Readonly<{
+type SectionLink = Readonly<{
   id: SectionId;
   label: string;
   href: `#${SectionId}`;
 }>;
 
-export type SocialAsset = Readonly<{
+type SocialAsset = Readonly<{
   src: string;
   width: number;
   height: number;

@@ -992,9 +992,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     <>
       <header
         ref={headerRef}
-        data-site-header
         inert={isNavigating}
-        data-desktop-lyrics-open={isDesktopLyricsMenuOpen || undefined}
         className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(255,255,255,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
           isIntroComplete
             ? isNavigating ||
@@ -1107,7 +1105,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                     </span>
                     <span
                       aria-hidden="true"
-                      className="desktop-lyrics-close-icon relative block h-5 w-5 shrink-0"
+                      className="relative block h-5 w-5 shrink-0"
                     >
                       <span className="desktop-lyrics-close-line desktop-lyrics-close-line-a" />
                       <span className="desktop-lyrics-close-line desktop-lyrics-close-line-b" />

@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MUSIC_PROJECT_LINKS, type MusicProjectId } from "../constants/links";
 
-const INTRO_TITLE = "The Music";
+const INTRO_TITLE = "Music";
 
 type Album = {
   id: MusicProjectId;
@@ -103,13 +103,13 @@ function AlbumCard({ album }: { album: Album }) {
         width={13}
         height={14}
         aria-hidden="true"
-        className="music-release-arrow h-3 w-3 shrink-0 md:h-4 md:w-4"
+        className="h-3 w-3 shrink-0 md:h-4 md:w-4"
       />
     </>
   );
 
   return (
-    <div className="music-release-card w-full text-center">
+    <div className="w-full text-center">
       <h3 className="music-release-heading mb-3 font-display text-lg uppercase leading-none text-white sm:text-xl md:text-2xl">
         {album.href ? (
           <a
@@ -133,7 +133,7 @@ function AlbumCard({ album }: { album: Album }) {
         )}
       </h3>
       <div
-        className={`album-cover relative aspect-square w-full overflow-hidden rounded-xl${
+        className={`relative aspect-square w-full overflow-hidden rounded-xl${
           album.id === "kings-road" ? " border border-white/15" : ""
         }`}
       >
@@ -247,7 +247,7 @@ export default function Music() {
     <section
       ref={sectionRef}
       id="music"
-      className="relative bg-black px-5 pb-20 pt-6 text-white sm:px-8 sm:pt-8 md:pt-10"
+      className="relative bg-black px-5 pb-20 pt-10 text-white sm:px-8 sm:pt-12 md:pt-14"
     >
         <div className="flex items-center justify-center px-5 py-10 text-center sm:py-14 md:py-16">
           <h2
@@ -317,7 +317,7 @@ export default function Music() {
               alt="My Solus album cover"
               width={1024}
               height={1024}
-              className="album-cover aspect-square w-full max-w-[520px] rounded-md object-cover"
+              className="aspect-square w-full max-w-[520px] rounded-md object-cover"
             />
           </div>
         </div>

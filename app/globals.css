@@ -471,16 +471,6 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   top: calc(100% + clamp(1.25rem, 4vh, 2.5rem));
 }
 
-/* The five named releases are a fresh, isolated static layer. The unique class
-   keeps them outside any historical `.album-card` reveal selector. */
-#music .music-release-card {
-  opacity: 1 !important;
-  visibility: visible !important;
-  transform: none !important;
-  animation: none !important;
-  transition: none !important;
-}
-
 /* Lock fill + soft shadow for every link state so visited/unvisited titles match. */
 #music .music-release-heading,
 #music .music-release-link,
