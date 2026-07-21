@@ -151,7 +151,6 @@ function AlbumCard({ album }: { album: Album }) {
 
 export default function Music() {
   const sectionRef = useRef<HTMLElement>(null);
-  const introSectionRef = useRef<HTMLDivElement>(null);
   const introTitleRef = useRef<HTMLHeadingElement>(null);
   const introTitleCharsRef = useRef<HTMLSpanElement[]>([]);
   const mixtapeImageRef = useRef<HTMLDivElement>(null);
@@ -163,13 +162,10 @@ export default function Music() {
     gsap.registerPlugin(ScrollTrigger);
 
     const section = sectionRef.current;
-    const introSection = introSectionRef.current;
 
-    if (!section || !introSection) {
+    if (!section) {
       return;
     }
-
-    let updateNavTarget = () => {};
 
     const ctx = gsap.context(() => {
       const introTitle = introTitleRef.current;
@@ -178,43 +174,22 @@ export default function Music() {
       const mixtapeSubheadingChars = mixtapeSubheadingCharsRef.current.filter(Boolean);
 
       gsap.set(introTitleChars, { autoAlpha: 0, y: 26 });
-      gsap.set(introTitle, { y: 0 });
 
-      // Reveal "The Music" across the sticky intro track. CSS owns the sticky
-      // positioning so ScrollTrigger never has to insert or recalculate a pin spacer
-      // as the section crosses the top of the viewport.
-      const introTl = gsap.timeline({
-        defaults: { ease: "none" },
-        scrollTrigger: {
-          trigger: introSection,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: true,
-          invalidateOnRefresh: true
-        }
-      });
-
-      introTl
-        .to(introTitleChars, { autoAlpha: 1, y: 0, duration: 0.5, stagger: { each: 0.03 } }, 0)
-        .addLabel("titleRevealed");
-
-      updateNavTarget = () => {
-        const scrollTrigger = introTl.scrollTrigger;
-        const titleRevealedAt = introTl.labels.titleRevealed;
-
-        if (!scrollTrigger || titleRevealedAt === undefined || introTl.duration() === 0) {
-          return;
-        }
-
-        const targetScroll =
-          scrollTrigger.start +
-          (titleRevealedAt / introTl.duration()) * (scrollTrigger.end - scrollTrigger.start);
-
-        section.dataset.navScrollY = Math.round(targetScroll).toString();
-      };
-
-      ScrollTrigger.addEventListener("refresh", updateNavTarget);
-      updateNavTarget();
+      if (introTitle && introTitleChars.length) {
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: introTitle,
+              start: "top 85%"
+            }
+          })
+          .to(introTitleChars, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.5,
+            stagger: { each: 0.03 }
+          });
+      }
 
       gsap.set([...mixtapeHeadingChars, ...mixtapeSubheadingChars], {
         autoAlpha: 0,
@@ -264,8 +239,6 @@ export default function Music() {
 
     return () => {
       window.removeEventListener("load", handleLoad);
-      ScrollTrigger.removeEventListener("refresh", updateNavTarget);
-      delete section.dataset.navScrollY;
       ctx.revert();
     };
   }, []);
@@ -274,29 +247,22 @@ export default function Music() {
     <section
       ref={sectionRef}
       id="music"
-      className="relative bg-black px-5 pb-20 pt-12 text-white sm:px-8 sm:pt-16 md:pt-20"
+      className="relative bg-black px-5 pb-20 pt-6 text-white sm:px-8 sm:pt-8 md:pt-10"
     >
-        {/* The outer track creates a compact 0.9-viewport reveal distance. The inner
-            stage stays put with native sticky positioning, which avoids a pin-boundary
-            jump before the album grid takes over. */}
-        <div ref={introSectionRef} className="relative h-[190svh]">
-          <div className="sticky top-0 h-[100svh] overflow-hidden">
-            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-5 text-center">
-              <h2
-                ref={introTitleRef}
-                className="w-full max-w-4xl text-center font-display text-5xl leading-none text-white sm:text-7xl md:text-8xl"
-              >
-                <CharSpans
-                  text={INTRO_TITLE}
-                  onCharRef={(el, index) => {
-                    if (el) {
-                      introTitleCharsRef.current[index] = el;
-                    }
-                  }}
-                />
-              </h2>
-            </div>
-          </div>
+        <div className="flex items-center justify-center px-5 py-10 text-center sm:py-14 md:py-16">
+          <h2
+            ref={introTitleRef}
+            className="w-full max-w-4xl text-center font-display text-5xl leading-none text-white sm:text-7xl md:text-8xl"
+          >
+            <CharSpans
+              text={INTRO_TITLE}
+              onCharRef={(el, index) => {
+                if (el) {
+                  introTitleCharsRef.current[index] = el;
+                }
+              }}
+            />
+          </h2>
         </div>
 
         {/* A single column below the "sm" breakpoint - a 2x2 grid from "sm" up - with

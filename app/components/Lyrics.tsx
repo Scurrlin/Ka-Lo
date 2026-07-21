@@ -8,7 +8,6 @@ import {
   type LyricRelease,
   type LyricSong
 } from "../constants/lyrics";
-import { SCRUB_LAG } from "../constants/motion";
 
 const LYRICS_TITLE = "Lyrics";
 
@@ -159,7 +158,6 @@ function AlbumRelease({ release }: { release: LyricRelease }) {
 
 export default function Lyrics() {
   const sectionRef = useRef<HTMLElement>(null);
-  const introSectionRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const titleCharacterRefs = useRef<HTMLSpanElement[]>([]);
 
@@ -167,67 +165,29 @@ export default function Lyrics() {
     gsap.registerPlugin(ScrollTrigger);
 
     const section = sectionRef.current;
-    const introSection = introSectionRef.current;
     const title = titleRef.current;
     const titleCharacters = titleCharacterRefs.current.filter(Boolean);
 
-    if (!section || !introSection || !title || !titleCharacters.length) {
+    if (!section || !title || !titleCharacters.length) {
       return;
     }
 
-    let updateNavTarget = () => {};
-
     const context = gsap.context(() => {
       gsap.set(titleCharacters, { autoAlpha: 0, y: 26 });
-      gsap.set(title, { y: 0 });
 
-      const timeline = gsap.timeline({
-        defaults: { ease: "none" },
-        scrollTrigger: {
-          trigger: introSection,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: SCRUB_LAG,
-          invalidateOnRefresh: true
-        }
-      });
-
-      timeline
-        .to(
-          titleCharacters,
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.5,
-            stagger: { each: 0.03 }
-          },
-          0
-        )
-        .addLabel("titleRevealed")
-        .to({}, { duration: 0.25 });
-
-      updateNavTarget = () => {
-        const scrollTrigger = timeline.scrollTrigger;
-        const titleRevealedAt = timeline.labels.titleRevealed;
-
-        if (
-          !scrollTrigger ||
-          titleRevealedAt === undefined ||
-          timeline.duration() === 0
-        ) {
-          return;
-        }
-
-        const targetScroll =
-          scrollTrigger.start +
-          (titleRevealedAt / timeline.duration()) *
-            (scrollTrigger.end - scrollTrigger.start);
-
-        section.dataset.navScrollY = Math.round(targetScroll).toString();
-      };
-
-      ScrollTrigger.addEventListener("refresh", updateNavTarget);
-      updateNavTarget();
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: title,
+            start: "top 85%"
+          }
+        })
+        .to(titleCharacters, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.5,
+          stagger: { each: 0.03 }
+        });
     }, section);
 
     const handleLoad = () => ScrollTrigger.refresh();
@@ -235,8 +195,6 @@ export default function Lyrics() {
 
     return () => {
       window.removeEventListener("load", handleLoad);
-      ScrollTrigger.removeEventListener("refresh", updateNavTarget);
-      delete section.dataset.navScrollY;
       context.revert();
     };
   }, []);
@@ -247,28 +205,24 @@ export default function Lyrics() {
       id="lyrics"
       className="relative bg-black text-white"
     >
-      <div ref={introSectionRef} className="relative h-[190svh]">
-        <div className="sticky top-0 h-[100svh] overflow-hidden">
-          <header className="pointer-events-none absolute inset-0 flex items-center justify-center px-5 text-center">
-            <h1
-              ref={titleRef}
-              aria-label={LYRICS_TITLE}
-              className="w-full text-center font-display text-[clamp(4.75rem,15vw,12rem)] leading-[0.8] tracking-[-0.06em]"
-            >
-              <span aria-hidden="true">
-                <TitleCharacters
-                  text={LYRICS_TITLE}
-                  registerCharacter={(node, index) => {
-                    if (node) {
-                      titleCharacterRefs.current[index] = node;
-                    }
-                  }}
-                />
-              </span>
-            </h1>
-          </header>
-        </div>
-      </div>
+      <header className="flex items-center justify-center px-5 py-12 text-center sm:py-16 md:py-20">
+        <h1
+          ref={titleRef}
+          aria-label={LYRICS_TITLE}
+          className="w-full text-center font-display text-[clamp(4.75rem,15vw,12rem)] leading-[0.8] tracking-[-0.06em]"
+        >
+          <span aria-hidden="true">
+            <TitleCharacters
+              text={LYRICS_TITLE}
+              registerCharacter={(node, index) => {
+                if (node) {
+                  titleCharacterRefs.current[index] = node;
+                }
+              }}
+            />
+          </span>
+        </h1>
+      </header>
 
       <div className="mx-auto w-full max-w-[112rem] px-5 pb-32 sm:px-8 sm:pb-40 lg:px-12 lg:pb-52">
         {LYRIC_RELEASES.map((release) =>

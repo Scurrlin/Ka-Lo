@@ -4,12 +4,11 @@ import { Fragment, useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SCRUB_LAG } from "../constants/motion";
 
 const TITLE = "Who is Ka-Lo?";
-const CONTINUE_HINT = "Scroll To Continue";
-const CONTINUE_HINT_LETTER_COUNT = CONTINUE_HINT.replace(/ /g, "").length;
 const NEXT_TITLE = "Rapper";
+/** Seconds of ScrollTrigger catch-up lag for the About scrubbed timeline. */
+const SCRUB_LAG = 1.7;
 const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
   "/videos/running-10s.mp4",
@@ -203,7 +202,7 @@ export default function About() {
   const finalMessageRef = useRef<HTMLHeadingElement>(null);
   const finalMessageCharRefs = useRef<HTMLSpanElement[]>([]);
   const charRefs = useRef<HTMLSpanElement[]>([]);
-  const continueHintCharRefs = useRef<HTMLSpanElement[]>([]);
+  const titleArrowRefs = useRef<HTMLSpanElement[]>([]);
   const nextTitleRef = useRef<HTMLHeadingElement>(null);
   const nextCharRefs = useRef<HTMLSpanElement[]>([]);
 
@@ -636,12 +635,12 @@ export default function About() {
 
     const ctx = gsap.context(() => {
       const chars = charRefs.current.filter(Boolean);
-      const continueHintChars = continueHintCharRefs.current.filter(Boolean);
+      const titleArrows = titleArrowRefs.current.filter(Boolean);
       const nextChars = nextCharRefs.current.filter(Boolean);
 
       updateLayout();
       gsap.set(chars, { autoAlpha: 0, y: 26 });
-      gsap.set(continueHintChars, { autoAlpha: 0, y: 26 });
+      gsap.set(titleArrows, { autoAlpha: 0, y: 26 });
       gsap.set(title, { autoAlpha: 1, y: 0 });
       gsap.set(cd, {
         autoAlpha: 1,
@@ -681,7 +680,7 @@ export default function About() {
       timeline
         .to(chars, { autoAlpha: 1, y: 0, duration: 0.6, stagger: { each: 0.03 } }, 0)
         .to(
-          continueHintChars,
+          titleArrows,
           { autoAlpha: 1, y: 0, duration: 0.45, stagger: { each: 0.025 } }
         )
         .addLabel("aboutTitleRevealed")
@@ -910,23 +909,16 @@ export default function About() {
 
       <div
         ref={titleRef}
-        className="pointer-events-none absolute left-1/2 top-[14%] z-50 w-full max-w-4xl -translate-x-1/2 px-5 text-center sm:top-[11%] md:top-[9%] lg:top-[8%]"
+        className="pointer-events-none absolute left-1/2 top-[16%] z-50 w-full max-w-4xl -translate-x-1/2 px-5 text-center"
       >
-        <h2 className="font-display text-5xl leading-none text-white sm:text-6xl md:text-7xl lg:text-6xl">
-          <AnimatedWords
-            text={TITLE}
-            registerCharacter={(node, index) => {
-              if (node) {
-                charRefs.current[index] = node;
-              }
-            }}
-          />
-        </h2>
-        <p className="mt-4 flex items-center justify-center gap-3 font-display text-lg leading-none text-white/80 sm:mt-5 sm:gap-4 sm:text-xl md:mt-4 md:text-2xl">
+        <h2
+          aria-label={TITLE}
+          className="flex items-center justify-center gap-3 font-display text-5xl leading-none text-white sm:gap-4 sm:text-6xl md:text-7xl lg:text-6xl"
+        >
           <span
             ref={(node) => {
               if (node) {
-                continueHintCharRefs.current[0] = node;
+                titleArrowRefs.current[0] = node;
               }
             }}
             className="inline-block"
@@ -934,12 +926,12 @@ export default function About() {
           >
             ↓
           </span>
-          <span className="inline-block">
+          <span aria-hidden="true">
             <AnimatedWords
-              text={CONTINUE_HINT}
+              text={TITLE}
               registerCharacter={(node, index) => {
                 if (node) {
-                  continueHintCharRefs.current[index + 1] = node;
+                  charRefs.current[index] = node;
                 }
               }}
             />
@@ -947,7 +939,7 @@ export default function About() {
           <span
             ref={(node) => {
               if (node) {
-                continueHintCharRefs.current[CONTINUE_HINT_LETTER_COUNT + 1] = node;
+                titleArrowRefs.current[1] = node;
               }
             }}
             className="inline-block"
@@ -955,7 +947,7 @@ export default function About() {
           >
             ↓
           </span>
-        </p>
+        </h2>
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center px-2 sm:px-5">
@@ -977,7 +969,7 @@ export default function About() {
       </section>
 
       <section
-        className="bg-black px-5 pb-24 pt-4 text-white sm:px-8 md:pb-32 md:pt-6"
+        className="bg-black px-5 pb-12 pt-4 text-white sm:px-8 md:pb-16 md:pt-6"
         aria-label="What's next story"
       >
         <div className="mx-auto max-w-3xl text-lg leading-relaxed text-white sm:text-xl sm:leading-relaxed">
