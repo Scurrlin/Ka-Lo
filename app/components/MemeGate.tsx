@@ -136,7 +136,6 @@ export default function MemeGate() {
           width={503}
           height={497}
           sizes="(max-height: 499px) min(80vw, 420px), 1px"
-          preload
         />
         <p className="viewport-blackout-caption">
           Please increase your screen height

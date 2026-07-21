@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -218,6 +218,30 @@ export default function About() {
   const continueHintCharRefs = useRef<HTMLSpanElement[]>([]);
   const nextTitleRef = useRef<HTMLHeadingElement>(null);
   const nextCharRefs = useRef<HTMLSpanElement[]>([]);
+  const [shouldLoadVideos, setShouldLoadVideos] = useState(false);
+
+  // Keep video bytes off the network until About is near the viewport.
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section || shouldLoadVideos) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShouldLoadVideos(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "80% 0px" }
+    );
+
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, [shouldLoadVideos]);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -864,11 +888,11 @@ export default function About() {
                     videoRefs.current[index] = node;
                   }
                 }}
-                src={src}
+                src={shouldLoadVideos ? src : undefined}
                 muted
                 loop
                 playsInline
-                preload="metadata"
+                preload={shouldLoadVideos ? "metadata" : "none"}
                 aria-hidden="true"
                 className={`block h-full w-full object-cover ${
                   index === 1 ? "about-running-video" : ""

@@ -4,6 +4,10 @@ const nextConfig = {
   reactStrictMode: false,
   images: {
     unoptimized: true
+  },
+  // Tree-shake lucide so only imported icons (ArrowLeft) enter the client graph.
+  experimental: {
+    optimizePackageImports: ["lucide-react"]
   }
 };
 

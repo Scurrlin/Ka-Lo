@@ -1,13 +1,9 @@
 "use client";
 
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import {
-  LYRIC_RELEASES,
-  type LyricRelease,
-  type LyricSong
-} from "../constants/lyrics";
+import type { LyricRelease, LyricSong } from "../constants/lyrics";
 
 const LYRICS_TITLE = "Lyrics";
 
@@ -160,6 +156,23 @@ export default function Lyrics() {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const titleCharacterRefs = useRef<HTMLSpanElement[]>([]);
+  const [releases, setReleases] = useState<readonly LyricRelease[] | null>(
+    null
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void import("../constants/lyrics").then((module) => {
+      if (!cancelled) {
+        setReleases(module.LYRIC_RELEASES);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -199,6 +212,12 @@ export default function Lyrics() {
     };
   }, []);
 
+  useEffect(() => {
+    if (releases) {
+      ScrollTrigger.refresh();
+    }
+  }, [releases]);
+
   return (
     <section
       ref={sectionRef}
@@ -225,7 +244,7 @@ export default function Lyrics() {
       </header>
 
       <div className="mx-auto w-full max-w-[112rem] px-5 pb-32 sm:px-8 sm:pb-40 lg:px-12 lg:pb-52">
-        {LYRIC_RELEASES.map((release) =>
+        {releases?.map((release) =>
           release.kind === "album" ? (
             <AlbumRelease key={release.id} release={release} />
           ) : (

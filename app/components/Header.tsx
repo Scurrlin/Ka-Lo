@@ -13,7 +13,7 @@ import {
   type SectionId,
   type SocialLink
 } from "../constants/links";
-import { useLenisRef } from "./SmoothScroll";
+import { useLenisRef } from "./scroll/SmoothScroll";
 
 const MOBILE_MENU_ID = "mobile-site-navigation";
 const DESKTOP_LYRICS_MENU_ID = "desktop-lyrics-navigation";
