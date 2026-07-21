@@ -1,18 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Header from "./Header";
 import Hero from "./Hero";
 
-type IntroProps = {
-  isIntroComplete: boolean;
-  onIntroComplete: () => void;
-};
+export default function Intro() {
+  const [isIntroComplete, setIsIntroComplete] = useState(false);
 
-export default function Intro({ isIntroComplete, onIntroComplete }: IntroProps) {
+  // Warm the Music chunk during the hero so height + images settle before scroll.
+  useEffect(() => {
+    void import("./Music");
+  }, []);
+
   return (
     <>
       <Header isIntroComplete={isIntroComplete} />
-      <Hero onIntroComplete={onIntroComplete} />
+      <Hero onIntroComplete={() => setIsIntroComplete(true)} />
     </>
   );
 }

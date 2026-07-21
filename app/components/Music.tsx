@@ -52,6 +52,19 @@ const ALBUMS: Album[] = [
 
 const CORNER_ALBUMS = ALBUMS.slice(0, 4);
 const CENTER_ALBUM = ALBUMS[4];
+const MIXTAPE_COVER = "/assets/My-Solus.webp";
+const MUSIC_COVER_URLS = [...ALBUMS.map((album) => album.image), MIXTAPE_COVER];
+
+function preloadMusicCovers() {
+  return Promise.all(
+    MUSIC_COVER_URLS.map((src) => {
+      const image = new window.Image();
+      image.decoding = "async";
+      image.src = src;
+      return image.decode().catch(() => undefined);
+    })
+  );
+}
 
 // Splits text into individually-ref'd spans so it can be revealed character by character,
 // matching the reveal technique already used in About.tsx. Each word's characters are
@@ -93,7 +106,13 @@ function CharSpans({
   );
 }
 
-function AlbumCard({ album }: { album: Album }) {
+function AlbumCard({
+  album,
+  priority = false
+}: {
+  album: Album;
+  priority?: boolean;
+}) {
   const releaseName = (
     <>
       <span className="music-release-name">{album.name}</span>
@@ -142,8 +161,9 @@ function AlbumCard({ album }: { album: Album }) {
           alt={`${album.name} album cover`}
           fill
           sizes="(max-width: 640px) 45vw, 320px"
-          loading="lazy"
           className="rounded-xl object-cover"
+          priority={priority}
+          loading={priority ? "eager" : undefined}
         />
       </div>
     </div>
@@ -158,6 +178,11 @@ export default function Music() {
   const mixtapeTextRef = useRef<HTMLDivElement>(null);
   const mixtapeHeadingCharsRef = useRef<HTMLSpanElement[]>([]);
   const mixtapeSubheadingCharsRef = useRef<HTMLSpanElement[]>([]);
+
+  useEffect(() => {
+    // Decode covers while the user is still in the hero, not mid-fling.
+    void preloadMusicCovers();
+  }, []);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -248,9 +273,9 @@ export default function Music() {
     <section
       ref={sectionRef}
       id="music"
-      className="relative bg-black px-5 pb-20 pt-16 text-white sm:px-8 sm:pt-20 md:pt-24"
+      className="relative bg-black text-white"
     >
-        <div className="flex items-center justify-center px-5 py-10 text-center sm:py-14 md:py-16">
+        <header className="flex items-center justify-center px-5 py-12 text-center sm:py-16 md:py-20">
           <h2
             ref={introTitleRef}
             className="w-full text-center font-display text-[clamp(4.75rem,15vw,12rem)] leading-[0.8] tracking-[-0.06em] text-white"
@@ -264,27 +289,29 @@ export default function Music() {
               }}
             />
           </h2>
-        </div>
+        </header>
 
         {/* A single column below the "sm" breakpoint - a 2x2 grid from "sm" up - with
             the fifth album in its own row underneath, centered. Simple layout, no
             absolute pixel math required. */}
-        <div className="mx-auto flex max-w-xs flex-col items-center gap-y-12 sm:max-w-2xl sm:gap-y-14 md:max-w-3xl md:gap-y-16">
-          <div className="grid w-full grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-14 md:gap-x-16 md:gap-y-16">
-            {CORNER_ALBUMS.map((album) => (
-              <AlbumCard key={album.id} album={album} />
-            ))}
-          </div>
-          {/* Full width to match the single column below "sm"; from "sm" up, sized to
-              exactly match a corner cell: half the row's width minus half the gap
-              between columns, at each breakpoint's own gap value. */}
-          <div className="w-full sm:w-[calc(50%-1.5rem)] md:w-[calc(50%-2rem)]">
-            <AlbumCard album={CENTER_ALBUM} />
+        <div className="border-t border-white/20 px-5 pb-20 pt-20 sm:px-8 sm:pt-28">
+          <div className="mx-auto flex max-w-xs flex-col items-center gap-y-12 sm:max-w-2xl sm:gap-y-14 md:max-w-3xl md:gap-y-16">
+            <div className="grid w-full grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-14 md:gap-x-16 md:gap-y-16">
+              {CORNER_ALBUMS.map((album, index) => (
+                <AlbumCard key={album.id} album={album} priority={index < 2} />
+              ))}
+            </div>
+            {/* Full width to match the single column below "sm"; from "sm" up, sized to
+                exactly match a corner cell: half the row's width minus half the gap
+                between columns, at each breakpoint's own gap value. */}
+            <div className="w-full sm:w-[calc(50%-1.5rem)] md:w-[calc(50%-2rem)]">
+              <AlbumCard album={CENTER_ALBUM} />
+            </div>
           </div>
         </div>
 
         <div
-          className="mx-auto mt-20 grid max-w-7xl items-center gap-12 py-24 md:grid-cols-[0.9fr_1.1fr] md:py-32"
+          className="mx-auto mt-20 grid max-w-7xl items-center gap-12 px-5 py-24 sm:px-8 md:grid-cols-[0.9fr_1.1fr] md:py-32"
           aria-labelledby="mixtape-title"
         >
           <div ref={mixtapeTextRef} className="text-center md:text-left">
@@ -314,11 +341,10 @@ export default function Music() {
           </div>
           <div ref={mixtapeImageRef} className="flex justify-center md:justify-end">
             <Image
-              src="/assets/My-Solus.webp"
+              src={MIXTAPE_COVER}
               alt="My Solus album cover"
               width={1024}
               height={1024}
-              loading="lazy"
               className="aspect-square w-full max-w-[520px] rounded-md object-cover"
             />
           </div>
