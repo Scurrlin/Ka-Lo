@@ -428,6 +428,35 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     lastScrollYRef.current = window.scrollY;
     scrollAnchorYRef.current = window.scrollY;
 
+    // Cache About document offsets so scroll frames only compare numbers —
+    // getBoundingClientRect every rAF was layout thrash on Safari.
+    let aboutTop = Number.POSITIVE_INFINITY;
+    let aboutBottom = Number.NEGATIVE_INFINITY;
+
+    const refreshAboutBounds = () => {
+      const aboutSection = document.getElementById("about");
+
+      if (!aboutSection) {
+        aboutTop = Number.POSITIVE_INFINITY;
+        aboutBottom = Number.NEGATIVE_INFINITY;
+        return;
+      }
+
+      const scrollY = window.scrollY;
+      const bounds = aboutSection.getBoundingClientRect();
+      aboutTop = bounds.top + scrollY;
+      aboutBottom = aboutTop + bounds.height;
+    };
+
+    refreshAboutBounds();
+
+    const aboutSection = document.getElementById("about");
+    const aboutResizeObserver =
+      aboutSection && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(refreshAboutBounds)
+        : null;
+    aboutResizeObserver?.observe(aboutSection);
+
     const updateHeaderVisibility = () => {
       scrollFrameRef.current = null;
 
@@ -441,14 +470,6 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         return;
       }
 
-      const aboutSection = document.getElementById("about");
-      const aboutBounds = aboutSection?.getBoundingClientRect();
-      const aboutTop = aboutBounds
-        ? aboutBounds.top + currentScrollY
-        : Number.POSITIVE_INFINITY;
-      const aboutBottom = aboutBounds
-        ? aboutTop + aboutBounds.height
-        : Number.NEGATIVE_INFINITY;
       const isInsideAbout =
         currentScrollY >= aboutTop - HEADER_TOP_THRESHOLD &&
         currentScrollY < aboutBottom - HEADER_TOP_THRESHOLD;
@@ -488,9 +509,14 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", refreshAboutBounds, { passive: true });
+    window.addEventListener("load", refreshAboutBounds);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", refreshAboutBounds);
+      window.removeEventListener("load", refreshAboutBounds);
+      aboutResizeObserver?.disconnect();
 
       if (scrollFrameRef.current !== null) {
         window.cancelAnimationFrame(scrollFrameRef.current);
@@ -993,7 +1019,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       <header
         ref={headerRef}
         inert={isNavigating}
-        className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(255,255,255,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
+        className={`site-header fixed inset-x-0 top-0 z-50 h-16 bg-black text-white shadow-[0_1px_0_rgba(255,255,255,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] md:h-20 ${
           isIntroComplete
             ? isNavigating ||
               isHeaderVisible ||

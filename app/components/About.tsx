@@ -815,7 +815,7 @@ export default function About() {
 
   return (
     <>
-      <section ref={sectionRef} id="about" className="relative h-screen bg-black text-white">
+      <section ref={sectionRef} id="about" className="relative bg-black text-white">
         <div
           ref={stickyStageRef}
           className="sticky top-0 h-screen overflow-hidden bg-black"

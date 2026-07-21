@@ -64,6 +64,7 @@ function getWaveBarDelay(index: number) {
 }
 
 export default function Hero({ onIntroComplete }: HeroProps) {
+  const sectionRef = useRef<HTMLElement>(null);
   const logoCharRefs = useRef<HTMLSpanElement[]>([]);
 
   useEffect(() => {
@@ -86,8 +87,34 @@ export default function Hero({ onIntroComplete }: HeroProps) {
     };
   }, []);
 
+  // Safari keeps infinite CSS animations compositing even when scrolled
+  // off-screen; pause the wave once the hero leaves the viewport so the
+  // rest of the page can scroll without that background GPU load.
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        section.classList.toggle("hero-waves-paused", !entry.isIntersecting);
+      },
+      { rootMargin: "10% 0px" }
+    );
+
+    observer.observe(section);
+
+    return () => {
+      observer.disconnect();
+      section.classList.remove("hero-waves-paused");
+    };
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       id="top"
       tabIndex={-1}
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen"
@@ -126,7 +153,7 @@ export default function Hero({ onIntroComplete }: HeroProps) {
               {WAVE_BARS.map((height, index) => (
                 <span key={index} className="hero-wave-reactor flex h-full flex-1 items-center">
                   <span
-                    className="hero-wave-bar relative block w-full rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.4)]"
+                    className="hero-wave-bar relative block w-full rounded-full bg-white"
                     style={{
                       animationDelay: `calc(var(--hero-reveal-duration) + ${getWaveBarDelay(index).toFixed(3)}s)`,
                       animationDuration: `${getWaveBarDuration(index).toFixed(3)}s`,
