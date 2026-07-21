@@ -910,7 +910,7 @@ export default function About() {
 
       <div
         ref={titleRef}
-        className="pointer-events-none absolute left-1/2 top-[16%] z-50 w-full max-w-4xl -translate-x-1/2 px-5 text-center"
+        className="pointer-events-none absolute left-1/2 top-[14%] z-50 w-full max-w-4xl -translate-x-1/2 px-5 text-center sm:top-[11%] md:top-[9%] lg:top-[8%]"
       >
         <h2 className="font-display text-5xl leading-none text-white sm:text-6xl md:text-7xl lg:text-6xl">
           <AnimatedWords
@@ -922,7 +922,7 @@ export default function About() {
             }}
           />
         </h2>
-        <p className="mt-5 flex items-center justify-center gap-3 font-display text-lg leading-none text-white/80 sm:mt-6 sm:gap-4 sm:text-xl md:text-2xl">
+        <p className="mt-4 flex items-center justify-center gap-3 font-display text-lg leading-none text-white/80 sm:mt-5 sm:gap-4 sm:text-xl md:mt-4 md:text-2xl">
           <span
             ref={(node) => {
               if (node) {

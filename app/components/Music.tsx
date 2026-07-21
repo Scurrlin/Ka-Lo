@@ -5,7 +5,6 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MUSIC_PROJECT_LINKS, type MusicProjectId } from "../constants/links";
-import { SCRUB_LAG } from "../constants/motion";
 
 const INTRO_TITLE = "The Music";
 
@@ -190,15 +189,14 @@ export default function Music() {
           trigger: introSection,
           start: "top top",
           end: "bottom bottom",
-          scrub: SCRUB_LAG,
+          scrub: true,
           invalidateOnRefresh: true
         }
       });
 
       introTl
         .to(introTitleChars, { autoAlpha: 1, y: 0, duration: 0.5, stagger: { each: 0.03 } }, 0)
-        .addLabel("titleRevealed")
-        .to({}, { duration: 0.25 });
+        .addLabel("titleRevealed");
 
       updateNavTarget = () => {
         const scrollTrigger = introTl.scrollTrigger;
@@ -278,10 +276,10 @@ export default function Music() {
       id="music"
       className="relative bg-black px-5 pb-20 pt-12 text-white sm:px-8 sm:pt-16 md:pt-20"
     >
-        {/* The outer track creates a short ~0.2-viewport reveal distance. The inner
+        {/* The outer track creates a compact 0.9-viewport reveal distance. The inner
             stage stays put with native sticky positioning, which avoids a pin-boundary
             jump before the album grid takes over. */}
-        <div ref={introSectionRef} className="relative h-[120svh]">
+        <div ref={introSectionRef} className="relative h-[190svh]">
           <div className="sticky top-0 h-[100svh] overflow-hidden">
             <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-5 text-center">
               <h2
