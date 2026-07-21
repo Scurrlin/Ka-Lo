@@ -725,7 +725,7 @@ export default function About() {
         .fromTo(
           cd,
           { y: () => getCdEntranceStartY(cd, window.innerHeight) },
-          { y: 0, duration: 2.0, ease: "none" }
+          { y: 0, duration: 3, ease: "none" }
         )
         .addLabel("cdIn")
         .to(cd, { rotation: 360, duration: 2.2 }, "cdIn")
