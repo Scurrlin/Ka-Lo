@@ -13,6 +13,7 @@ import {
   type SectionId,
   type SocialLink
 } from "../constants/links";
+import { useLenisRef } from "./SmoothScroll";
 
 const MOBILE_MENU_ID = "mobile-site-navigation";
 const DESKTOP_LYRICS_MENU_ID = "desktop-lyrics-navigation";
@@ -219,6 +220,7 @@ function SocialDestination({
 }
 
 export default function Header({ isIntroComplete }: HeaderProps) {
+  const lenisRef = useLenisRef();
   const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
@@ -532,6 +534,9 @@ export default function Header({ isIntroComplete }: HeaderProps) {
 
     const navigationTarget = target;
     const isLyricsDestination = id === "lyrics" || id.startsWith("lyrics-");
+    // Read at nav time so we pick up Lenis even if Header has not re-rendered
+    // since the smoother mounted.
+    const activeLenis = lenisRef.current;
 
     const run = ++navigationRunRef.current;
 
@@ -539,6 +544,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
     let scrollFrame: number | null = null;
     let settleTimer: number | null = null;
     let tween: gsap.core.Tween | null = null;
+    let isLenisNavActive = false;
     let isCleanedUp = false;
     let lastBlockedInputAt = Number.NEGATIVE_INFINITY;
 
@@ -551,6 +557,15 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         lastBlockedInputAt = performance.now();
         event.preventDefault();
       }
+    };
+
+    const scrollToYImmediate = (y: number) => {
+      if (activeLenis) {
+        activeLenis.scrollTo(y, { immediate: true, force: true });
+        return;
+      }
+
+      window.scrollTo({ top: y, behavior: "instant" });
     };
 
     const resetHeaderScrollTracking = () => {
@@ -587,6 +602,15 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       const activeTween = tween;
       tween = null;
       activeTween?.kill();
+
+      if (isLenisNavActive && activeLenis) {
+        // Immediate scrollTo unlocks Lenis if a locked nav scroll was interrupted.
+        activeLenis.scrollTo(activeLenis.scroll, {
+          immediate: true,
+          force: true
+        });
+        isLenisNavActive = false;
+      }
 
       window.removeEventListener("wheel", blockScrollInput, true);
       window.removeEventListener("touchmove", blockScrollInput, true);
@@ -631,7 +655,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         return;
       }
 
-      window.scrollTo({ top: navigationTarget.getTop(), behavior: "instant" });
+      scrollToYImmediate(navigationTarget.getTop());
 
       if (isLyricsDestination) {
         setIsHeaderVisible(true);
@@ -651,9 +675,33 @@ export default function Header({ isIntroComplete }: HeaderProps) {
             return;
           }
 
+          const targetY = navigationTarget.getTop();
+          const ease = gsap.parseEase("power2.inOut");
+
+          if (activeLenis) {
+            isLenisNavActive = true;
+            activeLenis.scrollTo(targetY, {
+              duration: NAV_SCROLL_DURATION_SECONDS,
+              easing: ease,
+              lock: true,
+              force: true,
+              onComplete: () => {
+                if (navigationRunRef.current !== run || isCleanedUp) {
+                  cleanupNavigation();
+                  return;
+                }
+
+                isLenisNavActive = false;
+                scrollToYImmediate(navigationTarget.getTop());
+                finishWhenInputIsQuiet();
+              }
+            });
+            return;
+          }
+
           tween = gsap.to(window, {
             scrollTo: {
-              y: navigationTarget.getTop(),
+              y: targetY,
               autoKill: false
             },
             duration: NAV_SCROLL_DURATION_SECONDS,
@@ -667,10 +715,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 return;
               }
 
-              window.scrollTo({
-                top: navigationTarget.getTop(),
-                behavior: "instant"
-              });
+              scrollToYImmediate(navigationTarget.getTop());
               finishWhenInputIsQuiet();
             },
             onInterrupt: cleanupNavigation

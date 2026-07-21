@@ -9,8 +9,9 @@ const TITLE = "Who is Ka-Lo?";
 const CONTINUE_HINT = "Scroll To Continue";
 const CONTINUE_HINT_LETTER_COUNT = CONTINUE_HINT.replace(/ /g, "").length;
 const NEXT_TITLE = "Rapper";
-/** Seconds of ScrollTrigger catch-up lag for the About scrubbed timeline. */
-const SCRUB_LAG = 1.7;
+/** Seconds of ScrollTrigger catch-up lag for the About scrubbed timeline.
+ * Kept moderate so it doesn't stack into "double mush" with Lenis wheel lerp. */
+const SCRUB_LAG = 1.2;
 const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
   "/videos/running-10s.mp4",

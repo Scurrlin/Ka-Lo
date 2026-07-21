@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import ScrollRestoration from "./components/ScrollRestoration";
+import SmoothScroll from "./components/SmoothScroll";
 import MemeGate from "./components/MemeGate";
 
 const instrumentSans = Instrument_Sans({
@@ -107,10 +108,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={instrumentSans.variable} suppressHydrationWarning>
       <body>
-        <div id="site-content">
-          <ScrollRestoration />
-          {children}
-        </div>
+        <SmoothScroll>
+          <div id="site-content">
+            <ScrollRestoration />
+            {children}
+          </div>
+        </SmoothScroll>
         <MemeGate />
       </body>
     </html>
