@@ -29,6 +29,8 @@ const FINAL_MESSAGE = "Not Your Traditional...";
 
 const CD_CLEARANCE = 18;
 const CD_VERTICAL_CLEARANCE = 36;
+/** Extra space below the fold so the waiting CD never peeks into view. */
+const CD_ENTRANCE_CLEARANCE = 24;
 const CD_MIN_DIAMETER = 88;
 const CD_MAX_DIAMETER = 192;
 const VIDEO_MAX_WIDTH = 680;
@@ -111,6 +113,11 @@ function getCubicBezierPoint(
 function smoothstep(value: number) {
   const progress = clamp(value, 0, 1);
   return progress * progress * (3 - 2 * progress);
+}
+
+/** GSAP y offset from viewport-center origin that parks the full CD below the fold. */
+function getCdEntranceStartY(cdElement: HTMLElement, viewportHeight: number) {
+  return viewportHeight / 2 + cdElement.offsetWidth / 2 + CD_ENTRANCE_CLEARANCE;
 }
 
 function getPointOnRoute(geometry: RouteGeometry, progress: number) {
@@ -653,7 +660,7 @@ export default function About() {
         xPercent: -50,
         yPercent: -50,
         x: 0,
-        y: "70vh",
+        y: () => getCdEntranceStartY(cd, window.innerHeight),
         rotation: 0,
         scale: 1
       });
@@ -691,7 +698,11 @@ export default function About() {
         )
         .addLabel("aboutTitleRevealed")
         .to({}, { duration: 0.05 })
-        .to(cd, { y: 0, duration: 0.7, ease: "power2.out" })
+        .fromTo(
+          cd,
+          { y: () => getCdEntranceStartY(cd, window.innerHeight) },
+          { y: 0, duration: 0.7, ease: "power2.out" }
+        )
         .addLabel("cdIn")
         .to(cd, { rotation: 360, duration: 2.2 }, "cdIn")
         .addLabel("fullTurn")
