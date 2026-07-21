@@ -252,7 +252,7 @@ export default function Music() {
         <div className="flex items-center justify-center px-5 py-10 text-center sm:py-14 md:py-16">
           <h2
             ref={introTitleRef}
-            className="w-full max-w-4xl text-center font-display text-5xl leading-none text-white sm:text-7xl md:text-8xl"
+            className="w-full text-center font-display text-[clamp(4.75rem,15vw,12rem)] leading-[0.8] tracking-[-0.06em] text-white"
           >
             <CharSpans
               text={INTRO_TITLE}
