@@ -12,9 +12,13 @@ import {
   type ReactNode,
   type RefObject
 } from "react";
+import { isWebKitBrowser } from "../utils/isWebKit";
 
 /** Modest inertia so About's scrub lag does not feel double-mushy. */
 const LENIS_LERP = 0.1;
+/** Duration-based smoothing blends Safari's discrete wheel notches more continuously. */
+const SAFARI_LENIS_DURATION = 1.15;
+const SAFARI_WHEEL_MULTIPLIER = 0.9;
 
 const LenisContext = createContext<RefObject<Lenis | null>>({
   current: null
@@ -39,12 +43,19 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
+    const useSafariSmoothing = isWebKitBrowser();
+
     const instance = new Lenis({
       autoRaf: false,
-      lerp: LENIS_LERP,
       smoothWheel: true,
       // Keep touch on native momentum — Safari + sticky video is already heavy.
-      syncTouch: false
+      syncTouch: false,
+      ...(useSafariSmoothing
+        ? {
+            duration: SAFARI_LENIS_DURATION,
+            wheelMultiplier: SAFARI_WHEEL_MULTIPLIER
+          }
+        : { lerp: LENIS_LERP })
     });
 
     lenisRef.current = instance;

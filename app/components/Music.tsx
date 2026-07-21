@@ -247,7 +247,7 @@ export default function Music() {
     <section
       ref={sectionRef}
       id="music"
-      className="relative bg-black px-5 pb-20 pt-10 text-white sm:px-8 sm:pt-12 md:pt-14"
+      className="relative bg-black px-5 pb-20 pt-16 text-white sm:px-8 sm:pt-20 md:pt-24"
     >
         <div className="flex items-center justify-center px-5 py-10 text-center sm:py-14 md:py-16">
           <h2

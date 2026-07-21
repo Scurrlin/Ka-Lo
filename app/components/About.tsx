@@ -4,6 +4,7 @@ import { Fragment, useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { isWebKitBrowser } from "../utils/isWebKit";
 
 const TITLE = "Who is Ka-Lo?";
 const CONTINUE_HINT = "Scroll To Continue";
@@ -12,6 +13,8 @@ const NEXT_TITLE = "Rapper";
 /** Seconds of ScrollTrigger catch-up lag for the About scrubbed timeline.
  * Kept moderate so it doesn't stack into "double mush" with Lenis wheel lerp. */
 const SCRUB_LAG = 1.2;
+/** Slightly higher on WebKit so sticky scrub masks residual Safari frame drops. */
+const SAFARI_SCRUB_LAG = 1.45;
 const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
   "/videos/running-10s.mp4",
@@ -671,7 +674,7 @@ export default function About() {
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: SCRUB_LAG,
+          scrub: isWebKitBrowser() ? SAFARI_SCRUB_LAG : SCRUB_LAG,
           invalidateOnRefresh: true,
           onRefreshInit: updateLayout,
           onUpdate: syncVideoPlayback,
