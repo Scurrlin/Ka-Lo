@@ -1,4 +1,4 @@
-import { LYRIC_CATALOG } from "./lyricCatalog";
+import { LYRIC_CATALOG } from "./music";
 
 export type LyricSong = Readonly<{
   id: `lyrics-${string}`;
@@ -16,7 +16,10 @@ export type LyricRelease = Readonly<{
 }>;
 
 const LYRIC_TEXTS = {
-  "lyrics-kings-road": `So I slow ride
+
+"lyrics-kings-road":
+
+`So I slow ride
 To my South Side
 To find clear eyes
 Damn right, damn right
@@ -126,7 +129,10 @@ To find clear eyes
 Damn right, damn right
 
 And now I'm gone`,
-  "lyrics-deep-end": `Yeah this world
+
+"lyrics-deep-end":
+
+`Yeah this world
 Got me slipping in the
 Got me slipping in the deep
 Yeah got me slipping in the

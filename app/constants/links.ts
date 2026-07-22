@@ -1,4 +1,4 @@
-import { LYRIC_CATALOG, type MusicProjectId } from "./lyricCatalog";
+import { LYRIC_CATALOG, type MusicProjectId } from "./music";
 
 export type { MusicProjectId };
 export type SectionId = "music" | "about" | "lyrics";
