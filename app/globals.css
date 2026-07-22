@@ -13,8 +13,6 @@
   --white: var(--color-white);
   --black: #000000;
   --silver: #d7d7d0;
-  /* Must match Hero.tsx logo reveal: 1.2s + 0.3s × 3 chars = 2.1s. */
-  --hero-reveal-duration: 2.1s;
 }
 
 * {
@@ -176,7 +174,6 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   opacity: 0;
   transform: translate3d(0, -115%, 0);
   animation: site-header-drop 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: calc(var(--hero-reveal-duration, 4s) + 0.5s);
 }
 
 .mobile-menu-line {
@@ -367,8 +364,10 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   opacity: 0;
   transform: translate3d(0, 5.75rem, 0);
   user-select: none;
+}
+
+.hero-reveal-ready .hero-sound-wave {
   animation: hero-wave-rise 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: calc(var(--hero-reveal-duration, 4s) + 0.5s);
 }
 
 .hero-sound-wave * {
@@ -379,11 +378,14 @@ html.viewport-blackout-active.viewport-blackout-meme-active
 
 .hero-wave-bar {
   transform: scaleY(0.28);
-  animation-name: hero-wave-pulse;
   animation-duration: 1.45s;
   animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
   animation-iteration-count: infinite;
   animation-direction: normal;
+}
+
+.hero-reveal-ready .hero-wave-bar {
+  animation-name: hero-wave-pulse;
 }
 
 /* Hero.tsx toggles .hero-waves-active via IntersectionObserver. */

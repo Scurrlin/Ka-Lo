@@ -3,15 +3,16 @@
 import { useEffect, useRef } from "react";
 
 const HERO_LOGO_TEXT = "KΛLO";
-const LOGO_CHAR_REVEAL_DURATION = 1.2;
-const LOGO_CHAR_STAGGER = 0.3;
-// Total until the last letter finishes. Must match --hero-reveal-duration in globals.css.
-// 1.2 + 0.3 × 3 = 2.1
+const LOGO_CHAR_REVEAL_DURATION = 1.5;
+const LOGO_CHAR_STAGGER = 0.5;
+// Total until the last letter finishes: 1.5 + 0.5 × 3 = 3 seconds.
 
 const WAVE_BAR_COUNT = 48;
 
 type HeroProps = {
+  isRevealReady: boolean;
   onIntroComplete: () => void;
+  onLogoRevealComplete: () => void;
 };
 
 const WAVE_BARS = Array.from({ length: WAVE_BAR_COUNT }, (_, index) => {
@@ -22,13 +23,21 @@ const WAVE_BARS = Array.from({ length: WAVE_BAR_COUNT }, (_, index) => {
   return Math.max(10, Math.min(100, Math.round(heightPct)));
 });
 
-// CSS letter reveal keeps GSAP off the intro critical path and stays in sync
-// with --hero-reveal-duration (wave + header drop).
-function LogoCharacters({ text }: { text: string }) {
+// CSS letter reveal keeps GSAP off the intro critical path.
+function LogoCharacters({
+  onRevealComplete,
+  text
+}: {
+  onRevealComplete: () => void;
+  text: string;
+}) {
   return Array.from(text).map((character, index) => (
     <span
       key={index}
       className="hero-logo-char inline-block"
+      onAnimationEnd={
+        index === text.length - 1 ? onRevealComplete : undefined
+      }
       style={{
         animationDelay: `${(index * LOGO_CHAR_STAGGER).toFixed(3)}s`,
         animationDuration: `${LOGO_CHAR_REVEAL_DURATION}s`
@@ -57,7 +66,11 @@ function getWaveBarDelay(index: number) {
   return 0.56 + index * 0.018 + jitter;
 }
 
-export default function Hero({ onIntroComplete }: HeroProps) {
+export default function Hero({
+  isRevealReady,
+  onIntroComplete,
+  onLogoRevealComplete
+}: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
 
   // Pause the infinite wave pulse while the hero is offscreen so Safari isn't
@@ -95,7 +108,9 @@ export default function Hero({ onIntroComplete }: HeroProps) {
       ref={sectionRef}
       id="top"
       tabIndex={-1}
-      className="hero-waves-active relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen"
+      className={`hero-waves-active relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen ${
+        isRevealReady ? "hero-reveal-ready" : ""
+      }`}
     >
       <div className="hero-lockup pointer-events-none relative z-30 flex w-full max-w-5xl flex-col items-center">
         <div className="flex w-fit max-w-full flex-col items-stretch gap-[var(--hero-logo-wave-gap)]">
@@ -104,7 +119,10 @@ export default function Hero({ onIntroComplete }: HeroProps) {
             aria-label="KALO"
           >
             <span aria-hidden="true">
-              <LogoCharacters text={HERO_LOGO_TEXT} />
+              <LogoCharacters
+                text={HERO_LOGO_TEXT}
+                onRevealComplete={onLogoRevealComplete}
+              />
             </span>
           </h1>
 
@@ -113,6 +131,7 @@ export default function Hero({ onIntroComplete }: HeroProps) {
             aria-hidden="true"
             onAnimationEnd={(event) => {
               if (
+                isRevealReady &&
                 event.currentTarget === event.target &&
                 event.animationName === "hero-wave-rise"
               ) {
@@ -126,7 +145,7 @@ export default function Hero({ onIntroComplete }: HeroProps) {
                   <span
                     className="hero-wave-bar relative block w-full rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.4)]"
                     style={{
-                      animationDelay: `calc(var(--hero-reveal-duration) + ${getWaveBarDelay(index).toFixed(3)}s)`,
+                      animationDelay: `${getWaveBarDelay(index).toFixed(3)}s`,
                       animationDuration: `${getWaveBarDuration(index).toFixed(3)}s`,
                       height: `${height}%`
                     }}

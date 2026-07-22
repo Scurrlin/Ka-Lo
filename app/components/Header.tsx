@@ -92,6 +92,7 @@ type SocialLinkProps = {
 
 type HeaderProps = {
   isIntroComplete: boolean;
+  isRevealReady: boolean;
 };
 
 function getPageSectionScrollTarget(id: string) {
@@ -245,7 +246,10 @@ function SocialDestination({
   );
 }
 
-export default function Header({ isIntroComplete }: HeaderProps) {
+export default function Header({
+  isIntroComplete,
+  isRevealReady
+}: HeaderProps) {
   const lenisRef = useLenisRef();
   const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -1087,7 +1091,9 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         ref={headerRef}
         inert={isNavigating}
         className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(255,255,255,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
-          isIntroComplete
+          !isRevealReady
+            ? "pointer-events-none -translate-y-[115%] opacity-0"
+            : isIntroComplete
             ? isNavigating ||
               isHeaderVisible ||
               isMenuOpen ||
