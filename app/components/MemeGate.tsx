@@ -2,27 +2,26 @@
 
 import Image from "next/image";
 import { useEffect } from "react";
+import {
+  SHORT_VIEWPORT_QUERY,
+  getBlackoutMediaQueries,
+  matchesBlackoutViewport
+} from "../utils/blackout";
 
-const SHORT_VIEWPORT_QUERY = "(max-height: 499px)";
-const MOBILE_LANDSCAPE_QUERY =
-  "(hover: none) and (pointer: coarse) and (orientation: landscape)";
 const MEME_DELAY_MS = 500;
 const RELEASE_HOLD_MS = 500;
 
 export default function MemeGate() {
   useEffect(() => {
     const root = document.documentElement;
-    const shortViewportMedia = window.matchMedia(SHORT_VIEWPORT_QUERY);
-    const mobileLandscapeMedia = window.matchMedia(MOBILE_LANDSCAPE_QUERY);
-    const mediaQueries = [shortViewportMedia, mobileLandscapeMedia];
+    const mediaQueries = getBlackoutMediaQueries();
     let blackoutHoldUntil = 0;
     let blackoutTimer = 0;
     let memeTimer = 0;
     let rotationFrame = 0;
     let wasBlackoutTarget = false;
 
-    const shouldBlackout = () =>
-      shortViewportMedia.matches || mobileLandscapeMedia.matches;
+    const shouldBlackout = () => matchesBlackoutViewport(mediaQueries);
 
     const clearBlackoutTimer = () => {
       window.clearTimeout(blackoutTimer);
@@ -135,7 +134,7 @@ export default function MemeGate() {
           alt=""
           width={503}
           height={497}
-          sizes="(max-height: 499px) min(80vw, 420px), 1px"
+          sizes={`${SHORT_VIEWPORT_QUERY} min(80vw, 420px), 1px`}
         />
         <p className="viewport-blackout-caption">
           Please increase your screen height

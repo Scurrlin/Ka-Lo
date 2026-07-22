@@ -2,10 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-
-const SHORT_VIEWPORT_QUERY = "(max-height: 499px)";
-const MOBILE_LANDSCAPE_QUERY =
-  "(hover: none) and (pointer: coarse) and (orientation: landscape)";
+import {
+  getBlackoutMediaQueries,
+  matchesBlackoutViewport
+} from "../utils/blackout";
 
 const MemeGate = dynamic(() => import("./MemeGate"), { ssr: false });
 
@@ -14,12 +14,10 @@ export default function DeferredMemeGate() {
   const [shouldLoad, setShouldLoad] = useState(false);
 
   useEffect(() => {
-    const shortViewport = window.matchMedia(SHORT_VIEWPORT_QUERY);
-    const mobileLandscape = window.matchMedia(MOBILE_LANDSCAPE_QUERY);
-    const mediaQueries = [shortViewport, mobileLandscape];
+    const mediaQueries = getBlackoutMediaQueries();
 
     const sync = () => {
-      if (shortViewport.matches || mobileLandscape.matches) {
+      if (matchesBlackoutViewport(mediaQueries)) {
         setShouldLoad(true);
       }
     };

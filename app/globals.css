@@ -146,7 +146,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   visibility: visible;
 }
 
-/* Paint the blackout before React hydrates on short or mobile-landscape screens. */
+/* Paint the blackout before React hydrates. Queries must match app/utils/blackout.ts. */
 @media (max-height: 499px),
   (hover: none) and (pointer: coarse) and (orientation: landscape) {
   html,
