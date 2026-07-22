@@ -9,6 +9,7 @@ export type LyricCatalogSong = Readonly<{
   id: `lyrics-${string}`;
   href: `#lyrics-${string}`;
   title: string;
+  credits?: string;
 }>;
 
 export type LyricCatalogRelease = Readonly<{
@@ -59,7 +60,8 @@ export const LYRIC_CATALOG = [
       {
         id: "lyrics-silver-cracks-intro",
         href: "#lyrics-silver-cracks-intro",
-        title: "Intro"
+        title: "Intro",
+        credits: "Lyrics: Murphy LeBlanc"
       },
       {
         id: "lyrics-silver-cracks-us",

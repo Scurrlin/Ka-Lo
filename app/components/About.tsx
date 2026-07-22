@@ -11,8 +11,8 @@ const CONTINUE_HINT = "Scroll To Continue";
 const CONTINUE_HINT_LETTER_COUNT = CONTINUE_HINT.replace(/ /g, "").length;
 const NEXT_TITLE = "Rapper";
 /** Seconds of ScrollTrigger catch-up lag for the About scrubbed timeline.
- * This eases the scrubbed animation on top of native scroll; kept moderate so
- * it feels smooth without lagging too far behind. Tune from here if needed. */
+ * One value for every browser; kept moderate so it doesn't stack into
+ * "double mush" with the Lenis wheel lerp. Tune from here if needed. */
 const SCRUB_LAG = 1.2;
 export const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",

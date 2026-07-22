@@ -1,7 +1,7 @@
-// Matches the intro's total on-screen duration (3.3s logo reveal +
-// 1.05s wave rise, see Hero.tsx / globals.css) so asset warming never
+// Matches the intro's total on-screen duration (3s logo reveal +
+// 1s wave rise, see Hero.tsx / globals.css) so asset warming never
 // holds the reveal past the point the intro animation itself would finish.
-export const ASSET_TIMEOUT_MS = 4350;
+export const ASSET_TIMEOUT_MS = 4000;
 
 // One retained <video> element per source. The intro warms these during the
 // hero, then About mounts these exact elements into its frames — so each clip

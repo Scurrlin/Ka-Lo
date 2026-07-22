@@ -285,7 +285,7 @@ export default function Music() {
     <section
       ref={sectionRef}
       id="music"
-      className="relative bg-black text-white"
+      className="relative bg-black pt-12 text-white sm:pt-16 md:pt-20"
     >
         <header className="flex items-center justify-center px-5 py-12 text-center sm:py-16 md:py-20">
           <h2
@@ -323,7 +323,7 @@ export default function Music() {
         </div>
 
         <div
-          className="mx-auto mt-20 grid max-w-7xl items-center gap-12 px-5 py-24 sm:px-8 md:grid-cols-[0.9fr_1.1fr] md:py-32"
+          className="mx-auto mt-20 grid max-w-7xl items-center gap-12 px-5 pb-24 pt-36 sm:px-8 sm:pt-40 md:grid-cols-[0.9fr_1.1fr] md:pb-32 md:pt-52"
           aria-labelledby="mixtape-title"
         >
           <div ref={mixtapeTextRef} className="text-center md:text-left">

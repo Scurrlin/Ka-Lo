@@ -79,6 +79,14 @@ function LyricsCopy({ song }: { song: LyricSong }) {
   );
 }
 
+function SongCredits({ credits }: { credits: string }) {
+  return (
+    <p className="mt-0.5 text-center font-display text-sm text-white sm:mt-1 sm:text-base lg:text-left">
+      {credits}
+    </p>
+  );
+}
+
 function NumberedSongTitle({ song, index }: { song: LyricSong; index: number }) {
   const [firstWord, ...remainingWords] = song.title.split(" ");
   const number = String(index + 1).padStart(2, "0");
@@ -115,11 +123,14 @@ function SingleRelease({ release }: { release: LyricRelease }) {
       id={release.id}
       className="grid gap-8 border-t border-white/20 py-20 sm:py-28 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
     >
-      <h2 className="text-center font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:sticky lg:top-28 lg:self-start lg:text-left lg:text-8xl">
-        <AnchorTitle href={song.href} className="max-w-[8ch]">
-          {release.title}
-        </AnchorTitle>
-      </h2>
+      <div className="text-center lg:sticky lg:top-28 lg:self-start lg:text-left">
+        <h2 className="font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
+          <AnchorTitle href={song.href} className="max-w-[8ch]">
+            {release.title}
+          </AnchorTitle>
+        </h2>
+        {song.credits ? <SongCredits credits={song.credits} /> : null}
+      </div>
 
       <LyricsCopy song={song} />
     </article>
@@ -142,10 +153,11 @@ function AlbumRelease({ release }: { release: LyricRelease }) {
             id={song.id}
             className="grid gap-8 border-t border-white/15 py-16 sm:py-20 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
           >
-            <div className="flex items-start justify-center text-center lg:sticky lg:top-28 lg:self-start lg:justify-start lg:text-left">
+            <div className="flex flex-col items-center text-center lg:sticky lg:top-28 lg:items-start lg:text-left">
               <h3 className="font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
                 <NumberedSongTitle song={song} index={index} />
               </h3>
+              {song.credits ? <SongCredits credits={song.credits} /> : null}
             </div>
 
             <LyricsCopy song={song} />

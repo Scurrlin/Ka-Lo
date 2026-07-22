@@ -6,7 +6,7 @@ const Music = dynamic(() => import("./components/Music"), {
   loading: () => (
     <section
       id="music"
-      className="relative bg-black text-white"
+      className="relative bg-black pt-12 text-white sm:pt-16 md:pt-20"
       aria-hidden="true"
     >
       <header className="flex items-center justify-center px-5 py-12 text-center sm:py-16 md:py-20">
@@ -37,7 +37,7 @@ const Music = dynamic(() => import("./components/Music"), {
         </div>
       </div>
 
-      <div className="mx-auto mt-20 grid max-w-7xl items-center gap-12 px-5 py-24 sm:px-8 md:grid-cols-[0.9fr_1.1fr] md:py-32">
+      <div className="mx-auto mt-20 grid max-w-7xl items-center gap-12 px-5 pb-24 pt-36 sm:px-8 sm:pt-40 md:grid-cols-[0.9fr_1.1fr] md:pb-32 md:pt-52">
         <div className="text-center md:text-left">
           <div className="h-[2.75rem] sm:h-[clamp(3.5rem,2.5rem+2.5vw,4.5rem)]" />
           <div className="mt-7 h-6 sm:h-7" />

@@ -23,6 +23,12 @@ html {
   background: var(--black);
 }
 
+/* Prevent Safari native smooth scrolling from fighting Lenis. */
+html.lenis,
+html.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -167,7 +173,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
 .site-header-intro {
   opacity: 0;
   transform: translate3d(0, -115%, 0);
-  animation: site-header-drop 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: site-header-drop 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .mobile-menu-line {
@@ -361,7 +367,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
 }
 
 .hero-reveal-ready .hero-sound-wave {
-  animation: hero-wave-rise 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: hero-wave-rise 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .hero-sound-wave * {

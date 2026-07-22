@@ -1,9 +1,10 @@
-import { LYRIC_CATALOG } from "./music";
+import { LYRIC_CATALOG, type LyricCatalogSong } from "./music";
 
 export type LyricSong = Readonly<{
   id: `lyrics-${string}`;
   href: `#lyrics-${string}`;
   title: string;
+  credits?: string;
   lyrics: string;
 }>;
 
@@ -212,7 +213,10 @@ Yeah this world
 Got me slipping in the deep end that's why I depend on ya
 Hand out of reach, God do me a favor
 Yeah this world`,
-  "lyrics-silver-cracks-intro": `You know something really stuck with me that L.A. Reid once said
+
+"lyrics-silver-cracks-intro":
+
+`You know something really stuck with me that L.A. Reid once said
 He said, “When I look up, I don’t see barriers, I don’t see the ceiling…
 I just see the sky”
 Be unlimited in your belief
@@ -658,7 +662,7 @@ export const LYRIC_RELEASES: readonly LyricRelease[] = LYRIC_CATALOG.map(
     href: release.href,
     title: release.title,
     kind: release.kind,
-    songs: release.songs.map((song) => {
+    songs: release.songs.map((song: LyricCatalogSong) => {
       const lyrics = LYRIC_TEXTS[song.id as keyof typeof LYRIC_TEXTS];
       if (lyrics === undefined) {
         throw new Error(`Missing lyrics text for ${song.id}`);
@@ -667,6 +671,7 @@ export const LYRIC_RELEASES: readonly LyricRelease[] = LYRIC_CATALOG.map(
         id: song.id,
         href: song.href,
         title: song.title,
+        credits: song.credits,
         lyrics
       };
     })

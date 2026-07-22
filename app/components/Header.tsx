@@ -12,6 +12,7 @@ import {
   type SectionId,
   type SocialLink
 } from "../constants/links";
+import { useLenisRef } from "./SmoothScroll";
 
 const MOBILE_MENU_ID = "mobile-site-navigation";
 const DESKTOP_LYRICS_MENU_ID = "desktop-lyrics-navigation";
@@ -19,7 +20,7 @@ const DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
 const HEADER_DIRECTION_THRESHOLD = 6;
 const HEADER_TOP_THRESHOLD = 2;
 // A genuine scroll-up is gradual; a large single-frame jump means a fling
-// settle or a ScrollTrigger refresh re-pinning the page.
+// settle, a Lenis correction, or a ScrollTrigger refresh re-pinning the page.
 const HEADER_JUMP_DELTA = 80;
 // Suppress upward blips for this long after such a jump so the header cannot
 // spuriously reappear mid-fling while scrolling through About.
@@ -249,6 +250,7 @@ export default function Header({
   isIntroComplete,
   isRevealReady
 }: HeaderProps) {
+  const lenisRef = useLenisRef();
   const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
@@ -517,7 +519,7 @@ export default function Header({
 
         // Hiding on a real downward move is always allowed; only re-show the
         // header from an upward move once the fling/refresh has settled, so a
-        // refresh re-pin blip can't flash it back in mid-scroll.
+        // Lenis overshoot blip can't flash it back in mid-scroll.
         if (direction === "down" || !isSettling) {
           setIsHeaderVisible(direction === "up");
         }
@@ -575,6 +577,9 @@ export default function Header({
 
     const navigationTarget = target;
     const isLyricsDestination = id === "lyrics" || id.startsWith("lyrics-");
+    // Read at nav time so we pick up Lenis even if Header has not re-rendered
+    // since the smoother mounted.
+    const activeLenis = lenisRef.current;
     // Prefetch while menus close / backdrop paints so scroll can start promptly.
     const gsapReady = loadGsapForNav();
 
@@ -584,6 +589,7 @@ export default function Header({
     let scrollFrame: number | null = null;
     let settleTimer: number | null = null;
     let tween: { kill: () => void } | null = null;
+    let isLenisNavActive = false;
     let isCleanedUp = false;
     let lastBlockedInputAt = Number.NEGATIVE_INFINITY;
 
@@ -599,6 +605,11 @@ export default function Header({
     };
 
     const scrollToYImmediate = (y: number) => {
+      if (activeLenis) {
+        activeLenis.scrollTo(y, { immediate: true, force: true });
+        return;
+      }
+
       window.scrollTo({ top: y, behavior: "instant" });
     };
 
@@ -636,6 +647,15 @@ export default function Header({
       const activeTween = tween;
       tween = null;
       activeTween?.kill();
+
+      if (isLenisNavActive && activeLenis) {
+        // Immediate scrollTo unlocks Lenis if a locked nav scroll was interrupted.
+        activeLenis.scrollTo(activeLenis.scroll, {
+          immediate: true,
+          force: true
+        });
+        isLenisNavActive = false;
+      }
 
       window.removeEventListener("wheel", blockScrollInput, true);
       window.removeEventListener("touchmove", blockScrollInput, true);
@@ -707,6 +727,28 @@ export default function Header({
             }
 
             const targetY = navigationTarget.getTop();
+            const ease = gsap.parseEase("power2.inOut");
+
+            if (activeLenis) {
+              isLenisNavActive = true;
+              activeLenis.scrollTo(targetY, {
+                duration: NAV_SCROLL_DURATION_SECONDS,
+                easing: ease,
+                lock: true,
+                force: true,
+                onComplete: () => {
+                  if (navigationRunRef.current !== run || isCleanedUp) {
+                    cleanupNavigation();
+                    return;
+                  }
+
+                  isLenisNavActive = false;
+                  scrollToYImmediate(navigationTarget.getTop());
+                  finishWhenInputIsQuiet();
+                }
+              });
+              return;
+            }
 
             tween = gsap.to(window, {
               scrollTo: {
