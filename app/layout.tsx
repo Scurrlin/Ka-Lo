@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Sans } from "next/font/google";
 import "./globals.css";
-import ScrollRestoration from "./components/scroll/ScrollRestoration";
 import SmoothScroll from "./components/scroll/SmoothScroll";
-import DeferredMemeGate from "./components/DeferredMemeGate";
+import MemeGate from "./components/MemeGate";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -109,12 +108,9 @@ export default function RootLayout({
     <html lang="en" className={instrumentSans.variable} suppressHydrationWarning>
       <body>
         <SmoothScroll>
-          <div id="site-content">
-            <ScrollRestoration />
-            {children}
-          </div>
+          <div id="site-content">{children}</div>
         </SmoothScroll>
-        <DeferredMemeGate />
+        <MemeGate />
       </body>
     </html>
   );

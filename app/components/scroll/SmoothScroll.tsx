@@ -33,11 +33,29 @@ type SmoothScrollProps = {
 /**
  * Provides Lenis context immediately, but loads Lenis + GSAP ScrollTrigger
  * after idle or first scroll intent so they stay off the critical path.
+ * Also forces every full page load to start at the top (defeats BFCache /
+ * hash restore).
  */
 export default function SmoothScroll({ children }: SmoothScrollProps) {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
+    // Browsers (and the back-forward cache) will otherwise restore scroll
+    // position — or jump to a URL hash like "#about" — on refresh/reload.
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    if (window.location.hash) {
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+    }
+
+    window.scrollTo(0, 0);
+
     let cancelled = false;
     let booted = false;
     let idleId: number | null = null;
