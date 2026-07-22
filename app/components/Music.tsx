@@ -53,11 +53,15 @@ const ALBUMS: Album[] = [
 const CORNER_ALBUMS = ALBUMS.slice(0, 4);
 const CENTER_ALBUM = ALBUMS[4];
 const MIXTAPE_COVER = "/assets/My-Solus.webp";
-const MUSIC_COVER_URLS = [...ALBUMS.map((album) => album.image), MIXTAPE_COVER];
+// Only decode the covers nearest the fold (the 2x2 grid) ahead of time. Images
+// are served unoptimized, so decoding all six full-size covers on mount is
+// wasteful on mobile; the center album and far-down mixtape decode lazily via
+// next/image as they scroll into view.
+const EAGER_PRELOAD_COVERS = CORNER_ALBUMS.map((album) => album.image);
 
 function preloadMusicCovers() {
   return Promise.all(
-    MUSIC_COVER_URLS.map((src) => {
+    EAGER_PRELOAD_COVERS.map((src) => {
       const image = new window.Image();
       image.decoding = "async";
       image.src = src;

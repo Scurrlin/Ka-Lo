@@ -49,8 +49,10 @@ const CD_ENTRANCE_SCROLL_SCREENS = 1;
 const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
 const DESKTOP_MIN_WIDTH = 640;
 const VIDEO_CENTER_PROGRESS = 0.5;
-/** Caption start on a 0–50 scale where 50% is video-centered (shared mobile/desktop). */
+/** Caption start on a 0–50 scale where 50% is video-centered. */
 const LATE_CAPTION_START_PROGRESS = 0.25;
+/** Earlier caption lead-in on phones (viewport width <= DESKTOP_MIN_WIDTH). */
+const MOBILE_LATE_CAPTION_START_PROGRESS = 0.1;
 const WIDE_VIEWPORT_SCROLL_STRETCH = 1.2;
 
 type Point = {
@@ -247,6 +249,10 @@ export default function About() {
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
+    // Mobile browsers fire a resize whenever the URL bar shows/hides (which
+    // happens mid-fling). Ignoring those keeps ScrollTrigger from refreshing
+    // and recomputing the About geometry underneath the user.
+    ScrollTrigger.config({ ignoreMobileResize: true });
 
     const section = sectionRef.current;
     const stickyStage = stickyStageRef.current;
@@ -290,6 +296,14 @@ export default function About() {
     let videosArePlaying = false;
     let updateNavTargets = () => {};
     const scrubLag = isWebKitBrowser() ? SAFARI_SCRUB_LAG : SCRUB_LAG;
+    // Height the layout was last built against. On touch devices we ignore
+    // height-only viewport changes (mobile URL bar) so the section height and
+    // the intro/story scroll boundary stay fixed while scrolling.
+    let layoutViewportWidth = 0;
+    let layoutViewportHeight = 0;
+    const isCoarsePointer =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(pointer: coarse)").matches;
 
     const playVideos = () => {
       if (videosArePlaying) {
@@ -334,6 +348,17 @@ export default function About() {
       }
     };
 
+    // Build the per-frame setters once. quickSetter skips the zero-duration
+    // tween allocation that gsap.set does on every call, which matters here
+    // because renderRoute writes ~50 caption characters each scrubbed frame.
+    const videoStageSetX = gsap.quickSetter(videoStage, "x", "px");
+    const captionCharSetters = videoCaptionChars.map((characters) =>
+      characters.map((character) => ({
+        setOpacity: gsap.quickSetter(character, "opacity"),
+        setY: gsap.quickSetter(character, "y", "px")
+      }))
+    );
+
     const renderRoute = () => {
       const geometry = routeGeometry;
 
@@ -341,35 +366,47 @@ export default function About() {
         return;
       }
 
+      // Don't let the scrubbed story route seize the CD before the gated
+      // entrance has finished painting; on a fast fling the two timelines can
+      // otherwise overlap and the CD would pop straight to its route position.
+      if (cdEntranceTween && cdEntranceTween.progress() < 1) {
+        return;
+      }
+
       const point = getPointOnRoute(geometry, routeState.progress);
 
       gsap.set(cd, { x: point.x, y: point.y, scale: geometry.smallScale });
-      gsap.set(videoStage, { x: point.trackX });
+      videoStageSetX(point.trackX);
 
-      videoCaptionChars.forEach((characters, captionIndex) => {
+      captionCharSetters.forEach((setters, captionIndex) => {
         const revealStart = geometry.captionRevealDistances[captionIndex];
         const revealProgress = clamp(
           (point.distance - revealStart) / geometry.captionRevealWindow,
           0,
           1
         );
-        const staggerSpan = characters.length + 5;
+        const staggerSpan = setters.length + 5;
 
-        characters.forEach((character, characterIndex) => {
+        setters.forEach((setter, characterIndex) => {
           const characterProgress = smoothstep(
             clamp(revealProgress * staggerSpan - characterIndex, 0, 1)
           );
-          gsap.set(character, {
-            autoAlpha: characterProgress,
-            y: (1 - characterProgress) * 20
-          });
+          setter.setOpacity(characterProgress);
+          setter.setY((1 - characterProgress) * 20);
         });
       });
     };
 
     const updateLayout = () => {
       const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+      const rawViewportHeight = window.innerHeight;
+      const widthChanged = viewportWidth !== layoutViewportWidth;
+      const viewportHeight =
+        isCoarsePointer && !widthChanged && layoutViewportHeight > 0
+          ? layoutViewportHeight
+          : rawViewportHeight;
+      layoutViewportWidth = viewportWidth;
+      layoutViewportHeight = viewportHeight;
       const baseCdDiameter = cd.offsetWidth;
       const smallCdDiameter = clamp(
         Math.min(viewportWidth, viewportHeight) * 0.15,
@@ -603,8 +640,12 @@ export default function About() {
         videoThree.left
       ];
       const captionRevealWindow = clamp(videoWidth * 0.42, 110, 260);
+      const lateCaptionStartProgress =
+        viewportWidth <= DESKTOP_MIN_WIDTH
+          ? MOBILE_LATE_CAPTION_START_PROGRESS
+          : LATE_CAPTION_START_PROGRESS;
       const lateCaptionApproachProgress =
-        LATE_CAPTION_START_PROGRESS / VIDEO_CENTER_PROGRESS;
+        lateCaptionStartProgress / VIDEO_CENTER_PROGRESS;
       const captionRevealDistances = videoCenterTrackPositions.map(
         (centerTrackX, captionIndex) => {
           const centeredDistance = getDistanceAtTrackPosition(
@@ -618,7 +659,7 @@ export default function About() {
           }
 
           // 0% = video's left edge at the viewport's right edge; 50% = centered.
-          // Later captions begin at 25% on both mobile and desktop.
+          // Later captions begin at 10% on phones (<= 640px) and 25% above.
           const entryTrackX =
             viewportWidth - videoEntryLeftPositions[captionIndex];
           const revealTrackX = interpolate(
@@ -740,7 +781,9 @@ export default function About() {
       // stage's clipped edge.
       gsap.set(videoFrames, { autoAlpha: 1 });
       gsap.set(videoCaptions, { autoAlpha: 1, xPercent: -50 });
-      gsap.set(videoCaptionChars.flat(), { autoAlpha: 0, y: 20 });
+      // opacity (not autoAlpha) + a one-time visible, because renderRoute now
+      // drives these with an opacity quickSetter that can't toggle visibility.
+      gsap.set(videoCaptionChars.flat(), { opacity: 0, y: 20, visibility: "visible" });
       gsap.set(finalMessage, { autoAlpha: 1, xPercent: -50, yPercent: -100 });
       gsap.set(finalMessageChars, { autoAlpha: 0, y: 20 });
       gsap.set(nextChars, { autoAlpha: 0, y: 26 });
