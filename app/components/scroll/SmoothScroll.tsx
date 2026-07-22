@@ -62,6 +62,15 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
     let timeoutId: number | null = null;
     let removeScrollListener: (() => void) | null = null;
     let removeTicker: (() => void) | null = null;
+    // Every section (Music/About/Lyrics) used to register its own
+    // window "load" -> ScrollTrigger.refresh() listener. refresh() is
+    // global, so on a heavy page (large videos) those all fired back to
+    // back on the same tick, forcing About's expensive layout recompute
+    // 3-4x in a row right as the user was scrolling. One deduped call here
+    // replaces all of them.
+    let scrollTriggerRef: typeof import("gsap/ScrollTrigger").ScrollTrigger | null =
+      null;
+    let refreshQueued = false;
 
     const tearDown = () => {
       removeTicker?.();
@@ -71,6 +80,38 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
       removeScrollListener = null;
       removeTicker = null;
     };
+
+    const scheduleRefresh = () => {
+      if (refreshQueued || !scrollTriggerRef) {
+        return;
+      }
+
+      refreshQueued = true;
+      window.requestAnimationFrame(() => {
+        refreshQueued = false;
+        scrollTriggerRef?.refresh();
+      });
+    };
+
+    const handleWindowLoad = async () => {
+      if (cancelled) {
+        return;
+      }
+
+      if (!scrollTriggerRef) {
+        const { ScrollTrigger } = await import("gsap/ScrollTrigger");
+
+        if (cancelled) {
+          return;
+        }
+
+        scrollTriggerRef = ScrollTrigger;
+      }
+
+      scheduleRefresh();
+    };
+
+    window.addEventListener("load", handleWindowLoad, { once: true });
 
     const boot = async () => {
       if (cancelled || booted) {
@@ -91,6 +132,7 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
       }
 
       gsap.registerPlugin(ScrollTrigger);
+      scrollTriggerRef = ScrollTrigger;
 
       const useSafariSmoothing = isWebKitBrowser();
       const instance = new Lenis({
@@ -124,7 +166,7 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
       if (window.scrollY < 1) {
         instance.scrollTo(0, { immediate: true, force: true });
       }
-      ScrollTrigger.refresh();
+      scheduleRefresh();
     };
 
     const scheduleBoot = () => {
@@ -168,6 +210,7 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
       window.removeEventListener("wheel", scheduleBoot);
       window.removeEventListener("touchstart", scheduleBoot);
       window.removeEventListener("keydown", scheduleBoot);
+      window.removeEventListener("load", handleWindowLoad);
       tearDown();
     };
   }, []);

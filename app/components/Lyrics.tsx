@@ -190,11 +190,9 @@ export default function Lyrics() {
         });
     }, section);
 
-    const handleLoad = () => ScrollTrigger.refresh();
-    window.addEventListener("load", handleLoad);
-
+    // A single deduped window "load" -> ScrollTrigger.refresh() lives in
+    // SmoothScroll (refresh() is global, so it covers every section).
     return () => {
-      window.removeEventListener("load", handleLoad);
       context.revert();
     };
   }, []);

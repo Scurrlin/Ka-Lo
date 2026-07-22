@@ -9,9 +9,12 @@ export default function Intro() {
   const [isLogoRevealComplete, setIsLogoRevealComplete] = useState(false);
   const [isSiteLoaded, setIsSiteLoaded] = useState(false);
 
-  // Warm the Music chunk during the hero so height + images settle before scroll.
+  // Warm every section's chunk during the hero so height, images, and video
+  // decode all settle before the user ever scrolls to them.
   useEffect(() => {
     void import("./Music");
+    void import("./About");
+    void import("./Lyrics");
   }, []);
 
   useEffect(() => {
