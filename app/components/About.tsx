@@ -44,6 +44,8 @@ const FULL_SIZE_HOLD_DURATION = 0.65;
 const EXIT_DURATION = 0.9;
 const NEXT_TITLE_HOLD_DURATION = 1.25;
 const NEXT_TITLE_EXTRA_SCROLL_SCREENS = 0.75;
+/** Dedicated scrubbed scroll for the CD slide-up (viewport heights). */
+const CD_ENTRANCE_SCROLL_SCREENS = 1;
 const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
 const DESKTOP_MIN_WIDTH = 640;
 const VIDEO_CENTER_PROGRESS = 0.5;
@@ -274,13 +276,20 @@ export default function About() {
     const finalMessageChars = finalMessageCharRefs.current.filter(Boolean);
     const videos = videoRefs.current.filter(Boolean);
     const routeState = { progress: 0 };
+    const scrollBudget = {
+      introScroll: 0,
+      entranceScroll: 0
+    };
     let routeGeometry: RouteGeometry | null = null;
+    let introTimeline: gsap.core.Timeline | null = null;
+    let cdEntranceTween: gsap.core.Tween | null = null;
     let timeline: gsap.core.Timeline | null = null;
     let videoTrackExitX = 0;
     let cdExitX = 0;
     let finalMessageExitX = 0;
     let videosArePlaying = false;
     let updateNavTargets = () => {};
+    const scrubLag = isWebKitBrowser() ? SAFARI_SCRUB_LAG : SCRUB_LAG;
 
     const playVideos = () => {
       if (videosArePlaying) {
@@ -630,15 +639,23 @@ export default function About() {
       };
       const scrollStretch =
         viewportWidth >= DESKTOP_MIN_WIDTH ? WIDE_VIEWPORT_SCROLL_STRETCH : 1;
-      const storyScrollDistance =
+      const baseStoryScroll =
         (Math.max(
           viewportHeight * 7,
           viewportHeight * 2.5 + totalRouteLength * 2.4
         ) +
           viewportHeight * NEXT_TITLE_EXTRA_SCROLL_SCREENS) *
         scrollStretch;
+      const introDur = introTimeline?.duration() || 2;
+      const storyDur = timeline?.duration() || 16;
+      const contentDur = introDur + storyDur;
 
-      section.style.height = `${viewportHeight + storyScrollDistance}px`;
+      scrollBudget.entranceScroll = viewportHeight * CD_ENTRANCE_SCROLL_SCREENS;
+      scrollBudget.introScroll = (introDur / contentDur) * baseStoryScroll;
+
+      section.style.height = `${
+        viewportHeight + baseStoryScroll + scrollBudget.entranceScroll
+      }px`;
       stickyStage.style.height = `${viewportHeight}px`;
       videoTrackExitX = -rowWidth - edgeMargin;
       cdExitX = viewportWidth + baseCdDiameter / 2 + edgeMargin - origin.x;
@@ -699,15 +716,55 @@ export default function About() {
       gsap.set(nextChars, { autoAlpha: 0, y: 26 });
       gsap.set(nextTitle, { y: 0 });
 
-      timeline = gsap.timeline({
+      introTimeline = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: "bottom bottom",
-          scrub: isWebKitBrowser() ? SAFARI_SCRUB_LAG : SCRUB_LAG,
+          end: () => `+=${scrollBudget.introScroll || window.innerHeight}`,
+          scrub: scrubLag,
           invalidateOnRefresh: true,
-          onRefreshInit: updateLayout,
+          onRefreshInit: updateLayout
+        }
+      });
+
+      introTimeline
+        .to(chars, { autoAlpha: 1, y: 0, duration: 0.6, stagger: { each: 0.03 } }, 0)
+        .to(
+          continueHintChars,
+          { autoAlpha: 1, y: 0, duration: 0.45, stagger: { each: 0.025 } }
+        )
+        .addLabel("aboutTitleRevealed");
+
+      cdEntranceTween = gsap.fromTo(
+        cd,
+        { y: () => getCdEntranceStartY(cd, window.innerHeight) },
+        {
+          y: 0,
+          ease: "none",
+          immediateRender: false,
+          scrollTrigger: {
+            trigger: section,
+            start: () => introTimeline?.scrollTrigger?.end ?? "top top",
+            end: () =>
+              `+=${scrollBudget.entranceScroll || window.innerHeight}`,
+            scrub: scrubLag,
+            invalidateOnRefresh: true
+          }
+        }
+      );
+
+      timeline = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: section,
+          start: () =>
+            cdEntranceTween?.scrollTrigger?.end ??
+            introTimeline?.scrollTrigger?.end ??
+            "top top",
+          end: "bottom bottom",
+          scrub: scrubLag,
+          invalidateOnRefresh: true,
           onUpdate: syncVideoPlayback,
           onLeave: pauseVideos,
           onLeaveBack: pauseVideos
@@ -715,18 +772,6 @@ export default function About() {
       });
 
       timeline
-        .to(chars, { autoAlpha: 1, y: 0, duration: 0.6, stagger: { each: 0.03 } }, 0)
-        .to(
-          continueHintChars,
-          { autoAlpha: 1, y: 0, duration: 0.45, stagger: { each: 0.025 } }
-        )
-        .addLabel("aboutTitleRevealed")
-        .to({}, { duration: 0.05 })
-        .fromTo(
-          cd,
-          { y: () => getCdEntranceStartY(cd, window.innerHeight) },
-          { y: 0, duration: 3, ease: "none" }
-        )
         .addLabel("cdIn")
         .to(cd, { rotation: 360, duration: 2.2 }, "cdIn")
         .addLabel("fullTurn")
@@ -816,10 +861,14 @@ export default function About() {
         .addLabel("nextTitleRevealed")
         .to({}, { duration: NEXT_TITLE_HOLD_DURATION });
 
+      // Recompute scroll budgets now that intro/story durations are known.
+      updateLayout();
+      ScrollTrigger.refresh();
+
       syncVideoPlayback();
 
       updateNavTargets = () => {
-        const currentTimeline = timeline;
+        const currentTimeline = introTimeline;
         const scrollTrigger = currentTimeline?.scrollTrigger;
         const duration = currentTimeline?.duration() ?? 0;
 
@@ -829,9 +878,12 @@ export default function About() {
 
         const scrollAtLabel = (label: "aboutTitleRevealed") =>
           scrollTrigger.start +
-          (currentTimeline.labels[label] / duration) * (scrollTrigger.end - scrollTrigger.start);
+          (currentTimeline.labels[label] / duration) *
+            (scrollTrigger.end - scrollTrigger.start);
 
-        section.dataset.navScrollY = Math.round(scrollAtLabel("aboutTitleRevealed")).toString();
+        section.dataset.navScrollY = Math.round(
+          scrollAtLabel("aboutTitleRevealed")
+        ).toString();
       };
 
       ScrollTrigger.addEventListener("refresh", updateNavTargets);
