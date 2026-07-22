@@ -71,7 +71,7 @@ export default function Home() {
       <DeferredMount
         id="about"
         minHeight="100vh"
-        rootMargin="40% 0px"
+        rootMargin="150% 0px"
         idleTimeoutMs={4000}
       >
         <About />

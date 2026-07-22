@@ -19,6 +19,12 @@ const DESKTOP_LYRICS_MENU_ID = "desktop-lyrics-navigation";
 const DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
 const HEADER_DIRECTION_THRESHOLD = 6;
 const HEADER_TOP_THRESHOLD = 2;
+// A genuine scroll-up is gradual; a large single-frame jump means a fling
+// settle, a Lenis correction, or a ScrollTrigger refresh re-pinning the page.
+const HEADER_JUMP_DELTA = 80;
+// Suppress upward blips for this long after such a jump so the header cannot
+// spuriously reappear mid-fling while scrolling through About.
+const HEADER_SETTLE_MS = 250;
 const NAV_SCROLL_DURATION_SECONDS = 1.2;
 const NAV_SCROLL_INPUT_QUIET_MS = 250;
 
@@ -254,6 +260,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const lastScrollYRef = useRef(0);
   const scrollAnchorYRef = useRef(0);
   const scrollDirectionRef = useRef<"up" | "down" | null>(null);
+  const lastLargeScrollDeltaAtRef = useRef(Number.NEGATIVE_INFINITY);
   const scrollFrameRef = useRef<number | null>(null);
   const mobileMenuTransitionTimerRef = useRef<number | null>(null);
   const mobileMenuFocusFrameRef = useRef<number | null>(null);
@@ -488,7 +495,14 @@ export default function Header({ isIntroComplete }: HeaderProps) {
         return;
       }
 
-      const direction = currentScrollY > previousScrollY ? "down" : "up";
+      const delta = currentScrollY - previousScrollY;
+      const now = performance.now();
+
+      if (Math.abs(delta) >= HEADER_JUMP_DELTA) {
+        lastLargeScrollDeltaAtRef.current = now;
+      }
+
+      const direction = delta > 0 ? "down" : "up";
 
       if (direction !== scrollDirectionRef.current) {
         scrollDirectionRef.current = direction;
@@ -496,7 +510,16 @@ export default function Header({ isIntroComplete }: HeaderProps) {
       }
 
       if (Math.abs(currentScrollY - scrollAnchorYRef.current) >= HEADER_DIRECTION_THRESHOLD) {
-        setIsHeaderVisible(direction === "up");
+        const isSettling =
+          now - lastLargeScrollDeltaAtRef.current < HEADER_SETTLE_MS;
+
+        // Hiding on a real downward move is always allowed; only re-show the
+        // header from an upward move once the fling/refresh has settled, so a
+        // Lenis overshoot blip can't flash it back in mid-scroll.
+        if (direction === "down" || !isSettling) {
+          setIsHeaderVisible(direction === "up");
+        }
+
         scrollAnchorYRef.current = currentScrollY;
       }
 

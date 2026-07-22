@@ -52,7 +52,7 @@ const VIDEO_CENTER_PROGRESS = 0.5;
 /** Caption start on a 0–50 scale where 50% is video-centered. */
 const LATE_CAPTION_START_PROGRESS = 0.25;
 /** Earlier caption lead-in on phones (viewport width <= DESKTOP_MIN_WIDTH). */
-const MOBILE_LATE_CAPTION_START_PROGRESS = 0.1;
+const MOBILE_LATE_CAPTION_START_PROGRESS = 0.15;
 const WIDE_VIEWPORT_SCROLL_STRETCH = 1.2;
 
 type Point = {
@@ -287,9 +287,9 @@ export default function About() {
       entranceScroll: 0
     };
     let routeGeometry: RouteGeometry | null = null;
-    let introTimeline: gsap.core.Timeline | null = null;
+    let master: gsap.core.Timeline | null = null;
+    let storyTl: gsap.core.Timeline | null = null;
     let cdEntranceTween: gsap.core.Tween | null = null;
-    let timeline: gsap.core.Timeline | null = null;
     let videoTrackExitX = 0;
     let cdExitX = 0;
     let finalMessageExitX = 0;
@@ -328,7 +328,7 @@ export default function About() {
     };
 
     const syncVideoPlayback = () => {
-      const currentTimeline = timeline;
+      const currentTimeline = storyTl;
 
       if (!currentTimeline) {
         pauseVideos();
@@ -363,13 +363,6 @@ export default function About() {
       const geometry = routeGeometry;
 
       if (!geometry) {
-        return;
-      }
-
-      // Don't let the scrubbed story route seize the CD before the gated
-      // entrance has finished painting; on a fast fling the two timelines can
-      // otherwise overlap and the CD would pop straight to its route position.
-      if (cdEntranceTween && cdEntranceTween.progress() < 1) {
         return;
       }
 
@@ -695,32 +688,38 @@ export default function About() {
         ) +
           viewportHeight * NEXT_TITLE_EXTRA_SCROLL_SCREENS) *
         scrollStretch;
-      // Title/hint share of scroll stays based on aboutTitleRevealed — not the
-      // full merged intro timeline (which also includes the gated CD entrance).
-      const titleRevealTime = introTimeline?.labels.aboutTitleRevealed;
+      // Title/hint share of scroll stays based on aboutTitleRevealed — the CD
+      // slide-up gets its own budget below, and the story fills the remainder.
+      const titleRevealTime = master?.labels.aboutTitleRevealed;
       const introDur =
         typeof titleRevealTime === "number" && titleRevealTime > 0
           ? titleRevealTime
-          : introTimeline?.duration() || 2;
-      const storyDur = timeline?.duration() || 16;
+          : 2;
+      const storyDur = storyTl?.duration() || 16;
       const contentDur = introDur + storyDur;
 
       scrollBudget.entranceScroll = viewportHeight * CD_ENTRANCE_SCROLL_SCREENS;
       scrollBudget.introScroll = (introDur / contentDur) * baseStoryScroll;
 
-      // Keep gated CD scrub share aligned with entranceScroll after resize.
-      if (cdEntranceTween && introTimeline) {
-        const titleDur =
-          typeof titleRevealTime === "number" && titleRevealTime > 0
-            ? titleRevealTime
-            : introTimeline.duration();
-        const nextCdDuration =
-          titleDur *
+      // A single scrubbed master timeline runs the whole section at one uniform
+      // scroll speed. Size the CD slide-up so its scroll share equals
+      // entranceScroll, then slot the nested story right after it — recomputed
+      // here so width/route-length changes stay aligned after a refresh.
+      if (cdEntranceTween && storyTl && master) {
+        const nextEntranceDuration =
+          introDur *
           (scrollBudget.entranceScroll /
             Math.max(scrollBudget.introScroll, 1));
 
-        if (Math.abs(cdEntranceTween.duration() - nextCdDuration) > 0.001) {
-          cdEntranceTween.duration(nextCdDuration);
+        if (Math.abs(cdEntranceTween.duration() - nextEntranceDuration) > 0.001) {
+          cdEntranceTween.duration(nextEntranceDuration);
+        }
+
+        const storyStart =
+          (master.labels.aboutTitleRevealed ?? 0) + nextEntranceDuration;
+
+        if (Math.abs(storyTl.startTime() - storyStart) > 0.001) {
+          storyTl.startTime(storyStart);
         }
       }
 
@@ -750,10 +749,10 @@ export default function About() {
         top: origin.y - baseCdDiameter / 2 - clamp(viewportHeight * 0.035, 20, 36)
       });
 
-      const routeStart = timeline?.labels.routeStart ?? Number.POSITIVE_INFINITY;
-      const routeComplete = timeline?.labels.routeComplete ?? Number.NEGATIVE_INFINITY;
+      const routeStart = storyTl?.labels.routeStart ?? Number.POSITIVE_INFINITY;
+      const routeComplete = storyTl?.labels.routeComplete ?? Number.NEGATIVE_INFINITY;
 
-      if (timeline && timeline.time() >= routeStart && timeline.time() <= routeComplete) {
+      if (storyTl && storyTl.time() >= routeStart && storyTl.time() <= routeComplete) {
         renderRoute();
       }
     };
@@ -789,47 +788,14 @@ export default function About() {
       gsap.set(nextChars, { autoAlpha: 0, y: 26 });
       gsap.set(nextTitle, { y: 0 });
 
-      // One scrubbed timeline gates the CD: title → continue hint → CD slide-up.
-      // Separate ScrollTriggers let scrub lag start the CD before the hint finishes.
-      introTimeline = gsap.timeline({
-        defaults: { ease: "none" },
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: () =>
-            `+=${
-              (scrollBudget.introScroll || window.innerHeight) +
-              (scrollBudget.entranceScroll || window.innerHeight)
-            }`,
-          scrub: scrubLag,
-          invalidateOnRefresh: true,
-          onRefreshInit: updateLayout
-        }
-      });
+      // Story segments live on their own (initially standalone) timeline so we
+      // can measure their duration, then nest it inside the single master
+      // timeline. One scrubbed ScrollTrigger drives the whole sequence, so the
+      // CD is always in one coherent state — a fast fling can no longer let a
+      // second timeline seize the CD mid-entrance and snap it to the route.
+      storyTl = gsap.timeline({ defaults: { ease: "none" } });
 
-      introTimeline
-        .to(chars, { autoAlpha: 1, y: 0, duration: 0.6, stagger: { each: 0.03 } }, 0)
-        .to(
-          continueHintChars,
-          { autoAlpha: 1, y: 0, duration: 0.45, stagger: { each: 0.025 } }
-        )
-        .addLabel("aboutTitleRevealed");
-
-      timeline = gsap.timeline({
-        defaults: { ease: "none" },
-        scrollTrigger: {
-          trigger: section,
-          start: () => introTimeline?.scrollTrigger?.end ?? "top top",
-          end: "bottom bottom",
-          scrub: scrubLag,
-          invalidateOnRefresh: true,
-          onUpdate: syncVideoPlayback,
-          onLeave: pauseVideos,
-          onLeaveBack: pauseVideos
-        }
-      });
-
-      timeline
+      storyTl
         .addLabel("cdIn")
         .to(cd, { rotation: 360, duration: 2.2 }, "cdIn")
         .addLabel("fullTurn")
@@ -919,13 +885,36 @@ export default function About() {
         .addLabel("nextTitleRevealed")
         .to({}, { duration: NEXT_TITLE_HOLD_DURATION });
 
-      // Scroll budgets use title-reveal time; size the gated CD tween so its
-      // scrub share matches entranceScroll (title share matches introScroll).
+      master = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: scrubLag,
+          invalidateOnRefresh: true,
+          onRefreshInit: updateLayout,
+          onUpdate: syncVideoPlayback,
+          onLeave: pauseVideos,
+          onLeaveBack: pauseVideos
+        }
+      });
+
+      master
+        .to(chars, { autoAlpha: 1, y: 0, duration: 0.6, stagger: { each: 0.03 } }, 0)
+        .to(
+          continueHintChars,
+          { autoAlpha: 1, y: 0, duration: 0.45, stagger: { each: 0.025 } }
+        )
+        .addLabel("aboutTitleRevealed");
+
+      // Recompute budgets now that both timelines exist so the CD slide-up is
+      // created at its correct length and the story is slotted right after it.
+      // updateLayout() (below / on refresh) only nudges these after a resize.
       updateLayout();
 
-      const titleDur =
-        introTimeline.labels.aboutTitleRevealed || introTimeline.duration();
-      const cdEntranceDuration =
+      const titleDur = master.labels.aboutTitleRevealed || master.duration();
+      const entranceDuration =
         titleDur *
         ((scrollBudget.entranceScroll || window.innerHeight) /
           Math.max(scrollBudget.introScroll || window.innerHeight, 1));
@@ -935,12 +924,13 @@ export default function About() {
         { y: () => getCdEntranceStartY(cd, window.innerHeight) },
         {
           y: 0,
-          duration: cdEntranceDuration,
+          duration: entranceDuration,
           ease: "none",
           immediateRender: false
         }
       );
-      introTimeline.add(cdEntranceTween, "aboutTitleRevealed");
+      master.add(cdEntranceTween, "aboutTitleRevealed");
+      master.add(storyTl, titleDur + entranceDuration);
 
       updateLayout();
       ScrollTrigger.refresh();
@@ -948,7 +938,7 @@ export default function About() {
       syncVideoPlayback();
 
       updateNavTargets = () => {
-        const currentTimeline = introTimeline;
+        const currentTimeline = master;
         const scrollTrigger = currentTimeline?.scrollTrigger;
         const duration = currentTimeline?.duration() ?? 0;
 
@@ -1062,7 +1052,7 @@ export default function About() {
         alt="Silver Cracks CD"
         width={1024}
         height={1024}
-        onLoad={() => ScrollTrigger.refresh()}
+        priority
         className="silver-disc pointer-events-none absolute z-40 aspect-square w-[45vmin] max-w-[620px] min-w-[240px] select-none"
       />
 
