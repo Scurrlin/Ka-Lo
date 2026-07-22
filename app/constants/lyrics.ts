@@ -4,7 +4,7 @@ export type LyricSong = Readonly<{
   id: `lyrics-${string}`;
   href: `#lyrics-${string}`;
   title: string;
-  credits?: string;
+  credits?: string | readonly string[];
   lyrics: string;
 }>;
 

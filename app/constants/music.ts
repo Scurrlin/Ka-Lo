@@ -9,7 +9,7 @@ export type LyricCatalogSong = Readonly<{
   id: `lyrics-${string}`;
   href: `#lyrics-${string}`;
   title: string;
-  credits?: string;
+  credits?: string | readonly string[];
 }>;
 
 export type LyricCatalogRelease = Readonly<{

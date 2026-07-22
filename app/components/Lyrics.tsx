@@ -79,11 +79,20 @@ function LyricsCopy({ song }: { song: LyricSong }) {
   );
 }
 
-function SongCredits({ credits }: { credits: string }) {
+function SongCredits({ credits }: { credits: string | readonly string[] }) {
+  const lines = typeof credits === "string" ? [credits] : credits;
+
   return (
-    <p className="mt-0.5 text-center font-display text-sm text-white sm:mt-1 sm:text-base lg:text-left">
-      {credits}
-    </p>
+    <div className="mt-1 flex flex-col items-center gap-0.5 text-center sm:mt-2 sm:gap-1 lg:items-start lg:text-left">
+      {lines.map((line, index) => (
+        <p
+          key={`${line}-${index}`}
+          className="font-display text-sm text-white sm:text-base"
+        >
+          {line}
+        </p>
+      ))}
+    </div>
   );
 }
 
