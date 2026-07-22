@@ -30,7 +30,7 @@ const FINAL_MESSAGE = "Not Your Traditional...";
 const CD_CLEARANCE = 18;
 const CD_VERTICAL_CLEARANCE = 36;
 /** Extra space below the fold so the waiting CD never peeks into view. */
-const CD_ENTRANCE_CLEARANCE = 24;
+const CD_ENTRANCE_CLEARANCE = 100;
 const CD_MIN_DIAMETER = 88;
 const CD_MAX_DIAMETER = 192;
 const VIDEO_MAX_WIDTH = 680;
@@ -45,7 +45,7 @@ const EXIT_DURATION = 0.9;
 const NEXT_TITLE_HOLD_DURATION = 1.25;
 const NEXT_TITLE_EXTRA_SCROLL_SCREENS = 0.75;
 /** Dedicated scrubbed scroll for the CD slide-up (viewport heights). */
-const CD_ENTRANCE_SCROLL_SCREENS = 1;
+const CD_ENTRANCE_SCROLL_SCREENS = 1.4;
 const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
 const DESKTOP_MIN_WIDTH = 640;
 const VIDEO_CENTER_PROGRESS = 0.5;
