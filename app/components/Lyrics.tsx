@@ -190,7 +190,11 @@ export default function Lyrics() {
         });
     }, section);
 
+    const handleLoad = () => ScrollTrigger.refresh();
+    window.addEventListener("load", handleLoad);
+
     return () => {
+      window.removeEventListener("load", handleLoad);
       context.revert();
     };
   }, []);

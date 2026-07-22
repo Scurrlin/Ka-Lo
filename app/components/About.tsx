@@ -960,7 +960,11 @@ export default function About() {
       updateNavTargets();
     }, section);
 
+    const handleLoad = () => ScrollTrigger.refresh();
+    window.addEventListener("load", handleLoad);
+
     return () => {
+      window.removeEventListener("load", handleLoad);
       ScrollTrigger.removeEventListener("refresh", updateNavTargets);
       pauseVideos();
       delete section.dataset.navScrollY;
