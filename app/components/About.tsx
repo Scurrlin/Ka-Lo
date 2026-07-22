@@ -49,8 +49,8 @@ const CD_ENTRANCE_SCROLL_SCREENS = 1;
 const CD_SPIN_DEGREES_PER_UNIT = 852 / 5.5;
 const DESKTOP_MIN_WIDTH = 640;
 const VIDEO_CENTER_PROGRESS = 0.5;
-const DESKTOP_LATE_CAPTION_START_PROGRESS = 0.3;
-const MOBILE_LATE_CAPTION_START_PROGRESS = 0.2;
+/** Caption start on a 0–50 scale where 50% is video-centered (shared mobile/desktop). */
+const LATE_CAPTION_START_PROGRESS = 0.25;
 const WIDE_VIEWPORT_SCROLL_STRETCH = 1.2;
 
 type Point = {
@@ -597,32 +597,40 @@ export default function About() {
         centerX - (videoTwo.left + runningSlotWidth / 2),
         centerX - (videoThree.left + videoWidth / 2)
       ];
+      const videoEntryLeftPositions = [
+        videoOne.left,
+        videoTwo.left,
+        videoThree.left
+      ];
       const captionRevealWindow = clamp(videoWidth * 0.42, 110, 260);
-      const lateCaptionStartProgress =
-        viewportWidth >= DESKTOP_MIN_WIDTH
-          ? DESKTOP_LATE_CAPTION_START_PROGRESS
-          : MOBILE_LATE_CAPTION_START_PROGRESS;
       const lateCaptionApproachProgress =
-        lateCaptionStartProgress / VIDEO_CENTER_PROGRESS;
+        LATE_CAPTION_START_PROGRESS / VIDEO_CENTER_PROGRESS;
       const captionRevealDistances = videoCenterTrackPositions.map(
-        (trackX, captionIndex) => {
+        (centerTrackX, captionIndex) => {
           const centeredDistance = getDistanceAtTrackPosition(
             points,
             cumulativeLengths,
-            trackX
+            centerTrackX
           );
 
           if (captionIndex === 0) {
             return centeredDistance;
           }
 
-          // Treat each video's reveal start as 0% and its centered position as
-          // 50%. The later captions therefore begin at 30% on desktop and 20%
-          // on mobile without changing the character-cascade duration.
-          return interpolate(
-            videoRevealRanges[captionIndex].start,
-            centeredDistance,
+          // 0% = video's left edge at the viewport's right edge; 50% = centered.
+          // Later captions begin at 25% on both mobile and desktop.
+          const entryTrackX =
+            viewportWidth - videoEntryLeftPositions[captionIndex];
+          const revealTrackX = interpolate(
+            entryTrackX,
+            centerTrackX,
             lateCaptionApproachProgress
+          );
+
+          return getDistanceAtTrackPosition(
+            points,
+            cumulativeLengths,
+            revealTrackX
           );
         }
       );
