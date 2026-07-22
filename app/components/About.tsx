@@ -1010,11 +1010,16 @@ export default function About() {
                     videoRefs.current[index] = node;
                   }
                 }}
-                src={shouldLoadVideos ? src : undefined}
+                // The first video is warmed immediately (About mounts during the
+                // intro) so it's ready on arrival; the heavier 2nd/3rd wait until
+                // the section nears the viewport.
+                src={index === 0 || shouldLoadVideos ? src : undefined}
                 muted
                 loop
                 playsInline
-                preload={shouldLoadVideos ? "metadata" : "none"}
+                preload={
+                  index === 0 ? "auto" : shouldLoadVideos ? "metadata" : "none"
+                }
                 aria-hidden="true"
                 className={`block h-full w-full object-cover ${
                   index === 1 ? "about-running-video" : ""
