@@ -1,13 +1,15 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import type { LyricRelease, LyricSong } from "../constants/lyrics";
+import {
+  LYRIC_RELEASES,
+  type LyricRelease,
+  type LyricSong
+} from "../constants/lyrics";
 
 const LYRICS_TITLE = "Lyrics";
-// Idle fallback so the section still warms if the user never scrolls near it.
-const LYRICS_IDLE_TIMEOUT_MS = 4500;
 
 function TitleCharacters({
   text,
@@ -156,103 +158,10 @@ function AlbumRelease({ release }: { release: LyricRelease }) {
 
 export default function Lyrics() {
   const sectionRef = useRef<HTMLElement>(null);
-  const placeholderRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const titleCharacterRefs = useRef<HTMLSpanElement[]>([]);
-  const [shouldMount, setShouldMount] = useState(false);
-  const [releases, setReleases] = useState<readonly LyricRelease[] | null>(
-    null
-  );
-
-  // Component-specific deferral: keep this heavy section off the initial render
-  // (JS-lazy data + DOM + GSAP) until it nears the viewport or the browser is
-  // idle, without relying on a shared wrapper.
-  useEffect(() => {
-    if (shouldMount) {
-      return;
-    }
-
-    const placeholder = placeholderRef.current;
-
-    if (!placeholder) {
-      return;
-    }
-
-    let idleId: number | null = null;
-    let timeoutId: number | null = null;
-    let mounted = false;
-
-    const mount = () => {
-      if (mounted) {
-        return;
-      }
-
-      mounted = true;
-      setShouldMount(true);
-    };
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          mount();
-        }
-      },
-      { rootMargin: "80% 0px" }
-    );
-
-    observer.observe(placeholder);
-
-    const requestIdle =
-      typeof window.requestIdleCallback === "function"
-        ? window.requestIdleCallback.bind(window)
-        : null;
-    const cancelIdle =
-      typeof window.cancelIdleCallback === "function"
-        ? window.cancelIdleCallback.bind(window)
-        : null;
-
-    if (requestIdle) {
-      idleId = requestIdle(mount, { timeout: LYRICS_IDLE_TIMEOUT_MS });
-    } else {
-      timeoutId = window.setTimeout(mount, Math.min(LYRICS_IDLE_TIMEOUT_MS, 400));
-    }
-
-    return () => {
-      observer.disconnect();
-
-      if (idleId !== null && cancelIdle) {
-        cancelIdle(idleId);
-      }
-
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
-      }
-    };
-  }, [shouldMount]);
 
   useEffect(() => {
-    if (!shouldMount) {
-      return;
-    }
-
-    let cancelled = false;
-
-    void import("../constants/lyrics").then((module) => {
-      if (!cancelled) {
-        setReleases(module.LYRIC_RELEASES);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [shouldMount]);
-
-  useEffect(() => {
-    if (!shouldMount) {
-      return;
-    }
-
     gsap.registerPlugin(ScrollTrigger);
 
     const section = sectionRef.current;
@@ -288,24 +197,7 @@ export default function Lyrics() {
       window.removeEventListener("load", handleLoad);
       context.revert();
     };
-  }, [shouldMount]);
-
-  useEffect(() => {
-    if (releases) {
-      ScrollTrigger.refresh();
-    }
-  }, [releases]);
-
-  if (!shouldMount) {
-    return (
-      <section
-        ref={placeholderRef}
-        id="lyrics"
-        className="relative min-h-[70vh] bg-black"
-        aria-hidden="true"
-      />
-    );
-  }
+  }, []);
 
   return (
     <section
@@ -333,7 +225,7 @@ export default function Lyrics() {
       </header>
 
       <div className="mx-auto w-full max-w-[112rem] px-5 pb-32 sm:px-8 sm:pb-40 lg:px-12 lg:pb-52">
-        {releases?.map((release) =>
+        {LYRIC_RELEASES.map((release) =>
           release.kind === "album" ? (
             <AlbumRelease key={release.id} release={release} />
           ) : (
