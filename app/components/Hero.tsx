@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 
 const HERO_LOGO_TEXT = "KΛLO";
 const LOGO_CHAR_REVEAL_DURATION = 1.5;
-const LOGO_CHAR_STAGGER = 0.5;
-// Total until the last letter finishes: 1.5 + 0.5 × 3 = 3 seconds.
+const LOGO_CHAR_STAGGER = 0.6;
+// Total until the last letter finishes: 1.5 + 0.6 × 3 = 3.3 seconds.
 
 const WAVE_BAR_COUNT = 48;
 

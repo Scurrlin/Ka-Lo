@@ -61,7 +61,7 @@ const EAGER_PRELOAD_COVERS = [
   MIXTAPE_COVER
 ];
 
-function preloadMusicCovers() {
+export function preloadMusicCovers() {
   return Promise.all(
     EAGER_PRELOAD_COVERS.map((src) => {
       const image = new window.Image();

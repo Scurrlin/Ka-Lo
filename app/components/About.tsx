@@ -15,7 +15,7 @@ const NEXT_TITLE = "Rapper";
 const SCRUB_LAG = 1.2;
 /** Slightly higher on WebKit so sticky scrub masks residual Safari frame drops. */
 const SAFARI_SCRUB_LAG = 1.45;
-const VIDEO_SOURCES = [
+export const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
   "/videos/running-10s.mp4",
   "/videos/birds-13s.mp4"
