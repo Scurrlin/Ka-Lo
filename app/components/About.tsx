@@ -4,17 +4,16 @@ import { Fragment, useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { isWebKitBrowser } from "../utils/isWebKit";
+import { getPreloadedVideo } from "../utils/videos";
 
 const TITLE = "Who is Ka-Lo?";
 const CONTINUE_HINT = "Scroll To Continue";
 const CONTINUE_HINT_LETTER_COUNT = CONTINUE_HINT.replace(/ /g, "").length;
 const NEXT_TITLE = "Rapper";
 /** Seconds of ScrollTrigger catch-up lag for the About scrubbed timeline.
- * Kept moderate so it doesn't stack into "double mush" with Lenis wheel lerp. */
+ * One value for every browser; kept moderate so it doesn't stack into
+ * "double mush" with the Lenis wheel lerp. Tune from here if needed. */
 const SCRUB_LAG = 1.2;
-/** Slightly higher on WebKit so sticky scrub masks residual Safari frame drops. */
-const SAFARI_SCRUB_LAG = 1.45;
 export const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
   "/videos/running-10s.mp4",
@@ -256,6 +255,29 @@ export default function About() {
       characters.filter(Boolean)
     );
     const finalMessageChars = finalMessageCharRefs.current.filter(Boolean);
+
+    // Mount the shared, already-warmed <video> elements (created + decoded by
+    // the intro's preload) into their frames so the exact same elements are
+    // reused here — no second fetch/decode when the user scrolls into About.
+    VIDEO_SOURCES.forEach((src, index) => {
+      const frame = videoFrameRefs.current[index];
+
+      if (!frame) {
+        return;
+      }
+
+      const video = getPreloadedVideo(src);
+      video.className = `block h-full w-full object-cover${
+        index === 1 ? " about-running-video" : ""
+      }`;
+
+      if (video.parentElement !== frame) {
+        frame.appendChild(video);
+      }
+
+      videoRefs.current[index] = video;
+    });
+
     const videos = videoRefs.current.filter(Boolean);
     const routeState = { progress: 0 };
     const scrollBudget = {
@@ -271,7 +293,7 @@ export default function About() {
     let finalMessageExitX = 0;
     let videosArePlaying = false;
     let updateNavTargets = () => {};
-    const scrubLag = isWebKitBrowser() ? SAFARI_SCRUB_LAG : SCRUB_LAG;
+    const scrubLag = SCRUB_LAG;
     // Height the layout was last built against. On touch devices we ignore
     // height-only viewport changes (mobile URL bar) so the section height and
     // the intro/story scroll boundary stay fixed while scrolling.
@@ -979,26 +1001,10 @@ export default function About() {
                   : "relative overflow-hidden rounded-md"
               }`}
             >
-              <video
-                ref={(node) => {
-                  if (node) {
-                    videoRefs.current[index] = node;
-                  }
-                }}
-                // All three videos are warmed immediately (About mounts during
-                // the intro) so decode is done before the user ever scrolls
-                // here — deferring the heavier 2nd/3rd to intersection made
-                // their decode land mid-scroll on desktop Safari instead.
-                src={src}
-                muted
-                loop
-                playsInline
-                preload="auto"
-                aria-hidden="true"
-                className={`block h-full w-full object-cover ${
-                  index === 1 ? "about-running-video" : ""
-                }`}
-              />
+              {/* The <video> is the shared, intro-warmed element; it is mounted
+                  here imperatively in the effect (see getPreloadedVideo) so the
+                  clip is fetched + decoded once and reused, never reloaded when
+                  the user scrolls into About. */}
             </div>
             <h3
               ref={(node) => {

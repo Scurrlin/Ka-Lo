@@ -10,13 +10,11 @@ import {
 } from "react";
 import type Lenis from "lenis";
 import "lenis/dist/lenis.css";
-import { isWebKitBrowser } from "../../utils/isWebKit";
 
-/** Modest inertia so About's scrub lag does not feel double-mushy. */
+/** Modest inertia so About's scrub lag does not feel double-mushy.
+ * One value for every browser — Safari-specific duration smoothing was the
+ * cause of desktop-Safari scroll jank, so all engines share this lerp now. */
 const LENIS_LERP = 0.1;
-/** Duration-based smoothing blends Safari's discrete wheel notches more continuously. */
-const SAFARI_LENIS_DURATION = 1.15;
-const SAFARI_WHEEL_MULTIPLIER = 0.9;
 
 const LenisContext = createContext<RefObject<Lenis | null>>({
   current: null
@@ -134,18 +132,12 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
       gsap.registerPlugin(ScrollTrigger);
       scrollTriggerRef = ScrollTrigger;
 
-      const useSafariSmoothing = isWebKitBrowser();
       const instance = new Lenis({
         autoRaf: false,
         smoothWheel: true,
         // Keep touch on native momentum — Safari + sticky video is already heavy.
         syncTouch: false,
-        ...(useSafariSmoothing
-          ? {
-              duration: SAFARI_LENIS_DURATION,
-              wheelMultiplier: SAFARI_WHEEL_MULTIPLIER
-            }
-          : { lerp: LENIS_LERP })
+        lerp: LENIS_LERP
       });
 
       lenisRef.current = instance;

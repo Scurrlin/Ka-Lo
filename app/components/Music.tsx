@@ -61,15 +61,23 @@ const EAGER_PRELOAD_COVERS = [
   MIXTAPE_COVER
 ];
 
+// Memoized so the intro warm-up and Music's own mount effect share a single
+// decode pass instead of each kicking off their own (covers were decoding twice).
+let coversPreloadPromise: Promise<unknown> | null = null;
+
 export function preloadMusicCovers() {
-  return Promise.all(
-    EAGER_PRELOAD_COVERS.map((src) => {
-      const image = new window.Image();
-      image.decoding = "async";
-      image.src = src;
-      return image.decode().catch(() => undefined);
-    })
-  );
+  if (!coversPreloadPromise) {
+    coversPreloadPromise = Promise.all(
+      EAGER_PRELOAD_COVERS.map((src) => {
+        const image = new window.Image();
+        image.decoding = "async";
+        image.src = src;
+        return image.decode().catch(() => undefined);
+      })
+    );
+  }
+
+  return coversPreloadPromise;
 }
 
 // Splits text into individually-ref'd spans so it can be revealed character by character,
