@@ -8,6 +8,7 @@ import {
   LYRIC_NAVIGATION,
   SECTION_LINKS,
   SOCIAL_LINKS,
+  type MusicProjectId,
   type SectionId,
   type SocialLink
 } from "../constants/links";
@@ -69,8 +70,8 @@ const DESKTOP_LYRICS_MENU_TEXT_CLASS =
 const MOBILE_LYRICS_MENU_TEXT_CLASS =
   "whitespace-nowrap font-display text-2xl leading-none text-white focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
 
-type MobileMenuView = "main" | "lyrics" | "silver-cracks" | "exercises";
-type DesktopLyricProject = "silver-cracks" | "exercises";
+type MobileMenuView = "main" | "lyrics" | MusicProjectId;
+type DesktopLyricProject = MusicProjectId;
 type BackdropSource = "mobile-menu" | "desktop-lyrics" | "navigation";
 
 type SocialLinkProps = {
@@ -277,7 +278,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
   const [mobileMenuView, setMobileMenuView] = useState<MobileMenuView>("main");
   const [isMobileMenuViewVisible, setIsMobileMenuViewVisible] = useState(true);
   const activeLyricProject =
-    mobileMenuView === "silver-cracks" || mobileMenuView === "exercises"
+    mobileMenuView !== "main" && mobileMenuView !== "lyrics"
       ? LYRIC_NAVIGATION.find(
           (release) => release.projectId === mobileMenuView
         ) ?? null
@@ -1374,9 +1375,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                 </MobileMenuItem>
 
                 {LYRIC_NAVIGATION.map((release, index) => {
-                  const opensTrackList =
-                    release.projectId === "silver-cracks" ||
-                    release.projectId === "exercises";
+                  const opensTrackList = release.songs.length > 0;
 
                   return (
                     <MobileMenuItem
@@ -1517,10 +1516,7 @@ export default function Header({ isIntroComplete }: HeaderProps) {
                     className={MOBILE_LYRICS_MENU_TEXT_CLASS}
                     href={release.href}
                     onClick={(event) => {
-                      if (
-                        release.projectId === "silver-cracks" ||
-                        release.projectId === "exercises"
-                      ) {
+                      if (release.songs.length > 0) {
                         event.preventDefault();
                         transitionMobileMenuView(release.projectId);
                         return;

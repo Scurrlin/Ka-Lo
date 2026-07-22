@@ -1,10 +1,7 @@
+import { LYRIC_CATALOG, type MusicProjectId } from "./lyricCatalog";
+
+export type { MusicProjectId };
 export type SectionId = "music" | "about" | "lyrics";
-export type MusicProjectId =
-  | "melody"
-  | "exercises"
-  | "silver-cracks"
-  | "deep-end"
-  | "kings-road";
 
 type LyricNavigationTarget = Readonly<{
   id: `lyrics-${string}`;
@@ -44,110 +41,22 @@ export const SECTION_LINKS = [
   { id: "lyrics", label: "LYRICS", href: "#lyrics" }
 ] as const satisfies readonly SectionLink[];
 
-export const LYRIC_NAVIGATION = [
-  {
-    projectId: "kings-road",
-    id: "lyrics-kings-road",
-    label: "King's Road",
-    href: "#lyrics-kings-road",
-    songs: []
-  },
-  {
-    projectId: "deep-end",
-    id: "lyrics-deep-end",
-    label: "Deep End",
-    href: "#lyrics-deep-end",
-    songs: []
-  },
-  {
-    projectId: "silver-cracks",
-    id: "lyrics-silver-cracks",
-    label: "Silver Cracks",
-    href: "#lyrics-silver-cracks",
-    songs: [
-      {
-        id: "lyrics-silver-cracks-intro",
-        label: "Intro",
-        href: "#lyrics-silver-cracks-intro"
-      },
-      {
-        id: "lyrics-silver-cracks-us",
-        label: "us",
-        href: "#lyrics-silver-cracks-us"
-      },
-      {
-        id: "lyrics-silver-cracks-terms-and-conditions",
-        label: "Terms & Conditions",
-        href: "#lyrics-silver-cracks-terms-and-conditions"
-      },
-      {
-        id: "lyrics-silver-cracks-behind-the-mind",
-        label: "Behind the Mind",
-        href: "#lyrics-silver-cracks-behind-the-mind"
-      },
-      {
-        id: "lyrics-silver-cracks-oddities",
-        label: "Oddities",
-        href: "#lyrics-silver-cracks-oddities"
-      },
-      {
-        id: "lyrics-silver-cracks-figure-it-out",
-        label: "Figure It Out",
-        href: "#lyrics-silver-cracks-figure-it-out"
-      },
-      {
-        id: "lyrics-silver-cracks-tough-skin",
-        label: "Tough Skin",
-        href: "#lyrics-silver-cracks-tough-skin"
-      }
-    ]
-  },
-  {
-    projectId: "exercises",
-    id: "lyrics-exercises",
-    label: "Exercises",
-    href: "#lyrics-exercises",
-    songs: [
-      {
-        id: "lyrics-exercises-1",
-        label: "Finna do?",
-        href: "#lyrics-exercises-1"
-      },
-      {
-        id: "lyrics-exercises-2",
-        label: "Bliss",
-        href: "#lyrics-exercises-2"
-      },
-      {
-        id: "lyrics-exercises-3",
-        label: "Help",
-        href: "#lyrics-exercises-3"
-      },
-      {
-        id: "lyrics-exercises-4",
-        label: "Somethin' Special",
-        href: "#lyrics-exercises-4"
-      },
-      {
-        id: "lyrics-exercises-5",
-        label: "Looking Glass",
-        href: "#lyrics-exercises-5"
-      },
-      {
-        id: "lyrics-exercises-6",
-        label: "Birds Calling Out",
-        href: "#lyrics-exercises-6"
-      }
-    ]
-  },
-  {
-    projectId: "melody",
-    id: "lyrics-melody",
-    label: "Melody",
-    href: "#lyrics-melody",
-    songs: []
-  }
-] as const satisfies readonly LyricNavigationRelease[];
+/** Slim nav view of the shared lyric catalog — albums expose tracks; singles link directly. */
+export const LYRIC_NAVIGATION: readonly LyricNavigationRelease[] =
+  LYRIC_CATALOG.map((release) => ({
+    projectId: release.projectId,
+    id: release.id,
+    label: release.title,
+    href: release.href,
+    songs:
+      release.kind === "album"
+        ? release.songs.map((song) => ({
+            id: song.id,
+            label: song.title,
+            href: song.href
+          }))
+        : []
+  }));
 
 export const MUSIC_PROJECT_LINKS: Readonly<Record<MusicProjectId, string | null>> = {
   "melody": "https://music.apple.com/us/album/melody/1502707173?i=1502707386",

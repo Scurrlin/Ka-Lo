@@ -1,3 +1,5 @@
+import { LYRIC_CATALOG } from "./lyricCatalog";
+
 export type LyricSong = Readonly<{
   id: `lyrics-${string}`;
   href: `#lyrics-${string}`;
@@ -13,18 +15,8 @@ export type LyricRelease = Readonly<{
   songs: readonly LyricSong[];
 }>;
 
-export const LYRIC_RELEASES = [
-  {
-    id: "lyrics-kings-road",
-    href: "#lyrics-kings-road",
-    title: "King's Road",
-    kind: "single",
-    songs: [
-        {
-          id: "lyrics-kings-road",
-          href: "#lyrics-kings-road",
-          title: "King's Road",
-          lyrics: `So I slow ride
+const LYRIC_TEXTS = {
+  "lyrics-kings-road": `So I slow ride
 To my South Side
 To find clear eyes
 Damn right, damn right
@@ -133,21 +125,8 @@ To my South Side
 To find clear eyes
 Damn right, damn right
 
-And now I'm gone`
-        }
-    ]
-  },
-  {
-    id: "lyrics-deep-end",
-    href: "#lyrics-deep-end",
-    title: "Deep End",
-    kind: "single",
-    songs: [
-        {
-          id: "lyrics-deep-end",
-          href: "#lyrics-deep-end",
-          title: "Deep End",
-          lyrics: `Yeah this world
+And now I'm gone`,
+  "lyrics-deep-end": `Yeah this world
 Got me slipping in the
 Got me slipping in the deep
 Yeah got me slipping in the
@@ -226,21 +205,8 @@ Yeah this world
 
 Got me slipping in the deep end that's why I depend on ya
 Hand out of reach, God do me a favor
-Yeah this world`
-        }
-    ]
-  },
-  {
-    id: "lyrics-silver-cracks",
-    href: "#lyrics-silver-cracks",
-    title: "Silver Cracks",
-    kind: "album",
-    songs: [
-        {
-          id: "lyrics-silver-cracks-intro",
-          href: "#lyrics-silver-cracks-intro",
-          title: "Intro",
-          lyrics: `You know something really stuck with me that L.A. Reid once said
+Yeah this world`,
+  "lyrics-silver-cracks-intro": `You know something really stuck with me that L.A. Reid once said
 He said, “When I look up, I don’t see barriers, I don’t see the ceiling…
 I just see the sky”
 Be unlimited in your belief
@@ -260,13 +226,8 @@ Your crown has already been paid for young king
 All you have to do is put it on and wear it
 
 What’s your move playa?
-What’s your move?`
-        },
-        {
-          id: "lyrics-silver-cracks-us",
-          href: "#lyrics-silver-cracks-us",
-          title: "us",
-          lyrics: `Oh my God what you talkin’ ‘bout?
+What’s your move?`,
+  "lyrics-silver-cracks-us": `Oh my God what you talkin’ ‘bout?
 Careful young nigga why you talkin’ loud?
 Why you talkin’ loud?
 
@@ -330,13 +291,8 @@ Let someone else worry child
 Why you talkin’ loud?
 
 Maybe it’s us?
-It's probably us...`
-        },
-        {
-          id: "lyrics-silver-cracks-terms-and-conditions",
-          href: "#lyrics-silver-cracks-terms-and-conditions",
-          title: "Terms & Conditions",
-          lyrics: `Ayo Kaleb! I got some paperwork for you to sign man
+It's probably us...`,
+  "lyrics-silver-cracks-terms-and-conditions": `Ayo Kaleb! I got some paperwork for you to sign man
 I need you to get yo shit
 This ain't like that record label shit
 This that real shit
@@ -422,13 +378,8 @@ I see the hands that try to take control
 My pen designed for me and me alone
 If you reach you risk yo life
 
-It’s about damn time…`
-        },
-        {
-          id: "lyrics-silver-cracks-behind-the-mind",
-          href: "#lyrics-silver-cracks-behind-the-mind",
-          title: "Behind The Mind",
-          lyrics: `What else is you looking for?
+It’s about damn time…`,
+  "lyrics-silver-cracks-behind-the-mind": `What else is you looking for?
 My mind so hard to ignore
 What else is you looking for?
 My mind so hard to ignore
@@ -489,13 +440,8 @@ The hard to find are the ones that normally last
 So I'm combing through the archives looking for silver
 Lining of the files tell me all but clearer
 And when I find it just check the paraphernalia
-A sign that I'm no longer hidden behind my mind`
-        },
-        {
-          id: "lyrics-silver-cracks-oddities",
-          href: "#lyrics-silver-cracks-oddities",
-          title: "Oddities",
-          lyrics: `More than you know
+A sign that I'm no longer hidden behind my mind`,
+  "lyrics-silver-cracks-oddities": `More than you know
 Lord here I come yeah, yeah
 Lord here I - more than you know
 Lord here I come yeah, yeah
@@ -581,13 +527,8 @@ Lord here I - more than you know
 
 More than you know
 More than you know
-More than you know`
-        },
-        {
-          id: "lyrics-silver-cracks-figure-it-out",
-          href: "#lyrics-silver-cracks-figure-it-out",
-          title: "Figure It Out",
-          lyrics: `I would love to figure it out, but let me
+More than you know`,
+  "lyrics-silver-cracks-figure-it-out": `I would love to figure it out, but let me
 tell you my doubts, cuz lately
 I ain’t that proud or maybe
 I ain’t that wild
@@ -623,13 +564,8 @@ Had to clear the air consciously
 
 Cuz I don't know, what to do though
 But I guess in the end its best to just go and
-Figure it out`
-        },
-        {
-          id: "lyrics-silver-cracks-tough-skin",
-          href: "#lyrics-silver-cracks-tough-skin",
-          title: "Tough Skin",
-          lyrics: `Tough skin tho
+Figure it out`,
+  "lyrics-silver-cracks-tough-skin": `Tough skin tho
 If you didn't know
 Tough skin tho
 I had to let it grow
@@ -686,81 +622,47 @@ Tough skin tho
 I had to let it grow
 Tough skin tho
 Always been my own
-Tough skin tho`
-        }
-    ]
-  },
-  {
-    id: "lyrics-exercises",
-    href: "#lyrics-exercises",
-    title: "Exercises",
-    kind: "album",
-    songs: [
-        {
-          id: "lyrics-exercises-1",
-          href: "#lyrics-exercises-1",
-          title: "Finna do?",
-          lyrics: `Placeholder lyrics for Finna do?.
+Tough skin tho`,
+  "lyrics-exercises-1": `Placeholder lyrics for Finna do?.
+
+Additional verses and choruses will be added here.`,
+  "lyrics-exercises-2": `Placeholder lyrics for Bliss.
+
+Additional verses and choruses will be added here.`,
+  "lyrics-exercises-3": `Placeholder lyrics for Help.
+
+Additional verses and choruses will be added here.`,
+  "lyrics-exercises-4": `Placeholder lyrics for Somethin' Special.
+
+Additional verses and choruses will be added here.`,
+  "lyrics-exercises-5": `Placeholder lyrics for Looking Glass.
+
+Additional verses and choruses will be added here.`,
+  "lyrics-exercises-6": `Placeholder lyrics for Birds Calling Out.
+
+Additional verses and choruses will be added here.`,
+  "lyrics-melody": `Placeholder lyrics for Melody.
 
 Additional verses and choruses will be added here.`
-        },
-        {
-          id: "lyrics-exercises-2",
-          href: "#lyrics-exercises-2",
-          title: "Bliss",
-          lyrics: `Placeholder lyrics for Bliss.
+} as const satisfies Readonly<Record<`lyrics-${string}`, string>>;
 
-Additional verses and choruses will be added here.`
-        },
-        {
-          id: "lyrics-exercises-3",
-          href: "#lyrics-exercises-3",
-          title: "Help",
-          lyrics: `Placeholder lyrics for Help.
-
-Additional verses and choruses will be added here.`
-        },
-        {
-          id: "lyrics-exercises-4",
-          href: "#lyrics-exercises-4",
-          title: "Somethin' Special",
-          lyrics: `Placeholder lyrics for Somethin' Special.
-
-Additional verses and choruses will be added here.`
-        },
-        {
-          id: "lyrics-exercises-5",
-          href: "#lyrics-exercises-5",
-          title: "Looking Glass",
-          lyrics: `Placeholder lyrics for Looking Glass.
-
-Additional verses and choruses will be added here.`
-        },
-        {
-          id: "lyrics-exercises-6",
-          href: "#lyrics-exercises-6",
-          title: "Birds Calling Out",
-          lyrics: `Placeholder lyrics for Birds Calling Out.
-
-Additional verses and choruses will be added here.`
-        }
-    ]
-  },
-  {
-    id: "lyrics-melody",
-    href: "#lyrics-melody",
-    title: "Melody",
-    kind: "single",
-    songs: [
-        {
-          id: "lyrics-melody",
-          href: "#lyrics-melody",
-          title: "Melody",
-          lyrics: `Placeholder lyrics for Melody.
-
-Additional verses and choruses will be added here.`
-        }
-    ]
-  }
-] as const satisfies readonly LyricRelease[];
-
+export const LYRIC_RELEASES: readonly LyricRelease[] = LYRIC_CATALOG.map(
+  (release) => ({
+    id: release.id,
+    href: release.href,
+    title: release.title,
+    kind: release.kind,
+    songs: release.songs.map((song) => {
+      const lyrics = LYRIC_TEXTS[song.id as keyof typeof LYRIC_TEXTS];
+      if (lyrics === undefined) {
+        throw new Error(`Missing lyrics text for ${song.id}`);
+      }
+      return {
+        id: song.id,
+        href: song.href,
+        title: song.title,
+        lyrics
+      };
+    })
+  })
+);
