@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import Header from "./Header";
 import Hero from "./Hero";
-import { preloadVideos } from "../utils/videos";
+import { ASSET_TIMEOUT_MS, preloadVideos } from "../utils/videos";
 
 // window.load never waits on JS-initiated dynamic imports or <video> network
 // activity (both are spec-excluded from load-blocking), so it's only a
 // best-effort signal on its own. This caps how long the real asset checks
 // below are allowed to hold up the reveal if something stalls entirely.
-const ASSETS_READY_TIMEOUT_MS = 9000;
 
 export default function Intro() {
   const [isIntroComplete, setIsIntroComplete] = useState(false);
@@ -41,7 +40,7 @@ export default function Intro() {
     };
 
     const timeout = new Promise<void>((resolve) => {
-      window.setTimeout(resolve, ASSETS_READY_TIMEOUT_MS);
+      window.setTimeout(resolve, ASSET_TIMEOUT_MS);
     });
 
     void Promise.race([warmSections(), timeout]).then(() => {
