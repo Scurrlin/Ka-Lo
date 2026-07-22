@@ -62,6 +62,14 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
     let timeoutId: number | null = null;
     let removeScrollListener: (() => void) | null = null;
     let removeTicker: (() => void) | null = null;
+    // Music/About/Lyrics all depend on final image/video dimensions, so one
+    // refresh after "load" re-measures every trigger at once. Kept here
+    // (rather than one listener per section) so "load" firing late on Safari
+    // triggers a single recompute instead of three redundant ones stacking
+    // in the same frame — each of which re-runs About's expensive layout pass.
+    let scrollTriggerAfterBoot: typeof import("gsap/ScrollTrigger").ScrollTrigger | null =
+      null;
+    let loadRefreshPending = false;
 
     const tearDown = () => {
       removeTicker?.();
@@ -91,6 +99,7 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
       }
 
       gsap.registerPlugin(ScrollTrigger);
+      scrollTriggerAfterBoot = ScrollTrigger;
 
       const useSafariSmoothing = isWebKitBrowser();
       const instance = new Lenis({
@@ -125,7 +134,28 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
         instance.scrollTo(0, { immediate: true, force: true });
       }
       ScrollTrigger.refresh();
+
+      if (loadRefreshPending) {
+        loadRefreshPending = false;
+        ScrollTrigger.refresh();
+      }
     };
+
+    const handleLoad = () => {
+      if (scrollTriggerAfterBoot) {
+        scrollTriggerAfterBoot.refresh();
+      } else {
+        // Boot hasn't registered ScrollTrigger yet — its own post-boot
+        // refresh will pick up final dimensions instead.
+        loadRefreshPending = true;
+      }
+    };
+
+    if (document.readyState === "complete") {
+      handleLoad();
+    } else {
+      window.addEventListener("load", handleLoad, { once: true });
+    }
 
     const scheduleBoot = () => {
       void boot();
@@ -168,6 +198,7 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
       window.removeEventListener("wheel", scheduleBoot);
       window.removeEventListener("touchstart", scheduleBoot);
       window.removeEventListener("keydown", scheduleBoot);
+      window.removeEventListener("load", handleLoad);
       tearDown();
     };
   }, []);

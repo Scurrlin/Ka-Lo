@@ -266,11 +266,7 @@ export default function Music() {
       }
     }, section);
 
-    const handleLoad = () => ScrollTrigger.refresh();
-    window.addEventListener("load", handleLoad);
-
     return () => {
-      window.removeEventListener("load", handleLoad);
       ctx.revert();
     };
   }, []);
