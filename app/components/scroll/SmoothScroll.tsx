@@ -132,9 +132,20 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
       gsap.registerPlugin(ScrollTrigger);
       scrollTriggerRef = ScrollTrigger;
 
+      // macOS Safari's trackpad/Magic Mouse keep firing decaying-inertia wheel
+      // events after the user stops. Lenis re-feeds that inertia into its
+      // target, so reversing direction feels "blocked" until the old momentum
+      // dies — laggy and juddery on every section. Safari's native scroll is
+      // already smooth and has no such conflict, so we let it drive scrolling
+      // there (ScrollTrigger + About's scrub still work on native scroll).
+      // Feature-detect instead of UA sniffing: GestureEvent exists only in
+      // WebKit/Safari, not Chrome or Firefox.
+      const isSafari = "GestureEvent" in window;
+
       const instance = new Lenis({
         autoRaf: false,
-        smoothWheel: true,
+        // Native scroll on Safari; keep Lenis wheel smoothing everywhere else.
+        smoothWheel: !isSafari,
         // Keep touch on native momentum — Safari + sticky video is already heavy.
         syncTouch: false,
         lerp: LENIS_LERP
