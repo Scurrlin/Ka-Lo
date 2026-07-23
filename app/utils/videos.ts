@@ -1,5 +1,5 @@
-// Matches the intro's total on-screen duration (3s logo reveal +
-// 0.5s wave/header rise) so asset warming never holds the reveal
+// Matches the intro's total on-screen duration (2.5s logo reveal +
+// 0.5s wave reveal + 0.5s header drop) so asset warming never holds the reveal
 // past the point the intro animation itself would finish.
 export const ASSET_TIMEOUT_MS = 3500;
 

@@ -92,7 +92,8 @@ type SocialLinkProps = {
 
 type HeaderProps = {
   isIntroComplete: boolean;
-  isRevealReady: boolean;
+  isHeaderRevealReady: boolean;
+  onIntroComplete: () => void;
 };
 
 function getPageSectionScrollTarget(id: string) {
@@ -248,7 +249,8 @@ function SocialDestination({
 
 export default function Header({
   isIntroComplete,
-  isRevealReady
+  isHeaderRevealReady,
+  onIntroComplete
 }: HeaderProps) {
   const lenisRef = useLenisRef();
   const headerRef = useRef<HTMLElement>(null);
@@ -1091,7 +1093,7 @@ export default function Header({
         ref={headerRef}
         inert={isNavigating}
         className={`site-header fixed inset-x-0 top-0 z-50 h-16 transform-gpu bg-black text-white shadow-[0_1px_0_rgba(255,255,255,1)] transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform md:h-20 ${
-          !isRevealReady
+          !isHeaderRevealReady
             ? "pointer-events-none -translate-y-[115%] opacity-0"
             : isIntroComplete
             ? isNavigating ||
@@ -1103,6 +1105,16 @@ export default function Header({
               : "pointer-events-none -translate-y-[115%]"
             : "site-header-intro pointer-events-none"
         }`}
+        onAnimationEnd={(event) => {
+          if (
+            isHeaderRevealReady &&
+            !isIntroComplete &&
+            event.currentTarget === event.target &&
+            event.animationName === "site-header-drop"
+          ) {
+            onIntroComplete();
+          }
+        }}
         onFocusCapture={(event) => {
           const target = event.target;
           setIsHeaderFocused(

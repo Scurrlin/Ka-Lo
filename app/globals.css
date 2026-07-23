@@ -376,7 +376,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   user-select: none;
 }
 
-.hero-reveal-ready .hero-sound-wave {
+.hero-wave-reveal-ready .hero-sound-wave {
   animation: hero-wave-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -394,7 +394,7 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   animation-direction: normal;
 }
 
-.hero-reveal-ready .hero-wave-bar {
+.hero-wave-active .hero-wave-bar {
   animation-name: hero-wave-pulse;
 }
 

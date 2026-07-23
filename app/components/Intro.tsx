@@ -13,6 +13,7 @@ import { ASSET_TIMEOUT_MS, preloadVideos } from "../utils/videos";
 export default function Intro() {
   const [isIntroComplete, setIsIntroComplete] = useState(false);
   const [isLogoRevealComplete, setIsLogoRevealComplete] = useState(false);
+  const [isWaveRevealComplete, setIsWaveRevealComplete] = useState(false);
   const [isWindowLoaded, setIsWindowLoaded] = useState(false);
   const [areAssetsReady, setAreAssetsReady] = useState(false);
 
@@ -75,19 +76,22 @@ export default function Intro() {
   // Safari desktop otherwise starts the CSS reveal on mount while assets
   // are still pending (Chrome / mobile Safari usually paint late enough to hide it).
   const isIntroStartReady = isWindowLoaded && areAssetsReady;
-  const isRevealReady = isLogoRevealComplete && isIntroStartReady;
+  const isWaveRevealReady = isLogoRevealComplete && isIntroStartReady;
+  const isHeaderRevealReady = isWaveRevealComplete && isIntroStartReady;
 
   return (
     <>
       <Header
         isIntroComplete={isIntroComplete}
-        isRevealReady={isRevealReady}
+        isHeaderRevealReady={isHeaderRevealReady}
+        onIntroComplete={() => setIsIntroComplete(true)}
       />
       <Hero
         isIntroStartReady={isIntroStartReady}
-        isRevealReady={isRevealReady}
-        onIntroComplete={() => setIsIntroComplete(true)}
+        isWaveActive={isIntroComplete}
+        isWaveRevealReady={isWaveRevealReady}
         onLogoRevealComplete={() => setIsLogoRevealComplete(true)}
+        onWaveRevealComplete={() => setIsWaveRevealComplete(true)}
       />
     </>
   );

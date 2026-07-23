@@ -3,17 +3,18 @@
 import { useEffect, useRef } from "react";
 
 const HERO_LOGO_TEXT = "KΛLO";
-const LOGO_CHAR_REVEAL_DURATION = 1.5;
+const LOGO_CHAR_REVEAL_DURATION = 1;
 const LOGO_CHAR_STAGGER = 0.5;
-// Total until the last letter finishes: 1.5 + 0.5 × 3 = 3 seconds.
+// Total until the last letter finishes: 1 + 0.5 × 3 = 2.5 seconds.
 
 const WAVE_BAR_COUNT = 48;
 
 type HeroProps = {
   isIntroStartReady: boolean;
-  isRevealReady: boolean;
-  onIntroComplete: () => void;
+  isWaveActive: boolean;
+  isWaveRevealReady: boolean;
   onLogoRevealComplete: () => void;
+  onWaveRevealComplete: () => void;
 };
 
 const WAVE_BARS = Array.from({ length: WAVE_BAR_COUNT }, (_, index) => {
@@ -69,9 +70,10 @@ function getWaveBarDelay(index: number) {
 
 export default function Hero({
   isIntroStartReady,
-  isRevealReady,
-  onIntroComplete,
-  onLogoRevealComplete
+  isWaveActive,
+  isWaveRevealReady,
+  onLogoRevealComplete,
+  onWaveRevealComplete
 }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -112,7 +114,9 @@ export default function Hero({
       tabIndex={-1}
       className={`hero-waves-active relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen ${
         isIntroStartReady ? "hero-letters-ready" : ""
-      } ${isRevealReady ? "hero-reveal-ready" : ""}`}
+      } ${isWaveRevealReady ? "hero-wave-reveal-ready" : ""} ${
+        isWaveActive ? "hero-wave-active" : ""
+      }`}
     >
       <div className="hero-lockup pointer-events-none relative z-30 flex w-full max-w-5xl flex-col items-center">
         <div className="flex w-fit max-w-full flex-col items-stretch gap-[var(--hero-logo-wave-gap)]">
@@ -135,11 +139,11 @@ export default function Hero({
             aria-hidden="true"
             onAnimationEnd={(event) => {
               if (
-                isRevealReady &&
+                isWaveRevealReady &&
                 event.currentTarget === event.target &&
                 event.animationName === "hero-wave-rise"
               ) {
-                onIntroComplete();
+                onWaveRevealComplete();
               }
             }}
           >
