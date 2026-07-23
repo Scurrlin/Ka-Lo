@@ -569,8 +569,6 @@ That is why we thug it out
 Let’s thug it out
 Figure it out
 
-(Guitar Solo)
-
 I swear we got a lot of things against us
 Tryna keep us a part
 But I'm standing on business
@@ -586,7 +584,9 @@ Had to clear the air consciously
 
 Cuz I don't know, what to do though
 But I guess in the end its best to just go and
-Figure it out`,
+Figure it out
+
+(Guitar Solo)`,
 
 "lyrics-silver-cracks-tough-skin":
 

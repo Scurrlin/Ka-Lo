@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Header from "./Header";
 import Hero from "./Hero";
 import { ASSET_TIMEOUT_MS, preloadVideos } from "../utils/videos";
@@ -17,6 +17,7 @@ const INTRO_SCROLL_LOCK_KEYS = new Set([
   "PageDown",
   "PageUp"
 ]);
+const INTRO_SCROLL_UNLOCK_DELAY_MS = 500;
 
 // window.load never waits on JS-initiated dynamic imports or <video> network
 // activity (both are spec-excluded from load-blocking), so it's only a
@@ -24,6 +25,7 @@ const INTRO_SCROLL_LOCK_KEYS = new Set([
 // below are allowed to hold up the reveal if something stalls entirely.
 
 export default function Intro() {
+  const introCompleteTimerRef = useRef<number | null>(null);
   const [isIntroComplete, setIsIntroComplete] = useState(false);
   const [isLogoRevealComplete, setIsLogoRevealComplete] = useState(false);
   const [isWaveRevealComplete, setIsWaveRevealComplete] = useState(false);
@@ -64,6 +66,15 @@ export default function Intro() {
       root.classList.remove(INTRO_SCROLL_LOCK_CLASS);
     };
   }, [isIntroComplete]);
+
+  useEffect(
+    () => () => {
+      if (introCompleteTimerRef.current !== null) {
+        window.clearTimeout(introCompleteTimerRef.current);
+      }
+    },
+    []
+  );
 
   // Warm every section's chunk during the hero, and actually wait for
   // Music's cover decode + About's video readiness — not just fire-and-forget
@@ -126,13 +137,23 @@ export default function Intro() {
   const isIntroStartReady = isWindowLoaded && areAssetsReady;
   const isWaveRevealReady = isLogoRevealComplete && isIntroStartReady;
   const isHeaderRevealReady = isWaveRevealComplete && isIntroStartReady;
+  const completeIntroAfterPause = () => {
+    if (isIntroComplete || introCompleteTimerRef.current !== null) {
+      return;
+    }
+
+    introCompleteTimerRef.current = window.setTimeout(() => {
+      introCompleteTimerRef.current = null;
+      setIsIntroComplete(true);
+    }, INTRO_SCROLL_UNLOCK_DELAY_MS);
+  };
 
   return (
     <>
       <Header
         isIntroComplete={isIntroComplete}
         isHeaderRevealReady={isHeaderRevealReady}
-        onIntroComplete={() => setIsIntroComplete(true)}
+        onIntroComplete={completeIntroAfterPause}
       />
       <Hero
         isIntroStartReady={isIntroStartReady}
