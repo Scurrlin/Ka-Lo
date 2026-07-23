@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer className="bg-white px-5 py-10 text-black sm:px-8">
       <div className="mx-auto flex max-w-7xl justify-center">
-        <p className="text-base font-semibold tracking-wide sm:text-lg">
+        <p className="text-lg font-semibold tracking-wide sm:text-xl">
           &copy; {year} SEΛN X KΛLO
         </p>
       </div>
