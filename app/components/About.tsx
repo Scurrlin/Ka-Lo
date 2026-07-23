@@ -13,7 +13,7 @@ const NEXT_TITLE = "Rapper";
 /** Seconds of ScrollTrigger catch-up lag for the About scrubbed timeline.
  * One value for every browser; kept moderate so it doesn't stack into
  * "double mush" with the Lenis wheel lerp. Tune from here if needed. */
-const SCRUB_LAG = 1.35;
+const SCRUB_LAG = 1.3;
 export const VIDEO_SOURCES = [
   "/videos/driving-6.5s.mp4",
   "/videos/running-10s.mp4",
