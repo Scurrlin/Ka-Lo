@@ -25,11 +25,11 @@ const metadataBase = configuredSiteUrl
   : undefined;
 const socialImage = {
   url: metadataBase
-    ? new URL("/assets/Silver-Cracks.webp", metadataBase).toString()
-    : "https://raw.githubusercontent.com/Scurrlin/Ka-Lo/main/public/assets/Silver-Cracks.webp",
-  width: 1024,
-  height: 1024,
-  alt: "Silver Cracks album cover by Ka-Lo Hané"
+    ? new URL("/opengraph-image", metadataBase).toString()
+    : "https://ka-lo.onrender.com/opengraph-image",
+  width: 1200,
+  height: 630,
+  alt: "Ka-Lo Hané official website"
 };
 
 export const metadata: Metadata = {
@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     images: [socialImage]
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
     images: [socialImage]
