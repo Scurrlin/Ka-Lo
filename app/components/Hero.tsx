@@ -114,11 +114,13 @@ export default function Hero({
     >
       <div className="hero-lockup pointer-events-none relative z-30 flex w-full max-w-5xl flex-col items-center">
         <div className="flex w-fit max-w-full flex-col items-stretch gap-[var(--hero-logo-wave-gap)]">
-          <h1
-            className="w-max select-none whitespace-nowrap text-center font-display text-[length:var(--hero-logo-size)] leading-none text-white"
-            aria-label="KALO"
-          >
-            <span aria-hidden="true">
+          <h1 className="relative w-max select-none whitespace-nowrap text-center font-display text-[length:var(--hero-logo-size)] leading-none">
+            {/* Black on black: crawlable for Lighthouse/SEO, invisible to users. */}
+            <span className="text-black">KΛLO</span>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 text-white"
+            >
               <LogoCharacters
                 text={HERO_LOGO_TEXT}
                 onRevealComplete={onLogoRevealComplete}
