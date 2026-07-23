@@ -93,7 +93,6 @@ export const LYRIC_CATALOG = [
         id: "lyrics-silver-cracks-tough-skin",
         href: "#lyrics-silver-cracks-tough-skin",
         title: "Tough Skin",
-        credits: "Co-Writer: Sean Currlin"
       }
     ]
   },

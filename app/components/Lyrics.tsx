@@ -87,7 +87,7 @@ function SongCredits({ credits }: { credits: string | readonly string[] }) {
       {lines.map((line, index) => (
         <p
           key={`${line}-${index}`}
-          className="font-display text-sm text-white sm:text-base"
+          className="font-sans text-base font-semibold leading-none tracking-normal text-white"
         >
           {line}
         </p>
