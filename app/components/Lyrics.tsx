@@ -162,7 +162,7 @@ function AlbumRelease({ release }: { release: LyricRelease }) {
             id={song.id}
             className="grid gap-8 border-t border-white/15 py-16 sm:py-20 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
           >
-            <div className="flex flex-col items-center text-center lg:sticky lg:top-28 lg:items-start lg:text-left">
+            <div className="flex flex-col items-center text-center lg:sticky lg:top-28 lg:self-start lg:items-start lg:text-left">
               <h3 className="font-display text-5xl leading-[0.92] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
                 <NumberedSongTitle song={song} index={index} />
               </h3>
