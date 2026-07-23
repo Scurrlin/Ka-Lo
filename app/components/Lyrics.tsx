@@ -222,7 +222,7 @@ export default function Lyrics() {
     <section
       ref={sectionRef}
       id="lyrics"
-      className="relative bg-black text-white"
+      className="relative overflow-x-clip bg-black text-white"
     >
       <header className="flex items-center justify-center px-5 py-12 text-center sm:py-16 md:py-20">
         <h1

@@ -136,7 +136,7 @@ export default function Intro() {
       />
       <Hero
         isIntroStartReady={isIntroStartReady}
-        isWaveActive={isIntroComplete}
+        isWaveActive={isHeaderRevealReady}
         isWaveRevealReady={isWaveRevealReady}
         onLogoRevealComplete={() => setIsLogoRevealComplete(true)}
         onWaveRevealComplete={() => setIsWaveRevealComplete(true)}
