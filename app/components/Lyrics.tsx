@@ -101,7 +101,7 @@ function NumberedSongTitle({ song, index }: { song: LyricSong; index: number }) 
   const number = String(index + 1).padStart(2, "0");
 
   return (
-    <span className="flex flex-col items-center gap-1 sm:contents">
+    <span className="flex flex-col items-center gap-4 sm:contents">
       <AnchorTitle href={song.href} className="max-w-[13ch]">
         <span className="relative inline-block whitespace-nowrap">
           <span
