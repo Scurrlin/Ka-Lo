@@ -10,6 +10,7 @@ const LOGO_CHAR_STAGGER = 0.5;
 const WAVE_BAR_COUNT = 48;
 
 type HeroProps = {
+  isIntroStartReady: boolean;
   isRevealReady: boolean;
   onIntroComplete: () => void;
   onLogoRevealComplete: () => void;
@@ -67,6 +68,7 @@ function getWaveBarDelay(index: number) {
 }
 
 export default function Hero({
+  isIntroStartReady,
   isRevealReady,
   onIntroComplete,
   onLogoRevealComplete
@@ -109,8 +111,8 @@ export default function Hero({
       id="top"
       tabIndex={-1}
       className={`hero-waves-active relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-black px-5 text-white focus:outline-none md:min-h-screen ${
-        isRevealReady ? "hero-reveal-ready" : ""
-      }`}
+        isIntroStartReady ? "hero-letters-ready" : ""
+      } ${isRevealReady ? "hero-reveal-ready" : ""}`}
     >
       <div className="hero-lockup pointer-events-none relative z-30 flex w-full max-w-5xl flex-col items-center">
         <div className="flex w-fit max-w-full flex-col items-stretch gap-[var(--hero-logo-wave-gap)]">

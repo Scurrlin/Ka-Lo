@@ -71,8 +71,11 @@ export default function Intro() {
     };
   }, []);
 
-  const isRevealReady =
-    isLogoRevealComplete && isWindowLoaded && areAssetsReady;
+  // Hold a black screen until load + assets are ready, then start letters.
+  // Safari desktop otherwise starts the CSS reveal on mount while assets
+  // are still pending (Chrome / mobile Safari usually paint late enough to hide it).
+  const isIntroStartReady = isWindowLoaded && areAssetsReady;
+  const isRevealReady = isLogoRevealComplete && isIntroStartReady;
 
   return (
     <>
@@ -81,6 +84,7 @@ export default function Intro() {
         isRevealReady={isRevealReady}
       />
       <Hero
+        isIntroStartReady={isIntroStartReady}
         isRevealReady={isRevealReady}
         onIntroComplete={() => setIsIntroComplete(true)}
         onLogoRevealComplete={() => setIsLogoRevealComplete(true)}

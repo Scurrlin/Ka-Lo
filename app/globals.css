@@ -299,10 +299,20 @@ html.viewport-blackout-active.viewport-blackout-meme-active
   opacity: 0;
   animation-name: hero-logo-char-reveal;
   animation-timing-function: linear;
-  animation-fill-mode: forwards;
+  /* both: keep opacity 0 during stagger delays (WebKit is flaky with forwards-only). */
+  animation-fill-mode: both;
+  animation-play-state: paused;
+}
+
+.hero-letters-ready .hero-logo-char {
+  animation-play-state: running;
 }
 
 @keyframes hero-logo-char-reveal {
+  from {
+    opacity: 0;
+  }
+
   to {
     opacity: 1;
   }
