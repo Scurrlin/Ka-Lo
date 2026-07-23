@@ -61,7 +61,7 @@ export const LYRIC_CATALOG = [
         id: "lyrics-silver-cracks-intro",
         href: "#lyrics-silver-cracks-intro",
         title: "Intro",
-        credits: "Lyrics: Murphy LeBlanc"
+        credits: ["Lyrics: Murphy LeBlanc", "Voice-Over: Murphy LeBlanc"]
       },
       {
         id: "lyrics-silver-cracks-us",
@@ -86,12 +86,14 @@ export const LYRIC_CATALOG = [
       {
         id: "lyrics-silver-cracks-figure-it-out",
         href: "#lyrics-silver-cracks-figure-it-out",
-        title: "Figure It Out"
+        title: "Figure It Out",
+        credits: "Electric Guitar: Sean Currlin"
       },
       {
         id: "lyrics-silver-cracks-tough-skin",
         href: "#lyrics-silver-cracks-tough-skin",
-        title: "Tough Skin"
+        title: "Tough Skin",
+        credits: "Co-Writer: Sean Currlin"
       }
     ]
   },

@@ -237,7 +237,10 @@ All you have to do is put it on and wear it
 
 What’s your move playa?
 What’s your move?`,
-  "lyrics-silver-cracks-us": `Oh my God what you talkin’ ‘bout?
+
+"lyrics-silver-cracks-us":
+
+`Oh my God what you talkin’ ‘bout?
 Careful young nigga why you talkin’ loud?
 Why you talkin’ loud?
 
@@ -302,7 +305,10 @@ Why you talkin’ loud?
 
 Maybe it’s us?
 It's probably us...`,
-  "lyrics-silver-cracks-terms-and-conditions": `Ayo Kaleb! I got some paperwork for you to sign man
+
+"lyrics-silver-cracks-terms-and-conditions":
+
+`Ayo Kaleb! I got some paperwork for you to sign man
 I need you to get yo shit
 This ain't like that record label shit
 This that real shit
@@ -451,7 +457,10 @@ So I'm combing through the archives looking for silver
 Lining of the files tell me all but clearer
 And when I find it just check the paraphernalia
 A sign that I'm no longer hidden behind my mind`,
-  "lyrics-silver-cracks-oddities": `More than you know
+
+"lyrics-silver-cracks-oddities":
+
+`More than you know
 Lord here I come yeah, yeah
 Lord here I - more than you know
 Lord here I come yeah, yeah
@@ -538,7 +547,10 @@ Lord here I - more than you know
 More than you know
 More than you know
 More than you know`,
-  "lyrics-silver-cracks-figure-it-out": `I would love to figure it out, but let me
+
+"lyrics-silver-cracks-figure-it-out":
+
+`I would love to figure it out, but let me
 tell you my doubts, cuz lately
 I ain’t that proud or maybe
 I ain’t that wild
@@ -575,7 +587,10 @@ Had to clear the air consciously
 Cuz I don't know, what to do though
 But I guess in the end its best to just go and
 Figure it out`,
-  "lyrics-silver-cracks-tough-skin": `Tough skin tho
+
+"lyrics-silver-cracks-tough-skin":
+
+`Tough skin tho
 If you didn't know
 Tough skin tho
 I had to let it grow
@@ -633,27 +648,49 @@ I had to let it grow
 Tough skin tho
 Always been my own
 Tough skin tho`,
-  "lyrics-exercises-1": `Placeholder lyrics for Finna do?.
+
+"lyrics-exercises-1":
+
+`Placeholder lyrics for Finna do?.
 
 Additional verses and choruses will be added here.`,
-  "lyrics-exercises-2": `Placeholder lyrics for Bliss.
+
+"lyrics-exercises-2":
+
+`Placeholder lyrics for Bliss.
 
 Additional verses and choruses will be added here.`,
-  "lyrics-exercises-3": `Placeholder lyrics for Help.
+
+"lyrics-exercises-3":
+
+`Placeholder lyrics for Help.
 
 Additional verses and choruses will be added here.`,
-  "lyrics-exercises-4": `Placeholder lyrics for Somethin' Special.
+
+"lyrics-exercises-4":
+
+`Placeholder lyrics for Somethin' Special.
 
 Additional verses and choruses will be added here.`,
-  "lyrics-exercises-5": `Placeholder lyrics for Looking Glass.
+
+"lyrics-exercises-5":
+
+`Placeholder lyrics for Looking Glass.
 
 Additional verses and choruses will be added here.`,
-  "lyrics-exercises-6": `Placeholder lyrics for Birds Calling Out.
+
+"lyrics-exercises-6":
+
+`Placeholder lyrics for Birds Calling Out.
 
 Additional verses and choruses will be added here.`,
-  "lyrics-melody": `Placeholder lyrics for Melody.
+
+"lyrics-melody":
+
+`Placeholder lyrics for Melody.
 
 Additional verses and choruses will be added here.`
+
 } as const satisfies Readonly<Record<`lyrics-${string}`, string>>;
 
 export const LYRIC_RELEASES: readonly LyricRelease[] = LYRIC_CATALOG.map(
