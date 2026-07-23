@@ -5,6 +5,19 @@ import Header from "./Header";
 import Hero from "./Hero";
 import { ASSET_TIMEOUT_MS, preloadVideos } from "../utils/videos";
 
+const INTRO_SCROLL_LOCK_CLASS = "intro-scroll-locked";
+const INTRO_SCROLL_LOCK_KEYS = new Set([
+  " ",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowUp",
+  "End",
+  "Home",
+  "PageDown",
+  "PageUp"
+]);
+
 // window.load never waits on JS-initiated dynamic imports or <video> network
 // activity (both are spec-excluded from load-blocking), so it's only a
 // best-effort signal on its own. This caps how long the real asset checks
@@ -16,6 +29,41 @@ export default function Intro() {
   const [isWaveRevealComplete, setIsWaveRevealComplete] = useState(false);
   const [isWindowLoaded, setIsWindowLoaded] = useState(false);
   const [areAssetsReady, setAreAssetsReady] = useState(false);
+
+  useEffect(() => {
+    if (isIntroComplete) {
+      document.documentElement.classList.remove(INTRO_SCROLL_LOCK_CLASS);
+      return;
+    }
+
+    const root = document.documentElement;
+    const lockToTop = () => {
+      window.scrollTo(0, 0);
+    };
+    const blockScroll = (event: Event) => {
+      event.preventDefault();
+      lockToTop();
+    };
+    const blockScrollKeys = (event: KeyboardEvent) => {
+      if (INTRO_SCROLL_LOCK_KEYS.has(event.key)) {
+        blockScroll(event);
+      }
+    };
+
+    root.classList.add(INTRO_SCROLL_LOCK_CLASS);
+    lockToTop();
+
+    window.addEventListener("wheel", blockScroll, { passive: false });
+    window.addEventListener("touchmove", blockScroll, { passive: false });
+    window.addEventListener("keydown", blockScrollKeys, true);
+
+    return () => {
+      window.removeEventListener("wheel", blockScroll);
+      window.removeEventListener("touchmove", blockScroll);
+      window.removeEventListener("keydown", blockScrollKeys, true);
+      root.classList.remove(INTRO_SCROLL_LOCK_CLASS);
+    };
+  }, [isIntroComplete]);
 
   // Warm every section's chunk during the hero, and actually wait for
   // Music's cover decode + About's video readiness — not just fire-and-forget

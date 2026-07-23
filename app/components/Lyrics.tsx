@@ -83,7 +83,7 @@ function SongCredits({ credits }: { credits: string | readonly string[] }) {
   const lines = typeof credits === "string" ? [credits] : credits;
 
   return (
-    <div className="mt-4 flex flex-col items-center gap-1 text-center sm:mt-4 sm:gap-2 lg:items-start lg:text-left">
+    <div className="mt-4 flex flex-col items-center gap-2 text-center sm:mt-4 sm:gap-2 lg:items-start lg:text-left">
       {lines.map((line, index) => (
         <p
           key={`${line}-${index}`}
@@ -116,7 +116,7 @@ function NumberedSongTitle({ song, index }: { song: LyricSong; index: number }) 
       </AnchorTitle>
       <span
         aria-hidden="true"
-        className="select-none font-sans text-base font-semibold leading-none tracking-normal tabular-nums text-white sm:hidden"
+        className="select-none font-sans text-base font-semibold leading-none tracking-normal tabular-nums text-white md:hidden"
       >
         {number}
       </span>
