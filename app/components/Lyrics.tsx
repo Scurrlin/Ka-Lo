@@ -83,7 +83,7 @@ function SongCredits({ credits }: { credits: string | readonly string[] }) {
   const lines = typeof credits === "string" ? [credits] : credits;
 
   return (
-    <div className="mt-1 flex flex-col items-center gap-1 text-center sm:mt-2 sm:gap-2 lg:items-start lg:text-left">
+    <div className="mt-3 flex flex-col items-center gap-1 text-center sm:mt-4 sm:gap-2 lg:items-start lg:text-left">
       {lines.map((line, index) => (
         <p
           key={`${line}-${index}`}
